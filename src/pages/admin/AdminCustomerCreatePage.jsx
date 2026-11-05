@@ -162,7 +162,12 @@ export default function AdminCustomerCreatePage() {
             <ArrowLeft className="w-4 h-4" />
             <span>Back to Patient & Customer Directory</span>
           </Link>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3.5 mb-2">
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500 via-emerald-500 to-cyan-600 text-white flex items-center justify-center shrink-0 icon-3d shadow-md shadow-teal-500/20">
+              <UserPlus className="w-6 h-6 drop-shadow-sm" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-medium">
               <Stethoscope className="w-3.5 h-3.5 text-blue-600" />
               <span>Clinic Registration Portal</span>
@@ -175,6 +180,8 @@ export default function AdminCustomerCreatePage() {
           <h1 className="text-lg sm:text-xl font-bold font-display text-slate-800 tracking-tight mt-1.5">
             New Patient / Customer Registration
           </h1>
+            </div>
+          </div>
           <p className="text-xs sm:text-sm text-slate-500 font-normal mt-1 max-w-2xl">
             Enroll patient demographics, upload medical profile photo, and save official clinic contact records.
           </p>
@@ -386,11 +393,16 @@ export default function AdminCustomerCreatePage() {
             <div className="lg:col-span-8 space-y-6">
               {/* Section 1: Demographics */}
               <div className="p-5 sm:p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-5">
-                <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100">
-                  <User className="w-4 h-4 text-blue-600" />
-                  <h2 className="text-xs font-semibold text-slate-800 tracking-wide">
-                    1. Patient Personal Demographics
-                  </h2>
+                <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-teal-500 via-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
+                    <User className="w-4 h-4 drop-shadow-sm" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-teal-100 text-teal-700 font-mono text-[10px] font-bold flex items-center justify-center">1</span>
+                    <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Patient Personal Demographics
+                    </h2>
+                  </div>
                 </div>
 
                 {/* Patient Full Name */}
@@ -500,11 +512,16 @@ export default function AdminCustomerCreatePage() {
 
               {/* Section 2: Contact Channels */}
               <div className="p-5 sm:p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-5">
-                <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100">
-                  <Phone className="w-4 h-4 text-blue-600" />
-                  <h2 className="text-xs font-semibold text-slate-800 tracking-wide">
-                    2. Primary Contact &amp; Communication
-                  </h2>
+                <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-500 via-indigo-600 to-cyan-500 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
+                    <Phone className="w-4 h-4 drop-shadow-sm" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-mono text-[10px] font-bold flex items-center justify-center">2</span>
+                    <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Primary Contact &amp; Communication
+                    </h2>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -571,11 +588,16 @@ export default function AdminCustomerCreatePage() {
 
               {/* Section 3: Residential Address */}
               <div className="p-5 sm:p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-4">
-                <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100">
-                  <MapPin className="w-4 h-4 text-blue-600" />
-                  <h2 className="text-xs font-semibold text-slate-800 tracking-wide">
-                    3. Residential Address
-                  </h2>
+                <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-600 to-violet-700 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
+                    <MapPin className="w-4 h-4 drop-shadow-sm" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 font-mono text-[10px] font-bold flex items-center justify-center">3</span>
+                    <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Residential Address
+                    </h2>
+                  </div>
                 </div>
 
                 <div>

@@ -22,6 +22,7 @@ import {
 import { useAdminAuth } from '../../features/auth/AdminAuthContext';
 import adminAuthService from '../../services/adminAuthService';
 import { useToast } from '../../context/ToastContext';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export default function AdminProfilePage() {
   const { user, updateUser } = useAdminAuth();
@@ -187,7 +188,7 @@ export default function AdminProfilePage() {
   const statusDisplay = isActive ? 'Yes' : 'Deactive';
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'A';
-  const currentAvatarSrc = imagePreview || user?.image_url;
+  const currentAvatarSrc = imagePreview || getImageUrl(user?.image_url || user?.image);
 
   return (
     <div className="w-full space-y-6 pb-12 animate-fade-in font-sans min-w-0">

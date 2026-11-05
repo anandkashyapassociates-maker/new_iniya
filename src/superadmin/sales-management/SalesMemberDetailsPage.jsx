@@ -23,6 +23,7 @@ import {
 import SalesMemberStatusBadge from './SalesMemberStatusBadge';
 import SalesMemberEditModal from './SalesMemberEditModal';
 import salesMemberManagementService from '../services/salesMemberManagementService';
+import { getImageUrl } from '../../utils/imageUrl';
 import { useToast } from '../../context/ToastContext';
 
 export default function SalesMemberDetailsPage() {
@@ -169,8 +170,8 @@ export default function SalesMemberDetailsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-200">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-blue-600/10 text-blue-600 flex items-center justify-center">
-              <TrendingUp className="w-4 h-4" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-500 via-indigo-600 to-cyan-500 text-white flex items-center justify-center shrink-0 icon-3d shadow-md shadow-blue-500/20">
+              <TrendingUp className="w-6 h-6 drop-shadow-sm" />
             </div>
             <h1 className="text-lg sm:text-xl font-bold font-display text-slate-900 tracking-tight">
               Sales Member Details
@@ -410,7 +411,7 @@ export default function SalesMemberDetailsPage() {
                     <td className="py-3 px-4">
                       {member.profile_photo ? (
                         <img
-                          src={member.profile_photo.startsWith('http') || member.profile_photo.startsWith('blob:') ? member.profile_photo : `/storage/${member.profile_photo}`}
+                          src={getImageUrl(member.image_url || member.profile_photo)}
                           alt={member.name}
                           className="w-8 h-8 rounded-full object-cover border border-slate-200 shadow-2xs"
                         />

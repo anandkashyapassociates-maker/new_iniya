@@ -20,6 +20,7 @@ import {
 import DataTable from '../../components/DataTable';
 import superAdminInventoryService from '../services/superAdminInventoryService';
 import { useToast } from '../../context/ToastContext';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export default function SuperAdminProductsPage() {
   const toast = useToast();
@@ -111,9 +112,9 @@ export default function SuperAdminProductsPage() {
       className: 'w-[30%]',
       render: (product) => (
         <div className="flex items-center gap-3">
-          {product.image_url ? (
+          {product.image_url || product.product_image ? (
             <img
-              src={product.image_url}
+              src={getImageUrl(product.image_url || product.product_image)}
               alt={product.product_name}
               className="w-11 h-11 rounded-xl object-cover border border-slate-200 shadow-2xs shrink-0 bg-slate-50"
             />
@@ -360,9 +361,9 @@ export default function SuperAdminProductsPage() {
           <div className="w-full max-w-lg bg-white rounded-3xl border border-slate-200 shadow-2xl p-6 sm:p-7 relative overflow-hidden space-y-6">
             <div className="flex items-start justify-between pb-3.5 border-b border-slate-100">
               <div className="flex items-center gap-3.5">
-                {selectedProduct.image_url ? (
+                {selectedProduct.image_url || selectedProduct.product_image ? (
                   <img
-                    src={selectedProduct.image_url}
+                    src={getImageUrl(selectedProduct.image_url || selectedProduct.product_image)}
                     alt={selectedProduct.product_name}
                     className="w-14 h-14 rounded-2xl object-cover border border-slate-200 shadow-xs shrink-0"
                   />

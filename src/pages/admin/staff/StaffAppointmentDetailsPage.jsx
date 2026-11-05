@@ -29,6 +29,7 @@ import {
 import { useAdminAuth } from '../../../features/auth/AdminAuthContext';
 import staffAppointmentService from '../../../services/staffAppointmentService';
 import { useToast } from '../../../context/ToastContext';
+import { getImageUrl } from '../../../utils/imageUrl';
 
 export default function StaffAppointmentDetailsPage() {
   const { id } = useParams();
@@ -244,8 +245,8 @@ export default function StaffAppointmentDetailsPage() {
   const session = sessionData || {};
   const master = appointmentData || session.master_appointment || {};
   const customer = master.customer || session.customer || {};
-  const sessionImage = session.image_url || session.image;
-  const masterImage = master.image_url || master.image;
+  const sessionImage = getImageUrl(session.image_url || session.image);
+  const masterImage = getImageUrl(master.image_url || master.image);
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 py-4 space-y-6">

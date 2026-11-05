@@ -435,11 +435,16 @@ export default function AdminCustomerEditPage() {
             <div className="lg:col-span-8 space-y-6">
               {/* Section 1: Demographics */}
               <div className="p-5 sm:p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-5">
-                <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100">
-                  <User className="w-4 h-4 text-blue-600" />
-                  <h2 className="text-xs font-semibold text-slate-800 tracking-wide">
-                    1. Patient Personal Demographics
-                  </h2>
+                <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-teal-500 via-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
+                    <User className="w-4 h-4 drop-shadow-sm" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-teal-100 text-teal-700 font-mono text-[10px] font-bold flex items-center justify-center">1</span>
+                    <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Patient Personal Demographics
+                    </h2>
+                  </div>
                 </div>
 
                 {/* Name */}
@@ -547,11 +552,16 @@ export default function AdminCustomerEditPage() {
 
               {/* Section 2: Contact Channels */}
               <div className="p-5 sm:p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-5">
-                <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100">
-                  <Phone className="w-4 h-4 text-blue-600" />
-                  <h2 className="text-xs font-semibold text-slate-800 tracking-wide">
-                    2. Primary Contact &amp; Communication
-                  </h2>
+                <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-500 via-indigo-600 to-cyan-500 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
+                    <Phone className="w-4 h-4 drop-shadow-sm" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-mono text-[10px] font-bold flex items-center justify-center">2</span>
+                    <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Primary Contact &amp; Communication
+                    </h2>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -616,11 +626,16 @@ export default function AdminCustomerEditPage() {
 
               {/* Section 3: Residential Address */}
               <div className="p-5 sm:p-6 rounded-2xl bg-white border border-slate-200/90 shadow-2xs space-y-4">
-                <div className="flex items-center gap-2 pb-2.5 border-b border-slate-100">
-                  <MapPin className="w-4 h-4 text-blue-600" />
-                  <h2 className="text-xs font-semibold text-slate-800 tracking-wide">
-                    3. Residential Address
-                  </h2>
+                <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-600 to-violet-700 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
+                    <MapPin className="w-4 h-4 drop-shadow-sm" />
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="w-5 h-5 rounded-full bg-purple-100 text-purple-700 font-mono text-[10px] font-bold flex items-center justify-center">3</span>
+                    <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                      Residential Address
+                    </h2>
+                  </div>
                 </div>
 
                 <div>

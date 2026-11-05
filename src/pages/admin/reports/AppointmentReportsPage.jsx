@@ -35,6 +35,7 @@ import {
 } from 'lucide-react';
 import appointmentReportService from '../../../services/appointmentReportService';
 import { useToast } from '../../../context/ToastContext';
+import { getImageUrl } from '../../../utils/imageUrl';
 
 export default function AppointmentReportsPage({
   role = 'admin', // 'admin' | 'superadmin'
@@ -1359,13 +1360,13 @@ export default function AppointmentReportsPage({
                   {selectedRecord.image_url ? (
                     <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-900 h-36 flex items-center justify-center">
                       <img
-                        src={selectedRecord.image_url}
+                        src={getImageUrl(selectedRecord.image_url || selectedRecord.image)}
                         alt="Clinical"
                         className="w-full h-full object-contain"
                       />
                       <button
                         type="button"
-                        onClick={() => setLightboxImage(selectedRecord.image_url)}
+                        onClick={() => setLightboxImage(getImageUrl(selectedRecord.image_url || selectedRecord.image))}
                         className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-1 text-[11px] font-bold cursor-pointer"
                       >
                         <ZoomIn className="w-4 h-4" /> View Full
@@ -1386,8 +1387,8 @@ export default function AppointmentReportsPage({
                   {(() => {
                     const mImg =
                       activeTab === 'appointments'
-                        ? selectedRecord.image_url
-                        : selectedRecord.master_appointment?.image_url;
+                        ? getImageUrl(selectedRecord.image_url || selectedRecord.image)
+                        : getImageUrl(selectedRecord.master_appointment?.image_url || selectedRecord.master_appointment?.image);
 
                     return mImg ? (
                       <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-900 h-36 flex items-center justify-center">
