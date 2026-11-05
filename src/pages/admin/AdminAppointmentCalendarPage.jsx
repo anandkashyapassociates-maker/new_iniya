@@ -118,7 +118,16 @@ export default function AdminAppointmentCalendarPage() {
 
       const res = await adminMasterAppointmentService.getCalendarSessions(params);
       if (res.success && res.data) {
-        setSessions(res.data || []);
+        let list = res.data || [];
+        if (isStaff && user) {
+          list = list.filter(
+            (s) =>
+              (user.id && String(s.staff_id) === String(user.id)) ||
+              (s.staff && user.id && String(s.staff.id) === String(user.id)) ||
+              (user.staff_code && s.staff?.staff_code === user.staff_code)
+          );
+        }
+        setSessions(list);
       }
     } catch (err) {
       console.error(err);

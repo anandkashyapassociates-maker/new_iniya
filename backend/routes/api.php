@@ -208,6 +208,9 @@ Route::prefix('admin')
         // ========================================================
         // ADMIN-ONLY MANAGEMENT MODULES (Staff access blocked 403)
         // ========================================================
+        // Calendar View: Shared for Admin & Staff (Staff gets strictly their own assigned sessions)
+        Route::get('/calendar/sessions', [AppointmentSessionController::class, 'calendar']);
+
         Route::middleware('auth.admin_only')->group(function () {
             // Customer Management
             Route::get('/customers/stats', [CustomerController::class, 'stats']);
@@ -297,8 +300,7 @@ Route::prefix('admin')
             Route::put('/sessions/{id}', [AppointmentSessionController::class, 'update']);
             Route::patch('/sessions/{id}/status', [AppointmentSessionController::class, 'updateStatus']);
             Route::delete('/sessions/{id}', [AppointmentSessionController::class, 'destroy']);
-            Route::get('/calendar/sessions', [AppointmentSessionController::class, 'calendar']);
-
+            
             // Session Reschedule & History (Strict Pending Validation & Concurrency Locked)
             Route::post('/sessions/{id}/reschedule', [SessionRescheduleController::class, 'reschedule']);
             Route::get('/sessions/{id}/reschedule-history', [SessionRescheduleController::class, 'history']);
