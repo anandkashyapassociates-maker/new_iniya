@@ -1,0 +1,135 @@
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { Shield, Layers, ArrowRight, Lock, CheckCircle2 } from 'lucide-react';
+import { useSuperAdminAuth } from '../superadmin/auth/SuperAdminAuthContext';
+import { useAdminAuth } from '../features/auth/AdminAuthContext';
+
+export default function LandingPage() {
+  const { isAuthenticated: isSuperAdminAuth, isLoading: isSuperAdminLoading } = useSuperAdminAuth();
+  const { isAuthenticated: isAdminAuth, isLoading: isAdminLoading, user: adminUser } = useAdminAuth();
+
+  const isSuperAdminActive = !isSuperAdminLoading && isSuperAdminAuth;
+  const isAdminActive = !isAdminLoading && isAdminAuth && adminUser?.is_active;
+
+  return (
+    <div className="min-h-screen bg-slate-950 flex flex-col justify-center items-center p-6 relative overflow-hidden">
+      {/* Background glow effects */}
+      <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-600/10 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
+
+      {/* Grid overlay */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#1e293b15_1px,transparent_1px),linear-gradient(to_bottom,#1e293b15_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] pointer-events-none" />
+
+      <div className="max-w-4xl w-full text-center relative z-10 space-y-10">
+        <div className="flex flex-col items-center">
+          <div className="mb-5 flex items-center justify-center">
+            <img
+              src="/logo-gold.png"
+              alt="Iniya Aesthetics &amp; Wellness"
+              className="h-16 sm:h-20 w-auto max-w-[260px] object-contain drop-shadow-[0_4px_20px_rgba(255,230,170,0.35)] hover:scale-105 transition-transform duration-300"
+            />
+          </div>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 text-xs font-semibold mb-4">
+            <Lock className="w-3.5 h-3.5 text-blue-400" />
+            <span className="micro-label text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
+              Dual-Tier Enterprise Management Portal
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-4xl font-bold font-display text-white tracking-tight">
+            INIYA ENTERPRISE SYSTEMS
+          </h1>
+          <p className="text-sm sm:text-base text-slate-400 max-w-xl mx-auto mt-3 font-normal">
+            Choose your administrative access level to securely authenticate with Cloudflare Turnstile verification.
+          </p>
+        </div>
+
+        {/* Portal Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
+          {/* Super Admin Portal Card */}
+          <div className="bg-slate-900/90 border border-purple-900/40 rounded-3xl p-8 hover:border-purple-500/60 transition-all duration-300 shadow-xl group flex flex-col justify-between">
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-purple-950/60 border border-purple-800/60 text-purple-400 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
+                <Shield className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-purple-400 block mb-1 micro-label">
+                Executive Tier
+              </span>
+              <h2 className="text-xl font-bold font-display text-white mb-2 tracking-tight">Super Admin Portal</h2>
+              <p className="text-xs text-slate-400 leading-relaxed mb-6 font-normal">
+                Complete system oversight, create and provision administrator accounts, manage access status, reset admin credentials, and audit security events.
+              </p>
+
+              <ul className="text-xs text-slate-300 space-y-2 mb-6 font-medium">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-purple-400 shrink-0" />
+                  <span>Admin CRUD &amp; status management</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-purple-400 shrink-0" />
+                  <span>Executive analytics &amp; live audit trail</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-purple-400 shrink-0" />
+                  <span>Strictly isolated authentication session</span>
+                </li>
+              </ul>
+            </div>
+
+            <Link
+              to={isSuperAdminActive ? '/superadmin/dashboard' : '/superadmin'}
+              className="inline-flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold shadow-lg shadow-purple-950/50 transition-all font-display cursor-pointer"
+            >
+              <span>{isSuperAdminActive ? 'Open Super Admin Dashboard' : 'Access Super Admin Portal'}</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* Admin Portal Card */}
+          <div className="bg-slate-900/90 border border-blue-900/40 rounded-3xl p-8 hover:border-blue-500/60 transition-all duration-300 shadow-xl group flex flex-col justify-between">
+            <div>
+              <div className="w-12 h-12 rounded-2xl bg-blue-950/60 border border-blue-800/60 text-blue-400 flex items-center justify-center mb-5 group-hover:scale-105 transition-transform">
+                <Layers className="w-6 h-6" />
+              </div>
+              <span className="text-[10px] font-extrabold uppercase tracking-widest text-blue-400 block mb-1 micro-label">
+                Operational Tier
+              </span>
+              <h2 className="text-xl font-bold font-display text-white mb-2 tracking-tight">Admin Portal</h2>
+              <p className="text-xs text-slate-400 leading-relaxed mb-6 font-normal">
+                Standard administrator interface to manage patients, schedule appointments, coordinate clinical sessions, and handle day-to-day operations.
+              </p>
+
+              <ul className="text-xs text-slate-300 space-y-2 mb-6 font-medium">
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
+                  <span>Patient &amp; clinical appointments</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
+                  <span>Service catalog &amp; inventory management</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-blue-400 shrink-0" />
+                  <span>Independent session in parallel tabs</span>
+                </li>
+              </ul>
+            </div>
+
+            <Link
+              to={isAdminActive ? '/admin/dashboard' : '/admin'}
+              className="inline-flex items-center justify-center gap-2 w-full py-3 px-4 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold shadow-lg shadow-blue-950/50 transition-all font-display cursor-pointer"
+            >
+              <span>{isAdminActive ? 'Open Admin Dashboard' : 'Access Admin Portal'}</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+        </div>
+
+        <div className="pt-4 text-center">
+          <p className="text-[11px] text-slate-400 font-medium tracking-wide">
+            INIYA ERP SYSTEMS &copy; {new Date().getFullYear()} &bull; ALL RIGHTS RESERVED
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

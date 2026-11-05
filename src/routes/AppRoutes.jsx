@@ -1,0 +1,232 @@
+import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
+
+// Super Admin Module (Dedicated, Isolated Architecture)
+import SuperAdminLayout from '../superadmin/layouts/SuperAdminLayout';
+import SuperAdminProtectedRoute from '../superadmin/auth/SuperAdminProtectedRoute';
+import SuperAdminGuestRoute from './SuperAdminGuestRoute';
+import SuperAdminLoginPage from '../superadmin/pages/SuperAdminLoginPage';
+import SuperAdminForgotPasswordPage from '../superadmin/pages/SuperAdminForgotPasswordPage';
+import SuperAdminResetPasswordPage from '../superadmin/pages/SuperAdminResetPasswordPage';
+import SuperAdminDashboardPage from '../superadmin/pages/SuperAdminDashboardPage';
+import AdminCreationPage from '../superadmin/admin-management/AdminCreationPage';
+import AdminDetailsPage from '../superadmin/admin-management/AdminDetailsPage';
+import StaffCreationPage from '../superadmin/staff-management/StaffCreationPage';
+import StaffDetailsPage from '../superadmin/staff-management/StaffDetailsPage';
+import VendorCreationPage from '../superadmin/vendor-management/VendorCreationPage';
+import VendorDetailsPage from '../superadmin/vendor-management/VendorDetailsPage';
+import SalesMemberCreationPage from '../superadmin/sales-management/SalesMemberCreationPage';
+import SalesMemberDetailsPage from '../superadmin/sales-management/SalesMemberDetailsPage';
+import SuperAdminEditAdminPage from '../pages/superadmin/SuperAdminEditAdminPage';
+import SuperAdminProfilePage from '../pages/superadmin/SuperAdminProfilePage';
+import SuperAdminCategoriesPage from '../superadmin/categories/SuperAdminCategoriesPage';
+
+// Super Admin Inventory Module
+import SuperAdminInventoryOverviewPage from '../superadmin/inventory/SuperAdminInventoryOverviewPage';
+import SuperAdminProductsPage from '../superadmin/inventory/SuperAdminProductsPage';
+import SuperAdminInventoryCategoriesPage from '../superadmin/inventory/SuperAdminInventoryCategoriesPage';
+import SuperAdminInventoryBrandsPage from '../superadmin/inventory/SuperAdminInventoryBrandsPage';
+import SuperAdminInventoryStocksPage from '../superadmin/inventory/SuperAdminInventoryStocksPage';
+import SuperAdminStockDetailsPage from '../superadmin/inventory/SuperAdminStockDetailsPage';
+import SuperAdminInventoryReportsPage from '../superadmin/inventory/SuperAdminInventoryReportsPage';
+
+// Super Admin Payouts Module
+import StaffPayoutsPage from '../superadmin/payouts/StaffPayoutsPage';
+import VendorPayoutsPage from '../superadmin/payouts/VendorPayoutsPage';
+import PayoutsLedgerPage from '../superadmin/payouts/PayoutsLedgerPage';
+
+// Admin Module (Panel 2 - Separate Team Developer)
+import AdminLayout from '../layouts/AdminLayout';
+import AdminProtectedRoute from './AdminProtectedRoute';
+import AdminGuestRoute from './AdminGuestRoute';
+import AdminOnlyRoute from './AdminOnlyRoute';
+import AdminLoginPage from '../pages/admin/AdminLoginPage';
+import AdminForgotPasswordPage from '../pages/admin/AdminForgotPasswordPage';
+import AdminResetPasswordPage from '../pages/admin/AdminResetPasswordPage';
+import AdminDashboardPage from '../pages/admin/AdminDashboardPage';
+import AdminCustomersPage from '../pages/admin/AdminCustomersPage';
+import AdminCustomerCreatePage from '../pages/admin/AdminCustomerCreatePage';
+import AdminCustomerEditPage from '../pages/admin/AdminCustomerEditPage';
+import AdminProfilePage from '../pages/admin/AdminProfilePage';
+import AdminChangePasswordPage from '../pages/admin/AdminChangePasswordPage';
+import AdminMasterAppointmentsPage from '../pages/admin/AdminMasterAppointmentsPage';
+import AdminMasterAppointmentCreatePage from '../pages/admin/AdminMasterAppointmentCreatePage';
+import AdminMasterAppointmentEditPage from '../pages/admin/AdminMasterAppointmentEditPage';
+import AdminMasterAppointmentDetailsPage from '../pages/admin/AdminMasterAppointmentDetailsPage';
+import AdminAppointmentCalendarPage from '../pages/admin/AdminAppointmentCalendarPage';
+import AdminServicesManagementPage from '../pages/admin/AdminServicesManagementPage';
+
+// Admin Inventory Management Module
+import AdminProductsPage from '../pages/admin/inventory/AdminProductsPage';
+import AdminProductCreatePage from '../pages/admin/inventory/AdminProductCreatePage';
+import AdminProductEditPage from '../pages/admin/inventory/AdminProductEditPage';
+import AdminInventoryCategoryListPage from '../pages/admin/inventory/AdminCategoryListPage';
+import AdminInventoryCategoryCreatePage from '../pages/admin/inventory/AdminCategoryCreatePage';
+import AdminInventoryCategoryEditPage from '../pages/admin/inventory/AdminCategoryEditPage';
+import AdminBrandsPage from '../pages/admin/inventory/AdminBrandsPage';
+import AdminBrandCreatePage from '../pages/admin/inventory/AdminBrandCreatePage';
+import AdminBrandEditPage from '../pages/admin/inventory/AdminBrandEditPage';
+import AdminInventoryStocksPage from '../pages/admin/inventory/AdminInventoryStocksPage';
+import AdminStockDetailsPage from '../pages/admin/inventory/AdminStockDetailsPage';
+import AdminInventoryReportsPage from '../pages/admin/inventory/AdminInventoryReportsPage';
+import AdminPayoutsReportsPage from '../pages/admin/reports/AdminPayoutsReportsPage';
+import AppointmentReportsPage from '../pages/admin/reports/AppointmentReportsPage';
+import StaffMyAppointmentsPage from '../pages/admin/staff/StaffMyAppointmentsPage';
+import StaffAppointmentDetailsPage from '../pages/admin/staff/StaffAppointmentDetailsPage';
+
+// Portal Root
+import LandingPage from '../pages/LandingPage';
+
+export default function AppRoutes() {
+  return (
+    <Routes>
+      {/* Root Portal / Default Route -> Admin Login Page (Replaces old LandingPage) */}
+      {/* <Route path="/" element={<LandingPage />} /> */}
+      <Route element={<AdminGuestRoute />}>
+        <Route path="/" element={<AdminLoginPage />} />
+      </Route>
+
+      {/* ======================================================== */}
+      {/* 1. Super Admin Public / Guest Routes (Dedicated Auth)    */}
+      {/* ======================================================== */}
+      <Route element={<SuperAdminGuestRoute />}>
+        <Route path="/superadmin" element={<SuperAdminLoginPage />} />
+        <Route path="/superadmin/login" element={<SuperAdminLoginPage />} />
+        <Route path="/superadmin/forgot-password" element={<SuperAdminForgotPasswordPage />} />
+        <Route path="/superadmin/reset-password" element={<SuperAdminResetPasswordPage />} />
+      </Route>
+
+      {/* ======================================================== */}
+      {/* 2. Super Admin Protected Routes                          */}
+      {/* ======================================================== */}
+      <Route element={<SuperAdminProtectedRoute />}>
+        <Route element={<SuperAdminLayout />}>
+          <Route path="/superadmin/dashboard" element={<SuperAdminDashboardPage />} />
+          
+          {/* Phase 2: Admin Management Submodule Routes */}
+          <Route path="/superadmin/admin-management/create" element={<AdminCreationPage />} />
+          <Route path="/superadmin/admin-management/details" element={<AdminDetailsPage />} />
+          
+          {/* Phase 3: Staff Management Submodule Routes */}
+          <Route path="/superadmin/staff-management/create" element={<StaffCreationPage />} />
+          <Route path="/superadmin/staff-management/details" element={<StaffDetailsPage />} />
+
+          {/* Phase 4: Vendor Management Submodule Routes */}
+          <Route path="/superadmin/vendors" element={<VendorDetailsPage />} />
+          <Route path="/superadmin/vendors/create" element={<VendorCreationPage />} />
+          <Route path="/superadmin/vendor-management" element={<Navigate to="/superadmin/vendors" replace />} />
+          <Route path="/superadmin/vendor-management/details" element={<Navigate to="/superadmin/vendors" replace />} />
+          <Route path="/superadmin/vendor-management/create" element={<Navigate to="/superadmin/vendors/create" replace />} />
+
+          {/* Phase 5: Sales Team Management Submodule Routes */}
+          <Route path="/superadmin/sales-members" element={<SalesMemberDetailsPage />} />
+          <Route path="/superadmin/sales-members/create" element={<SalesMemberCreationPage />} />
+          <Route path="/superadmin/sales-team" element={<Navigate to="/superadmin/sales-members" replace />} />
+          <Route path="/superadmin/sales-team/create" element={<Navigate to="/superadmin/sales-members/create" replace />} />
+          
+          {/* Backward Compatibility Aliases */}
+          <Route path="/superadmin/admins" element={<Navigate to="/superadmin/admin-management/details" replace />} />
+          <Route path="/superadmin/admins/create" element={<Navigate to="/superadmin/admin-management/create" replace />} />
+          <Route path="/superadmin/admins/:id/edit" element={<SuperAdminEditAdminPage />} />
+          <Route path="/superadmin/staff" element={<Navigate to="/superadmin/staff-management/details" replace />} />
+          <Route path="/superadmin/staff/create" element={<Navigate to="/superadmin/staff-management/create" replace />} />
+          
+          {/* Executive Category Oversight */}
+          <Route path="/superadmin/categories" element={<Navigate to="/superadmin/inventory/categories" replace />} />
+
+          {/* Super Admin Inventory Management Module */}
+          <Route path="/superadmin/inventory" element={<Navigate to="/superadmin/inventory/overview" replace />} />
+          <Route path="/superadmin/inventory/overview" element={<SuperAdminInventoryOverviewPage />} />
+          <Route path="/superadmin/inventory/products" element={<SuperAdminProductsPage />} />
+          <Route path="/superadmin/inventory/stocks" element={<SuperAdminInventoryStocksPage />} />
+          <Route path="/superadmin/inventory/stocks/:id" element={<SuperAdminStockDetailsPage />} />
+          <Route path="/superadmin/inventory/reports" element={<SuperAdminInventoryReportsPage />} />
+          <Route path="/superadmin/reports/appointments" element={<AppointmentReportsPage role="superadmin" defaultTab="appointments" />} />
+          <Route path="/superadmin/reports/sessions" element={<AppointmentReportsPage role="superadmin" defaultTab="sessions" />} />
+          <Route path="/superadmin/reports" element={<Navigate to="/superadmin/reports/appointments" replace />} />
+          <Route path="/superadmin/inventory/low-stock" element={<Navigate to="/superadmin/inventory/stocks" replace />} />
+          <Route path="/superadmin/inventory/categories" element={<SuperAdminInventoryCategoriesPage />} />
+          <Route path="/superadmin/inventory/brands" element={<SuperAdminInventoryBrandsPage />} />
+
+          {/* Super Admin Payouts Management Module */}
+          <Route path="/superadmin/payouts" element={<Navigate to="/superadmin/payouts/ledger" replace />} />
+          <Route path="/superadmin/payouts/staff" element={<StaffPayoutsPage />} />
+          <Route path="/superadmin/payouts/vendors" element={<VendorPayoutsPage />} />
+          <Route path="/superadmin/payouts/ledger" element={<PayoutsLedgerPage />} />
+
+          <Route path="/superadmin/profile" element={<SuperAdminProfilePage />} />
+        </Route>
+      </Route>
+
+      {/* ======================================================== */}
+      {/* 3. Admin Public / Guest Routes (Panel 2 - Isolated)      */}
+      {/* ======================================================== */}
+      <Route element={<AdminGuestRoute />}>
+        {/* /admin route commented out as requested; default route '/' now serves AdminLoginPage */}
+        {/* <Route path="/admin" element={<AdminLoginPage />} /> */}
+        <Route path="/admin/login" element={<AdminLoginPage />} />
+        <Route path="/admin/forgot-password" element={<AdminForgotPasswordPage />} />
+        <Route path="/admin/reset-password" element={<AdminResetPasswordPage />} />
+      </Route>
+
+      {/* ======================================================== */}
+      {/* 4. Admin Protected Routes (Panel 2 - Isolated)           */}
+      {/* ======================================================== */}
+      <Route element={<AdminProtectedRoute />}>
+        <Route element={<AdminLayout />}>
+          {/* Shared Routes: Accessible to both Admin and Staff */}
+          <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
+          <Route path="/admin/profile" element={<AdminProfilePage />} />
+          <Route path="/admin/change-password" element={<AdminChangePasswordPage />} />
+
+          {/* Staff Personal Portal: Accessible only to Staff */}
+          <Route path="/admin/my-appointments" element={<StaffMyAppointmentsPage />} />
+          <Route path="/admin/my-appointments/:id" element={<StaffAppointmentDetailsPage />} />
+
+          {/* ADMIN-ONLY MODULES: Staff cannot open via URL, direct navigation, or typing in address bar */}
+          <Route element={<AdminOnlyRoute />}>
+            {/* Appointments Management */}
+            <Route path="/admin/appointments" element={<AdminMasterAppointmentsPage />} />
+            <Route path="/admin/appointments/create" element={<AdminMasterAppointmentCreatePage />} />
+            <Route path="/admin/appointments/services" element={<AdminServicesManagementPage />} />
+            <Route path="/admin/services" element={<Navigate to="/admin/appointments/services" replace />} />
+            <Route path="/admin/appointments/calendar" element={<AdminAppointmentCalendarPage />} />
+            <Route path="/admin/appointments/:id" element={<AdminMasterAppointmentDetailsPage />} />
+            <Route path="/admin/appointments/:id/edit" element={<AdminMasterAppointmentEditPage />} />
+
+            {/* Patient Directory */}
+            <Route path="/admin/customers" element={<AdminCustomersPage />} />
+            <Route path="/admin/customers/create" element={<AdminCustomerCreatePage />} />
+            <Route path="/admin/customers/:id/edit" element={<AdminCustomerEditPage />} />
+
+            {/* Inventory Management & Stocks */}
+            <Route path="/admin/categories" element={<Navigate to="/admin/inventory/categories" replace />} />
+            <Route path="/admin/inventory" element={<Navigate to="/admin/inventory/stocks" replace />} />
+            <Route path="/admin/inventory/stocks" element={<AdminInventoryStocksPage />} />
+            <Route path="/admin/inventory/stocks/:id" element={<AdminStockDetailsPage />} />
+            <Route path="/admin/inventory/reports" element={<AdminInventoryReportsPage />} />
+            <Route path="/admin/inventory/low-stock" element={<Navigate to="/admin/inventory/stocks" replace />} />
+            <Route path="/admin/inventory/products" element={<AdminProductsPage />} />
+            <Route path="/admin/inventory/products/create" element={<AdminProductCreatePage />} />
+            <Route path="/admin/inventory/products/:id/edit" element={<AdminProductEditPage />} />
+            <Route path="/admin/inventory/categories" element={<AdminInventoryCategoryListPage />} />
+            <Route path="/admin/inventory/categories/create" element={<AdminInventoryCategoryCreatePage />} />
+            <Route path="/admin/inventory/categories/:id/edit" element={<AdminInventoryCategoryEditPage />} />
+            <Route path="/admin/inventory/brands" element={<AdminBrandsPage />} />
+            <Route path="/admin/inventory/brands/create" element={<AdminBrandCreatePage />} />
+            <Route path="/admin/inventory/brands/:id/edit" element={<AdminBrandEditPage />} />
+
+            {/* Reports Module */}
+            <Route path="/admin/reports/appointments" element={<AppointmentReportsPage role="admin" defaultTab="appointments" />} />
+            <Route path="/admin/reports/sessions" element={<AppointmentReportsPage role="admin" defaultTab="sessions" />} />
+            <Route path="/admin/reports/payouts" element={<AdminPayoutsReportsPage />} />
+            <Route path="/admin/reports" element={<Navigate to="/admin/reports/appointments" replace />} />
+          </Route>
+        </Route>
+      </Route>
+
+      {/* Fallback to root (LandingPage will redirect if logged in) */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+}

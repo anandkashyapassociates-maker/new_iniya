@@ -1,0 +1,37 @@
+# Root Laravel ignores
+/node_modules/
+/public/build/
+/public/hot/
+/public/storage
+/storage/*.key
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/logs/*.log
+/vendor/
+.env
+.env.backup
+.env.production
+.phpunit.result.cache
+.phpunit.cache
+
+# Frontend ignores
+/frontend/node_modules/
+/frontend/dist/
+/frontend/dist-ssr/
+/frontend/.env
+/frontend/.env.local
+/frontend/.env.*.local
+
+# General logs and OS
+*.log
+*.zip
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+.qodo/
+
+/backend/
+.env*
+!.env.example
