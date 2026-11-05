@@ -107,30 +107,22 @@ export default function ResetPasswordForm({
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          readOnly
           required
-          className="w-full px-4 py-2.5 text-xs bg-slate-950 text-white border border-slate-800 rounded-xl focus:outline-none font-mono"
+          className="w-full px-4 py-2.5 text-xs bg-slate-900/60 text-slate-400 border border-slate-800 rounded-xl focus:outline-none font-mono cursor-not-allowed select-none"
         />
         {errors.email && (
           <p className="text-[11px] text-rose-400 mt-1 font-medium">{Array.isArray(errors.email) ? errors.email[0] : errors.email}</p>
         )}
       </div>
 
-      <div>
-        <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-1.5 font-display">
-          Reset Token
-        </label>
-        <input
-          type="text"
-          value={token}
-          onChange={(e) => setToken(e.target.value)}
-          placeholder="Paste security reset token"
-          required
-          className="w-full px-4 py-2.5 text-xs font-mono bg-slate-950 text-slate-300 border border-slate-800 rounded-xl focus:outline-none"
-        />
-        {errors.token && (
-          <p className="text-[11px] text-rose-400 mt-1 font-medium">{Array.isArray(errors.token) ? errors.token[0] : errors.token}</p>
-        )}
-      </div>
+      {/* Hidden Reset Token */}
+      <input type="hidden" name="token" value={token} />
+      {errors.token && (
+        <div className="p-3 rounded-xl bg-rose-950/40 border border-rose-800/60 text-rose-300 text-xs font-medium">
+          {Array.isArray(errors.token) ? errors.token[0] : errors.token}
+        </div>
+      )}
 
       {/* New Password */}
       <div>
