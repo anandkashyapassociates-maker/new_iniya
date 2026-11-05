@@ -144,7 +144,7 @@ export default function AdminDashboardPage() {
   const completedCount = stats?.completed_sessions ?? (isStaff ? 0 : (masterStats?.completed_sessions ?? 0));
   const cancelledCount = stats?.cancelled_sessions ?? (isStaff ? 0 : (masterStats?.cancelled_sessions ?? 0));
   const activePackages = stats?.active_packages ?? (isStaff ? 0 : (categoryStats?.active ?? categoryStats?.total ?? 0));
-  const lowStockCount = stats?.low_stock_count ?? (isStaff ? 0 : (inventoryStats?.total_low_stock_alerts ?? 0));
+  const lowStockCount = isStaff ? 0 : (stats?.low_stock_count ?? inventoryStats?.total_low_stock_alerts ?? 0);
   const totalInventory = stats?.total_inventory_products ?? (isStaff ? 0 : (inventoryStats?.total_products ?? 0));
   const sessionCompletionRate = stats?.session_completion_rate ?? 0;
 
@@ -314,7 +314,7 @@ export default function AdminDashboardPage() {
       {/* ======================================================== */}
       {/* 2. CRITICAL LOW INVENTORY ALERT BANNER (If Depleted)     */}
       {/* ======================================================== */}
-      {lowStockCount > 0 && (
+      {!isStaff && lowStockCount > 0 && (
         <div className="bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-amber-500/10 border border-amber-300/80 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-sm">
