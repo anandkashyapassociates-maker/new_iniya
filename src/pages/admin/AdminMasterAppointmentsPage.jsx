@@ -239,11 +239,23 @@ export default function AdminMasterAppointmentsPage() {
     {
       header: 'FEES (₹)',
       className: 'text-right',
-      render: (row) => (
-        <span className="font-bold text-slate-900 text-sm">
-          ₹{Number(row.appointment_fees || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
-        </span>
-      ),
+      render: (row) => {
+        let totalFee = Number(row.appointment_fees || 0);
+        if (Array.isArray(row.sessions) && row.sessions.length > 0) {
+          const sessionsSum = row.sessions.reduce((acc, s) => {
+            const p = s.service?.price !== undefined ? Number(s.service.price) : Number(s.payment_amount || 0);
+            return acc + (isNaN(p) ? 0 : p);
+          }, 0);
+          if (sessionsSum > 0) {
+            totalFee = sessionsSum;
+          }
+        }
+        return (
+          <span className="font-bold text-slate-900 text-sm font-mono">
+            ₹{totalFee.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          </span>
+        );
+      },
     },
     {
       header: 'SESSIONS BREAKDOWN',
