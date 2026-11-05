@@ -390,23 +390,28 @@ export default function AdminCustomersPage() {
         {/* Subtle background glow */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-blue-50 via-indigo-50/40 to-transparent rounded-full blur-2xl pointer-events-none -mr-16 -mt-16" />
 
-        <div className="relative z-10">
-          <div className="flex items-center gap-2 mb-2 flex-wrap">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-medium">
-              <Stethoscope className="w-3.5 h-3.5 text-blue-600" />
-              <span>Clinic Clinical Registry</span>
-            </span>
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              <span>Sorted: Newest First</span>
-            </span>
+        <div className="relative z-10 flex items-start gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500 via-emerald-500 to-cyan-600 text-white flex items-center justify-center shrink-0 icon-3d shadow-md shadow-teal-500/20 mt-1">
+            <Users className="w-6 h-6 drop-shadow-sm" />
           </div>
-          <h1 className="text-lg sm:text-xl font-bold font-display text-slate-800 tracking-tight">
-            Patient &amp; Customer Directory
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 font-normal mt-1 max-w-2xl leading-relaxed">
-            Manage clinical enrollments, patient demographics, and contact records in real-time.
-          </p>
+          <div>
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-medium">
+                <Stethoscope className="w-3.5 h-3.5 text-blue-600" />
+                <span>Clinic Clinical Registry</span>
+              </span>
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-medium">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>Sorted: Newest First</span>
+              </span>
+            </div>
+            <h1 className="text-lg sm:text-xl font-bold font-display text-slate-800 tracking-tight">
+              Patient &amp; Customer Directory
+            </h1>
+            <p className="text-xs sm:text-sm text-slate-500 font-normal mt-1 max-w-2xl leading-relaxed">
+              Manage clinical enrollments, patient demographics, and contact records in real-time.
+            </p>
+          </div>
         </div>
 
         <div className="relative z-10 flex items-center gap-3 shrink-0">

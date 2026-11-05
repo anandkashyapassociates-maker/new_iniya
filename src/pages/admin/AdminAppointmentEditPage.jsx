@@ -293,11 +293,16 @@ export default function AdminAppointmentEditPage() {
 
           {/* Section 1: Schedule (Date & Time) */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-              <Clock className="w-4 h-4 text-blue-600" />
-              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                1. Schedule & Session Slot
-              </h2>
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-500 via-purple-600 to-violet-700 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
+                <Clock className="w-4 h-4 drop-shadow-sm" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 font-mono text-[10px] font-bold flex items-center justify-center">1</span>
+                <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  Schedule & Session Slot
+                </h2>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -374,11 +379,16 @@ export default function AdminAppointmentEditPage() {
 
           {/* Section 2: Staff & Status */}
           <div className="space-y-4 pt-2">
-            <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-              <Users className="w-4 h-4 text-blue-600" />
-              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                2. Staff Assignment & Status
-              </h2>
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-500 via-indigo-600 to-cyan-500 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
+                <Users className="w-4 h-4 drop-shadow-sm" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-mono text-[10px] font-bold flex items-center justify-center">2</span>
+                <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  Staff Assignment & Status
+                </h2>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -431,11 +441,16 @@ export default function AdminAppointmentEditPage() {
 
           {/* Section 3: Session & Treatment */}
           <div className="space-y-4 pt-2">
-            <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-              <Stethoscope className="w-4 h-4 text-blue-600" />
-              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                3. Treatment & Session Progress
-              </h2>
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-teal-500 via-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
+                <Stethoscope className="w-4 h-4 drop-shadow-sm" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-teal-100 text-teal-700 font-mono text-[10px] font-bold flex items-center justify-center">3</span>
+                <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  Treatment & Session Progress
+                </h2>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -522,11 +537,16 @@ export default function AdminAppointmentEditPage() {
 
           {/* Section 4: Payment & Notes */}
           <div className="space-y-4 pt-2">
-            <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-              <CreditCard className="w-4 h-4 text-blue-600" />
-              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                4. Payment & Notes
-              </h2>
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-amber-500 via-orange-500 to-amber-600 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
+                <CreditCard className="w-4 h-4 drop-shadow-sm" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-amber-100 text-amber-700 font-mono text-[10px] font-bold flex items-center justify-center">4</span>
+                <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  Payment & Notes
+                </h2>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
