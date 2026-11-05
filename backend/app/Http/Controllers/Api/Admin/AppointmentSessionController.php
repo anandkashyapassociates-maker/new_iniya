@@ -226,15 +226,22 @@ class AppointmentSessionController extends Controller
         }
 
         // Filter by Staff (Automatic strict isolation if logged-in user is staff)
-        $user = $request->user();
+        $user = $request->user() ?? auth('sanctum')->user();
         $isStaff = ($user instanceof Staff)
             || (isset($user->role) && in_array(strtolower($user->role), ['staff', 'staff practitioner']))
             || (isset($user->user_type) && strtolower($user->user_type) === 'staff')
             || ($user && ! empty($user->staff_code))
-            || ($user && $user->tokenCan('role:staff'));
+            || ($user && method_exists($user, 'tokenCan') && $user->tokenCan('role:staff'));
 
-        if ($isStaff && $user?->id) {
-            $query->where('staff_id', $user->id);
+        if ($isStaff) {
+            $staffId = $user?->id;
+            if (! $staffId && $user?->email) {
+                $staffRecord = Staff::where('email', $user->email)->first();
+                $staffId = $staffRecord?->id;
+            }
+            if ($staffId) {
+                $query->where('staff_id', $staffId);
+            }
         } elseif ($staffId = $request->input('staff_id')) {
             $query->where('staff_id', $staffId);
         }

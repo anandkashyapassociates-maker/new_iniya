@@ -306,6 +306,16 @@ export default function AdminDashboardPage() {
                 <RefreshCw className={`w-3.5 h-3.5 text-blue-600 ${isRefreshing ? 'animate-spin' : ''}`} />
                 <span>{isRefreshing ? 'Refreshing...' : 'Refresh'}</span>
               </button>
+
+              {isStaff && (
+                <Link
+                  to="/admin/appointments/calendar"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-800 text-xs font-bold border border-slate-300 hover:border-slate-400 transition-all cursor-pointer font-display shadow-xs"
+                >
+                  <Calendar className="w-4 h-4 text-purple-600" />
+                  <span>OPD Calendar</span>
+                </Link>
+              )}
             </div>
           </div>
         </div>
