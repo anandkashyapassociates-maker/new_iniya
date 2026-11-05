@@ -1,5 +1,17 @@
 import React, { useState } from 'react';
-import { User, Mail, Phone, Lock, Eye, EyeOff, UserPlus, CheckCircle2 } from 'lucide-react';
+import {
+  User,
+  Mail,
+  Phone,
+  Lock,
+  Eye,
+  EyeOff,
+  UserPlus,
+  CheckCircle2,
+  AlertCircle,
+  Shield,
+  KeyRound,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function AdminForm({
@@ -48,7 +60,12 @@ export default function AdminForm({
 
     if (!formData.mobile.trim()) {
       newErrors.mobile = 'Mobile number is required.';
-    } else if (!/^(\+?\d{1,4}[-.\s]?)?(\(?\d{2,5}\)?[-.\s]?)?\d{3,5}[-.\s]?\d{3,5}$/.test(formData.mobile.trim()) || formData.mobile.replace(/\D/g, '').length < 7) {
+    } else if (
+      !/^(\+?\d{1,4}[-.\s]?)?(\(?\d{2,5}\)?[-.\s]?)?\d{3,5}[-.\s]?\d{3,5}$/.test(
+        formData.mobile.trim()
+      ) ||
+      formData.mobile.replace(/\D/g, '').length < 7
+    ) {
       newErrors.mobile = 'Please enter a valid mobile number (min 7 digits).';
     }
 
@@ -80,7 +97,7 @@ export default function AdminForm({
     try {
       await onSubmit({
         name: formData.name.trim(),
-        email: formData.email.trim(),
+        email: formData.email.trim().toLowerCase(),
         mobile: formData.mobile.trim(),
         password: formData.password,
         password_confirmation: formData.password_confirmation,
@@ -103,7 +120,9 @@ export default function AdminForm({
       } else if (err.response?.data?.message) {
         setErrors({ general: err.response.data.message });
       } else {
-        setErrors({ general: 'Failed to create admin account. Please check your network and try again.' });
+        setErrors({
+          general: 'Failed to create admin account. Please check your network and try again.',
+        });
       }
     }
   };
@@ -119,221 +138,291 @@ export default function AdminForm({
     <form onSubmit={handleSubmit} className="space-y-6" noValidate>
       {/* General Server Error Banner */}
       {errors.general && (
-        <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium">
-          {errors.general}
+        <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium flex items-center gap-2.5 animate-slide-up shadow-xs">
+          <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+          <span>{errors.general}</span>
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {/* Full Name */}
-        <div className="md:col-span-2">
-          <label htmlFor="admin-name" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Full Name <span className="text-rose-500">*</span>
-          </label>
-          <div className="relative">
-            <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              id="admin-name"
-              type="text"
-              value={formData.name}
-              onChange={(e) => handleChange('name', e.target.value)}
-              placeholder="e.g. Rajesh Kumar"
-              disabled={isLoading}
-              required
-              className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/80 text-slate-900 border rounded-xl focus:bg-white focus:outline-none focus:ring-2 transition-all ${
-                errors.name
-                  ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
-                  : 'border-slate-300 focus:border-blue-600 focus:ring-blue-600/20'
-              }`}
-            />
+      {/* SECTION 1: IDENTITY & COMMUNICATION */}
+      <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-blue-200/80 transition-all duration-300 space-y-4 animate-slide-up stagger-1 group">
+        <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
+            <User className="w-4 h-4 drop-shadow-sm" />
           </div>
-          {errors.name && (
-            <p className="text-[11px] text-rose-600 mt-1 font-medium">
-              {Array.isArray(errors.name) ? errors.name[0] : errors.name}
-            </p>
-          )}
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-mono text-[10px] font-bold flex items-center justify-center">
+              1
+            </span>
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+              Admin Profile &amp; Contact
+            </h3>
+          </div>
         </div>
 
-        {/* Email Address */}
-        <div>
-          <label htmlFor="admin-email" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Email Address <span className="text-rose-500">*</span>
-          </label>
-          <div className="relative">
-            <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              id="admin-email"
-              type="email"
-              value={formData.email}
-              onChange={(e) => handleChange('email', e.target.value)}
-              placeholder="admin@company.com"
-              disabled={isLoading}
-              required
-              className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/80 text-slate-900 border rounded-xl focus:bg-white focus:outline-none focus:ring-2 transition-all ${
-                errors.email
-                  ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
-                  : 'border-slate-300 focus:border-blue-600 focus:ring-blue-600/20'
-              }`}
-            />
-          </div>
-          {errors.email && (
-            <p className="text-[11px] text-rose-600 mt-1 font-medium">
-              {Array.isArray(errors.email) ? errors.email[0] : errors.email}
-            </p>
-          )}
-        </div>
-
-        {/* Mobile Number */}
-        <div>
-          <label htmlFor="admin-mobile" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Mobile Number <span className="text-rose-500">*</span>
-          </label>
-          <div className="relative">
-            <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              id="admin-mobile"
-              type="tel"
-              value={formData.mobile}
-              onChange={(e) => handleChange('mobile', e.target.value)}
-              placeholder="+91 98765 43210"
-              disabled={isLoading}
-              required
-              className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/80 text-slate-900 border rounded-xl focus:bg-white focus:outline-none focus:ring-2 transition-all ${
-                errors.mobile
-                  ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
-                  : 'border-slate-300 focus:border-blue-600 focus:ring-blue-600/20'
-              }`}
-            />
-          </div>
-          {errors.mobile && (
-            <p className="text-[11px] text-rose-600 mt-1 font-medium">
-              {Array.isArray(errors.mobile) ? errors.mobile[0] : errors.mobile}
-            </p>
-          )}
-        </div>
-
-        {/* Password */}
-        <div>
-          <label htmlFor="admin-password" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Initial Password <span className="text-rose-500">*</span>
-          </label>
-          <div className="relative">
-            <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              id="admin-password"
-              type={showPassword ? 'text' : 'password'}
-              value={formData.password}
-              onChange={(e) => handleChange('password', e.target.value)}
-              placeholder="Minimum 8 characters"
-              disabled={isLoading}
-              required
-              className={`w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50/80 text-slate-900 border rounded-xl focus:bg-white focus:outline-none focus:ring-2 transition-all ${
-                errors.password
-                  ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
-                  : 'border-slate-300 focus:border-blue-600 focus:ring-blue-600/20'
-              }`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword(!showPassword)}
-              tabIndex={-1}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
-            >
-              {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
-          </div>
-          {errors.password && (
-            <p className="text-[11px] text-rose-600 mt-1 font-medium">
-              {Array.isArray(errors.password) ? errors.password[0] : errors.password}
-            </p>
-          )}
-
-          {/* Strength Meter */}
-          {formData.password && (
-            <div className="mt-2">
-              <div className="flex gap-1 h-1.5 w-full bg-slate-200 rounded-full overflow-hidden">
-                <div className={`h-full transition-all ${strength >= 1 ? 'w-1/4 bg-rose-500' : 'w-0'}`} />
-                <div className={`h-full transition-all ${strength >= 2 ? 'w-1/4 bg-amber-500' : 'w-0'}`} />
-                <div className={`h-full transition-all ${strength >= 3 ? 'w-1/4 bg-blue-500' : 'w-0'}`} />
-                <div className={`h-full transition-all ${strength >= 4 ? 'w-1/4 bg-emerald-500' : 'w-0'}`} />
-              </div>
-              <span className="text-[10px] text-slate-500 mt-1 block">
-                Strength: {strength <= 1 ? 'Weak' : strength === 2 ? 'Moderate' : strength === 3 ? 'Strong' : 'Very Strong'}
-              </span>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Full Name */}
+          <div className="md:col-span-2 min-w-0">
+            <label htmlFor="admin-name" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Full Name <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                id="admin-name"
+                type="text"
+                value={formData.name}
+                onChange={(e) => handleChange('name', e.target.value)}
+                placeholder="e.g. Rajesh Kumar"
+                disabled={isLoading}
+                required
+                className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 shadow-2xs ${
+                  errors.name
+                    ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/15'
+                    : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500/15'
+                }`}
+              />
             </div>
-          )}
-        </div>
-
-        {/* Confirm Password */}
-        <div>
-          <label htmlFor="admin-password-confirmation" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-            Confirm Password <span className="text-rose-500">*</span>
-          </label>
-          <div className="relative">
-            <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-            <input
-              id="admin-password-confirmation"
-              type={showConfirmPassword ? 'text' : 'password'}
-              value={formData.password_confirmation}
-              onChange={(e) => handleChange('password_confirmation', e.target.value)}
-              placeholder="Re-enter matching password"
-              disabled={isLoading}
-              required
-              className={`w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50/80 text-slate-900 border rounded-xl focus:bg-white focus:outline-none focus:ring-2 transition-all ${
-                errors.password_confirmation
-                  ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/20'
-                  : 'border-slate-300 focus:border-blue-600 focus:ring-blue-600/20'
-              }`}
-            />
-            <button
-              type="button"
-              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-              tabIndex={-1}
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer"
-            >
-              {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            </button>
+            {errors.name && (
+              <p className="text-[11px] text-rose-600 mt-1 font-medium flex items-center gap-1">
+                <AlertCircle className="w-3 h-3 shrink-0" />
+                <span>{Array.isArray(errors.name) ? errors.name[0] : errors.name}</span>
+              </p>
+            )}
           </div>
-          {errors.password_confirmation && (
-            <p className="text-[11px] text-rose-600 mt-1 font-medium">
-              {Array.isArray(errors.password_confirmation) ? errors.password_confirmation[0] : errors.password_confirmation}
-            </p>
-          )}
+
+          {/* Email Address */}
+          <div className="min-w-0">
+            <label htmlFor="admin-email" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Email Address <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                id="admin-email"
+                type="email"
+                value={formData.email}
+                onChange={(e) => handleChange('email', e.target.value)}
+                placeholder="admin@company.com"
+                disabled={isLoading}
+                required
+                className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 shadow-2xs ${
+                  errors.email
+                    ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/15'
+                    : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500/15'
+                }`}
+              />
+            </div>
+            {errors.email && (
+              <p className="text-[11px] text-rose-600 mt-1 font-medium flex items-center gap-1">
+                <AlertCircle className="w-3 h-3 shrink-0" />
+                <span>{Array.isArray(errors.email) ? errors.email[0] : errors.email}</span>
+              </p>
+            )}
+          </div>
+
+          {/* Mobile Number */}
+          <div className="min-w-0">
+            <label htmlFor="admin-mobile" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Mobile Number <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                id="admin-mobile"
+                type="tel"
+                value={formData.mobile}
+                onChange={(e) => handleChange('mobile', e.target.value)}
+                placeholder="+91 98765 43210"
+                disabled={isLoading}
+                required
+                className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 shadow-2xs ${
+                  errors.mobile
+                    ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/15'
+                    : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500/15'
+                }`}
+              />
+            </div>
+            {errors.mobile && (
+              <p className="text-[11px] text-rose-600 mt-1 font-medium flex items-center gap-1">
+                <AlertCircle className="w-3 h-3 shrink-0" />
+                <span>{Array.isArray(errors.mobile) ? errors.mobile[0] : errors.mobile}</span>
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
-      {/* Account Status Radio / Switch */}
-      <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-2">
-        <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-          Account Status
-        </label>
-        <div className="flex flex-wrap items-center gap-6 pt-1">
-          <label className="flex items-center gap-2 cursor-pointer select-none">
+      {/* SECTION 2: ACCESS & SECURITY CREDENTIALS */}
+      <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-indigo-200/80 transition-all duration-300 space-y-4 animate-slide-up stagger-2 group">
+        <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
+            <KeyRound className="w-4 h-4 drop-shadow-sm" />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 font-mono text-[10px] font-bold flex items-center justify-center">
+              2
+            </span>
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+              Security &amp; Credentials
+            </h3>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Password */}
+          <div className="min-w-0">
+            <label htmlFor="admin-password" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Initial Password <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                id="admin-password"
+                type={showPassword ? 'text' : 'password'}
+                value={formData.password}
+                onChange={(e) => handleChange('password', e.target.value)}
+                placeholder="Minimum 8 characters"
+                disabled={isLoading}
+                required
+                className={`w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 shadow-2xs ${
+                  errors.password
+                    ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/15'
+                    : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500/15'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                tabIndex={-1}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer p-1"
+              >
+                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            {errors.password && (
+              <p className="text-[11px] text-rose-600 mt-1 font-medium flex items-center gap-1">
+                <AlertCircle className="w-3 h-3 shrink-0" />
+                <span>{Array.isArray(errors.password) ? errors.password[0] : errors.password}</span>
+              </p>
+            )}
+
+            {/* Strength Meter */}
+            {formData.password && (
+              <div className="mt-2 space-y-1 animate-fade-in">
+                <div className="flex gap-1.5 h-1.5 w-full bg-slate-100 rounded-full overflow-hidden p-0.5 border border-slate-200/60">
+                  <div className={`h-full rounded-full transition-all duration-300 ${strength >= 1 ? 'w-1/4 bg-rose-500' : 'w-0'}`} />
+                  <div className={`h-full rounded-full transition-all duration-300 ${strength >= 2 ? 'w-1/4 bg-amber-500' : 'w-0'}`} />
+                  <div className={`h-full rounded-full transition-all duration-300 ${strength >= 3 ? 'w-1/4 bg-blue-500' : 'w-0'}`} />
+                  <div className={`h-full rounded-full transition-all duration-300 ${strength >= 4 ? 'w-1/4 bg-emerald-500' : 'w-0'}`} />
+                </div>
+                <div className="flex items-center justify-between text-[10px] text-slate-500 px-0.5">
+                  <span>Password Complexity</span>
+                  <span className={`font-bold ${strength <= 1 ? 'text-rose-600' : strength === 2 ? 'text-amber-600' : strength === 3 ? 'text-blue-600' : 'text-emerald-600'}`}>
+                    {strength <= 1 ? 'Weak' : strength === 2 ? 'Moderate' : strength === 3 ? 'Strong' : 'Very Strong'}
+                  </span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Confirm Password */}
+          <div className="min-w-0">
+            <label htmlFor="admin-password-confirmation" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Confirm Password <span className="text-rose-500">*</span>
+            </label>
+            <div className="relative">
+              <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                id="admin-password-confirmation"
+                type={showConfirmPassword ? 'text' : 'password'}
+                value={formData.password_confirmation}
+                onChange={(e) => handleChange('password_confirmation', e.target.value)}
+                placeholder="Re-enter matching password"
+                disabled={isLoading}
+                required
+                className={`w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 shadow-2xs ${
+                  errors.password_confirmation
+                    ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/15'
+                    : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500/15'
+                }`}
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                tabIndex={-1}
+                className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer p-1"
+              >
+                {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+            </div>
+            {errors.password_confirmation && (
+              <p className="text-[11px] text-rose-600 mt-1 font-medium flex items-center gap-1">
+                <AlertCircle className="w-3 h-3 shrink-0" />
+                <span>{Array.isArray(errors.password_confirmation) ? errors.password_confirmation[0] : errors.password_confirmation}</span>
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* SECTION 3: ACCOUNT STATUS */}
+      <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-slate-300 transition-all duration-300 space-y-4 animate-slide-up stagger-3 group">
+        <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-slate-700 via-slate-800 to-slate-900 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
+            <CheckCircle2 className="w-4 h-4 drop-shadow-sm" />
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 font-mono text-[10px] font-bold flex items-center justify-center">
+              3
+            </span>
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+              Account Status &amp; Activation
+            </h3>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <label
+            className={`flex items-center gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all duration-200 ${
+              formData.is_active === true
+                ? 'border-blue-500/50 bg-blue-50/60 ring-2 ring-blue-500/20 shadow-xs'
+                : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/60'
+            }`}
+          >
             <input
               type="radio"
               name="is_active"
               checked={formData.is_active === true}
               onChange={() => handleChange('is_active', true)}
               disabled={isLoading}
-              className="w-4 h-4 text-blue-600 focus:ring-blue-500 cursor-pointer"
+              className="w-4 h-4 text-blue-600 focus:ring-blue-500 shrink-0"
             />
-            <span className="text-xs font-semibold text-slate-800">
-              Active <span className="text-slate-400 font-normal">(Authorized to log into Panel 2)</span>
-            </span>
+            <div>
+              <span className="text-xs font-bold text-blue-900 block">Active Status</span>
+              <span className="text-[11px] text-slate-500">Authorized to log into Panel 2 (Clinic Portal)</span>
+            </div>
           </label>
 
-          <label className="flex items-center gap-2 cursor-pointer select-none">
+          <label
+            className={`flex items-center gap-3 p-3.5 rounded-2xl border cursor-pointer transition-all duration-200 ${
+              formData.is_active === false
+                ? 'border-amber-500/50 bg-amber-50/60 ring-2 ring-amber-500/20 shadow-xs'
+                : 'border-slate-200 bg-slate-50/50 hover:bg-slate-100/60'
+            }`}
+          >
             <input
               type="radio"
               name="is_active"
               checked={formData.is_active === false}
               onChange={() => handleChange('is_active', false)}
               disabled={isLoading}
-              className="w-4 h-4 text-slate-600 focus:ring-slate-500 cursor-pointer"
+              className="w-4 h-4 text-amber-600 focus:ring-amber-500 shrink-0"
             />
-            <span className="text-xs font-semibold text-slate-800">
-              Inactive <span className="text-slate-400 font-normal">(Account suspended upon creation)</span>
-            </span>
+            <div>
+              <span className="text-xs font-bold text-amber-900 block">Inactive Status</span>
+              <span className="text-[11px] text-slate-500">Access suspended immediately upon creation</span>
+            </div>
           </label>
         </div>
       </div>
@@ -342,14 +431,14 @@ export default function AdminForm({
       <div className="pt-4 border-t border-slate-200 flex flex-col-reverse sm:flex-row items-center justify-end gap-3">
         <Link
           to={cancelPath}
-          className="w-full sm:w-auto px-5 py-2.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors text-center cursor-pointer"
+          className="w-full sm:w-auto px-6 py-2.5 rounded-xl text-xs font-bold text-slate-600 hover:text-slate-900 border border-slate-200 hover:bg-slate-50 transition-all text-center cursor-pointer shadow-2xs"
         >
           Cancel
         </Link>
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 active:bg-slate-950 shadow-md shadow-slate-900/20 focus:outline-none focus:ring-2 focus:ring-slate-900/30 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-7 py-2.5 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-md shadow-blue-500/20 hover:shadow-lg hover:shadow-blue-500/30 hover:-translate-y-0.5 active:translate-y-0 focus:outline-none focus:ring-4 focus:ring-blue-500/20 transition-all cursor-pointer disabled:opacity-50"
         >
           {isLoading ? (
             <>
@@ -367,4 +456,3 @@ export default function AdminForm({
     </form>
   );
 }
-

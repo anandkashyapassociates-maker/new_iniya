@@ -337,6 +337,17 @@ export default function AdminMasterAppointmentDetailsPage() {
 
   const sessions = appointment.sessions || [];
 
+  const totalAppointmentFees = useMemo(() => {
+    if (sessions && sessions.length > 0) {
+      const sum = sessions.reduce((acc, s) => {
+        const p = s.service?.price !== undefined ? Number(s.service.price) : Number(s.payment_amount || 0);
+        return acc + (isNaN(p) ? 0 : p);
+      }, 0);
+      if (sum > 0) return sum;
+    }
+    return Number(appointment?.appointment_fees || 0);
+  }, [sessions, appointment?.appointment_fees]);
+
   return (
     <div className="space-y-6 pb-12">
       {/* Top Header Card */}
@@ -418,10 +429,14 @@ export default function AdminMasterAppointmentDetailsPage() {
               <IndianRupee className="w-4 h-4" />
             </div>
           </div>
-          <div className="text-2xl font-black text-slate-900">
-            ₹{Number(appointment.appointment_fees || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+          <div className="text-2xl font-black text-slate-900 font-mono">
+            ₹{Number(totalAppointmentFees).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
           </div>
-          <p className="text-[11px] text-slate-500 mt-1">Charged once at Master level</p>
+          <p className="text-[11px] text-slate-500 mt-1">
+            {sessions.length > 1
+              ? `Total for ${sessions.length} sessions`
+              : 'Charged once at Master level'}
+          </p>
         </div>
       </div>
 

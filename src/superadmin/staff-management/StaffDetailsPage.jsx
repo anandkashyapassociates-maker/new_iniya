@@ -54,11 +54,35 @@ const formatJoiningDate = (dateString) => {
   }
 };
 
+const COMMON_DEPARTMENTS = [
+  'Dental',
+  'Dermatology',
+  'Physiotherapy',
+  'Aesthetics & Cosmetology',
+  'Trichology (Hair Care)',
+  'General Medicine / OPD',
+  'Plastic & Cosmetic Surgery',
+  'Nutrition & Dietetics',
+  'Ayurveda & Wellness',
+  'Orthopedics',
+  'Gynecology & Obstetrics',
+  'Pediatrics',
+  'Cardiology',
+  'ENT (Ear, Nose, Throat)',
+  'Ophthalmology',
+  'Psychiatry & Psychology',
+  'Radiology & Diagnostics',
+  'Pathology & Laboratory',
+  'Nursing & Patient Care',
+  'Pharmacy',
+  'Clinical Administration',
+];
+
 export default function StaffDetailsPage() {
   const toast = useToast();
 
   const [staffList, setStaffList] = useState([]);
-  const [departmentsList, setDepartmentsList] = useState([]);
+  const [departmentsList, setDepartmentsList] = useState(COMMON_DEPARTMENTS);
   const [pagination, setPagination] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -113,7 +137,10 @@ export default function StaffDetailsPage() {
     staffManagementService
       .getDepartments()
       .then((data) => {
-        if (Array.isArray(data)) setDepartmentsList(data);
+        if (Array.isArray(data)) {
+          const merged = Array.from(new Set([...COMMON_DEPARTMENTS, ...data])).filter(Boolean);
+          setDepartmentsList(merged);
+        }
       })
       .catch(() => {});
   }, []);
@@ -180,8 +207,8 @@ export default function StaffDetailsPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-200">
         <div>
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-blue-600/10 text-blue-600 flex items-center justify-center">
-              <UserCheck className="w-4 h-4" />
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-emerald-400 via-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 icon-3d shadow-md shadow-emerald-500/20">
+              <UserCheck className="w-6 h-6 drop-shadow-sm" />
             </div>
             <h1 className="text-lg sm:text-xl font-bold font-display text-slate-900 tracking-tight">
               Staff Details

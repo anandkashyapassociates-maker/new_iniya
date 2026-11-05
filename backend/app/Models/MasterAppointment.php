@@ -42,11 +42,18 @@ class MasterAppointment extends Model
     ];
 
     /**
+     * Transient flag to avoid recalculation loops when master appointment is being deleted.
+     */
+    public bool $isDeletingMaster = false;
+
+    /**
      * Boot the model.
      */
     protected static function booted(): void
     {
         static::deleting(function (MasterAppointment $master) {
+            $master->isDeletingMaster = true;
+
             if ($master->image && Storage::disk('public')->exists($master->image)) {
                 Storage::disk('public')->delete($master->image);
             }
@@ -56,6 +63,27 @@ class MasterAppointment extends Model
                 $session->delete();
             }
         });
+    }
+
+    /**
+     * Recalculates and updates appointment fees based on all remaining active sessions.
+     */
+    public function recalculateFees(): float
+    {
+        $sessions = $this->sessions()->with('service')->get();
+        $total = 0.0;
+        foreach ($sessions as $session) {
+            if ($session->service && $session->service->price !== null) {
+                $total += (float) $session->service->price;
+            } elseif ($session->payment_amount !== null && (float) $session->payment_amount > 0) {
+                $total += (float) $session->payment_amount;
+            }
+        }
+
+        $this->appointment_fees = $total;
+        $this->saveQuietly();
+
+        return (float) $this->appointment_fees;
     }
 
     /**

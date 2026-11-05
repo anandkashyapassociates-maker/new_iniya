@@ -195,11 +195,16 @@ export default function AdminAppointmentCreatePage() {
 
           {/* Section 1: Patient & Staff Selection */}
           <div className="space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-              <Users className="w-4 h-4 text-blue-600" />
-              <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-                1. Patient &amp; Staff Assignment
-              </h2>
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+              <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-500 via-indigo-600 to-cyan-500 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
+                <Users className="w-4 h-4 drop-shadow-sm" />
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-mono text-[10px] font-bold flex items-center justify-center">1</span>
+                <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
+                  Patient &amp; Staff Assignment
+                </h2>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">

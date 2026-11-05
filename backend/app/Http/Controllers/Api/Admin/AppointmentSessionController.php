@@ -74,10 +74,13 @@ class AppointmentSessionController extends Controller
             'status' => AppointmentSession::STATUS_PENDING,
         ]);
 
+        $master->recalculateFees();
+
         return response()->json([
             'success' => true,
             'message' => 'New session added successfully.',
             'data' => $session->load(['staff', 'inventoryProduct', 'service.category.parent']),
+            'new_appointment_fees' => (float) $master->appointment_fees,
         ], 201);
     }
 
@@ -130,6 +133,7 @@ class AppointmentSessionController extends Controller
         }
 
         $session->update($validated);
+        $session->masterAppointment?->recalculateFees();
 
         return response()->json([
             'success' => true,
@@ -166,6 +170,7 @@ class AppointmentSessionController extends Controller
     public function destroy(int $id): JsonResponse
     {
         $session = AppointmentSession::findOrFail($id);
+        $master = $session->masterAppointment;
 
         if ($session->image && Storage::disk('public')->exists($session->image)) {
             Storage::disk('public')->delete($session->image);
@@ -173,9 +178,25 @@ class AppointmentSessionController extends Controller
 
         $session->delete();
 
+        if ($master) {
+            $remaining = $master->sessions()->orderBy('session_number')->get();
+            foreach ($remaining as $idx => $s) {
+                $newNum = $idx + 1;
+                if ($s->session_number !== $newNum) {
+                    $s->session_number = $newNum;
+                    $s->saveQuietly();
+                }
+            }
+            $master->recalculateFees();
+        }
+
         return response()->json([
             'success' => true,
             'message' => 'Session deleted successfully.',
+            'data' => [
+                'master_appointment_id' => $master?->id,
+                'new_appointment_fees' => $master ? (float) $master->appointment_fees : 0,
+            ],
         ]);
     }
 

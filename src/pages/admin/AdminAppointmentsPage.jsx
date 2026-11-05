@@ -213,17 +213,22 @@ export default function AdminAppointmentsPage() {
     <div className="space-y-6">
       {/* Top Header Card */}
       <div className="bg-white rounded-3xl p-6 border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-semibold mb-2">
-            <Calendar className="w-3.5 h-3.5 text-blue-600" />
-            <span>Schedule & Session Management</span>
+        <div className="flex items-start gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-sky-400 text-white flex items-center justify-center shrink-0 icon-3d shadow-md shadow-blue-500/20 mt-1">
+            <Calendar className="w-6 h-6 drop-shadow-sm" />
           </div>
-          <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-            Appointments Directory
-          </h1>
-          <p className="text-xs text-slate-500 mt-1 max-w-xl">
-            Manage patient bookings, session progress, staff assignments, and reschedule or update appointment status.
-          </p>
+          <div>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 border border-blue-200/60 text-blue-700 text-xs font-semibold mb-2">
+              <Calendar className="w-3.5 h-3.5 text-blue-600" />
+              <span>Schedule &amp; Session Management</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+              Appointments Directory
+            </h1>
+            <p className="text-xs text-slate-500 mt-1 max-w-xl">
+              Manage patient bookings, session progress, staff assignments, and reschedule or update appointment status.
+            </p>
+          </div>
         </div>
 
         <Link

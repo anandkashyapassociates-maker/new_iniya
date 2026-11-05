@@ -90,8 +90,11 @@ export default function AppointmentReceiptModal({
       })
     : 'N/A';
 
-  const sessionFee = session?.service?.price ? Number(session.service.price) : Number(appointment.appointment_fees || 0);
-  const totalAmount = isSessionType ? sessionFee : Number(appointment.appointment_fees || 0);
+  const sessionFee = session?.service?.price ? Number(session.service.price) : Number(session?.payment_amount || appointment.appointment_fees || 0);
+  const masterFee = sessions.length > 0
+    ? sessions.reduce((acc, s) => acc + (s.service?.price !== undefined ? Number(s.service.price) : Number(s.payment_amount || 0)), 0)
+    : Number(appointment.appointment_fees || 0);
+  const totalAmount = isSessionType ? sessionFee : (masterFee > 0 ? masterFee : Number(appointment.appointment_fees || 0));
 
   // High-fidelity Single Page Isolated Iframe Print
   const handlePrint = () => {

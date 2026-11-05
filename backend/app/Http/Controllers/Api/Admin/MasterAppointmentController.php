@@ -106,6 +106,18 @@ class MasterAppointmentController extends Controller
             $appt->completed_sessions_count = $sessions->where('status', AppointmentSession::STATUS_COMPLETED)->count();
             $appt->cancelled_sessions_count = $sessions->where('status', AppointmentSession::STATUS_CANCELLED)->count();
 
+            // Self-heal: ensure appointment_fees matches current sessions sum
+            if ($sessions->isNotEmpty()) {
+                $computedFee = $sessions->reduce(function ($sum, $s) {
+                    $price = $s->service?->price ?? $s->payment_amount ?? 0;
+                    return $sum + (float) $price;
+                }, 0.0);
+                if ($computedFee > 0 && abs((float) $appt->appointment_fees - $computedFee) > 0.001) {
+                    $appt->appointment_fees = $computedFee;
+                    $appt->saveQuietly();
+                }
+            }
+
             return $appt;
         });
 
@@ -368,6 +380,8 @@ class MasterAppointmentController extends Controller
                 ]);
             }
 
+            $master->recalculateFees();
+
             return $master->load([
                 'customer:id,name,mobile,email',
                 'salesTeam:id,sales_code,name,department',
@@ -403,6 +417,17 @@ class MasterAppointmentController extends Controller
                 ])->orderBy('session_number');
             },
         ])->findOrFail($id);
+
+        if ($master->sessions->isNotEmpty()) {
+            $computedFee = $master->sessions->reduce(function ($sum, $s) {
+                $price = $s->service?->price ?? $s->payment_amount ?? 0;
+                return $sum + (float) $price;
+            }, 0.0);
+            if ($computedFee > 0 && abs((float) $master->appointment_fees - $computedFee) > 0.001) {
+                $master->appointment_fees = $computedFee;
+                $master->saveQuietly();
+            }
+        }
 
         return response()->json([
             'success' => true,
@@ -516,6 +541,17 @@ class MasterAppointmentController extends Controller
                 ])->orderBy('session_number');
             },
         ])->findOrFail($id);
+
+        if ($master->sessions->isNotEmpty()) {
+            $computedFee = $master->sessions->reduce(function ($sum, $s) {
+                $price = $s->service?->price ?? $s->payment_amount ?? 0;
+                return $sum + (float) $price;
+            }, 0.0);
+            if ($computedFee > 0 && abs((float) $master->appointment_fees - $computedFee) > 0.001) {
+                $master->appointment_fees = $computedFee;
+                $master->saveQuietly();
+            }
+        }
 
         $admin = $request->user();
         if ($admin) {

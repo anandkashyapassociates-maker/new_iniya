@@ -74,6 +74,33 @@ class AppointmentSession extends Model
             }
             $session->rescheduleHistories()->delete();
         });
+
+        static::deleted(function (AppointmentSession $session) {
+            if ($session->master_appointment_id) {
+                $master = MasterAppointment::find($session->master_appointment_id);
+                if ($master && ! $master->isDeletingMaster) {
+                    // Re-sequence remaining session numbers
+                    $remaining = $master->sessions()->orderBy('session_number')->get();
+                    foreach ($remaining as $idx => $s) {
+                        $newNum = $idx + 1;
+                        if ($s->session_number !== $newNum) {
+                            $s->session_number = $newNum;
+                            $s->saveQuietly();
+                        }
+                    }
+                    $master->recalculateFees();
+                }
+            }
+        });
+
+        static::saved(function (AppointmentSession $session) {
+            if ($session->master_appointment_id) {
+                $master = MasterAppointment::find($session->master_appointment_id);
+                if ($master && ! $master->isDeletingMaster) {
+                    $master->recalculateFees();
+                }
+            }
+        });
     }
 
     /**

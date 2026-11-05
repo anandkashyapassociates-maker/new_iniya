@@ -12,7 +12,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Save,
-  FileText,
   Globe,
   UploadCloud,
   Layers,
@@ -74,8 +73,8 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
     status: 'active',
   });
 
-  const [photoFile, setPhotoFile] = useState(null);
   const [previewPhoto, setPreviewPhoto] = useState(null);
+  const [photoFile, setPhotoFile] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -99,7 +98,7 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
         notes: member.notes || '',
         status: member.status || 'active',
       });
-      setPreviewPhoto(member.profile_photo || null);
+      setPreviewPhoto(member.profile_photo_url || null);
       setPhotoFile(null);
       setErrors({});
     }
@@ -130,23 +129,21 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
   };
 
   const handlePhotoChange = (e) => {
-    const file = e.target.files[0];
+    const file = e.target.files?.[0];
     if (file) {
-      if (!file.type.startsWith('image/')) {
-        setErrors((prev) => ({ ...prev, profile_photo: 'Please select a valid image file.' }));
-        return;
-      }
       if (file.size > 2 * 1024 * 1024) {
-        setErrors((prev) => ({ ...prev, profile_photo: 'File size must not exceed 2MB.' }));
+        setErrors((prev) => ({
+          ...prev,
+          profile_photo: 'Photo size must not exceed 2MB.',
+        }));
         return;
       }
       setPhotoFile(file);
-      setPreviewPhoto(URL.createObjectURL(file));
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next.profile_photo;
-        return next;
-      });
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewPhoto(reader.result);
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -197,7 +194,7 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
         email: formData.email.trim().toLowerCase(),
         mobile: formData.mobile.trim(),
         alternate_mobile: formData.alternate_mobile.trim() || null,
-        gender: formData.gender || null,
+        gender: formData.gender,
         designation: formData.designation.trim() || null,
         department: formData.department || null,
         employment_type: formData.employment_type || null,
@@ -254,29 +251,29 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity"
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-fade-in"
         onClick={!isSubmitting ? onClose : undefined}
       />
 
-      <div className="min-h-full flex items-center justify-center p-4">
-        <div className="relative w-full max-w-3xl bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden my-8">
+      <div className="min-h-full flex items-center justify-center p-3 sm:p-4">
+        <div className="relative w-full max-w-3xl max-h-[92vh] flex flex-col bg-white rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden my-4 sm:my-8 animate-slide-up">
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-blue-600/10 text-blue-600 flex items-center justify-center">
-                <User className="w-5 h-5" />
+          <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50/70 shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-purple-500 via-indigo-600 to-purple-700 text-white flex items-center justify-center shrink-0 icon-3d shadow-md">
+                <User className="w-5 h-5 drop-shadow-sm" />
               </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-base font-bold text-slate-900">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h2 className="text-base font-bold text-slate-900 truncate">
                     Edit Sales Member Profile
                   </h2>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-mono font-bold bg-blue-100 text-blue-700">
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-purple-100 text-purple-700 border border-purple-200/60">
                     <Lock className="w-3 h-3" />
                     {member.sales_code}
                   </span>
                 </div>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 truncate">
                   Sales code is immutable for auditing and transaction attribution.
                 </p>
               </div>
@@ -284,120 +281,93 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
             <button
               onClick={onClose}
               disabled={isSubmitting}
-              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors disabled:opacity-50 cursor-pointer"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors disabled:opacity-50 cursor-pointer shrink-0 ml-2"
+              title="Close"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
 
           {/* Form */}
-          <form onSubmit={handleSubmit} className="p-6 space-y-5">
-            {errors.general && (
-              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
-                <span>{errors.general}</span>
-              </div>
-            )}
-
-            {/* 1. Basic Info */}
-            <div>
-              <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5">
-                1. Basic Info
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Full Name <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.name}
-                    onChange={(e) => handleChange('name', e.target.value)}
-                    required
-                    disabled={isSubmitting}
-                    className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white focus:outline-none focus:ring-2 transition-all ${
-                      errors.name
-                        ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-200'
-                        : 'border-slate-300 focus:border-blue-600 focus:ring-blue-100'
-                    }`}
-                  />
-                  {errors.name && (
-                    <p className="text-[10px] text-rose-600 mt-1">{errors.name}</p>
-                  )}
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 sm:p-6 space-y-5 overflow-y-auto flex-1 min-h-0">
+              {errors.general && (
+                <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 shadow-xs">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span className="font-medium">{errors.general}</span>
                 </div>
+              )}
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Email Address <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="email"
-                    value={formData.email}
-                    onChange={(e) => handleChange('email', e.target.value)}
-                    required
-                    disabled={isSubmitting}
-                    className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white focus:outline-none focus:ring-2 transition-all ${
-                      errors.email
-                        ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-200'
-                        : 'border-slate-300 focus:border-blue-600 focus:ring-blue-100'
-                    }`}
-                  />
-                  {errors.email && (
-                    <p className="text-[10px] text-rose-600 mt-1">{errors.email}</p>
-                  )}
+              {/* 1. Basic Info */}
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-4 h-4 rounded-full bg-purple-100 text-purple-700 font-mono text-[9px] font-bold flex items-center justify-center">
+                    1
+                  </span>
+                  <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    Basic Info &amp; Photo
+                  </h4>
                 </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  <div className="min-w-0">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Full Name <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.name}
+                      onChange={(e) => handleChange('name', e.target.value)}
+                      required
+                      disabled={isSubmitting}
+                      className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white focus:outline-none focus:ring-4 transition-all duration-200 ${
+                        errors.name
+                          ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-200'
+                          : 'border-slate-300 focus:border-purple-600 focus:ring-purple-100'
+                      }`}
+                    />
+                    {errors.name && (
+                      <p className="text-[10px] text-rose-600 mt-1">{errors.name}</p>
+                    )}
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Gender
-                  </label>
-                  <select
-                    value={formData.gender}
-                    onChange={(e) => handleChange('gender', e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer"
-                  >
-                    {GENDERS.map((g) => (
-                      <option key={g} value={g}>
-                        {g}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                  <div className="min-w-0">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Email Address <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="email"
+                      value={formData.email}
+                      onChange={(e) => handleChange('email', e.target.value)}
+                      required
+                      disabled={isSubmitting}
+                      className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white focus:outline-none focus:ring-4 transition-all duration-200 ${
+                        errors.email
+                          ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-200'
+                          : 'border-slate-300 focus:border-purple-600 focus:ring-purple-100'
+                      }`}
+                    />
+                    {errors.email && (
+                      <p className="text-[10px] text-rose-600 mt-1">{errors.email}</p>
+                    )}
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Primary Mobile <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.mobile}
-                    onChange={(e) => handleChange('mobile', e.target.value)}
-                    required
-                    disabled={isSubmitting}
-                    className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white focus:outline-none focus:ring-2 transition-all ${
-                      errors.mobile
-                        ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-200'
-                        : 'border-slate-300 focus:border-blue-600 focus:ring-blue-100'
-                    }`}
-                  />
-                  {errors.mobile && (
-                    <p className="text-[10px] text-rose-600 mt-1">{errors.mobile}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Alternate Mobile
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.alternate_mobile}
-                    onChange={(e) => handleChange('alternate_mobile', e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all"
-                  />
-                </div>
+                  <div className="min-w-0">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Gender
+                    </label>
+                    <select
+                      value={formData.gender}
+                      onChange={(e) => handleChange('gender', e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-100 transition-all duration-200 cursor-pointer"
+                    >
+                      {GENDERS.map((g) => (
+                        <option key={g} value={g}>
+                          {g}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
@@ -411,271 +381,319 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
                         className="w-8 h-8 rounded-lg object-cover border border-slate-200"
                       />
                     )}
+                  </div>
+
+                  <div className="min-w-0">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Alternate Mobile
+                    </label>
                     <input
-                      type="file"
-                      accept="image/*"
-                      onChange={handlePhotoChange}
+                      type="text"
+                      value={formData.alternate_mobile}
+                      onChange={(e) => handleChange('alternate_mobile', e.target.value)}
                       disabled={isSubmitting}
-                      className="text-xs text-slate-500 file:mr-2 file:py-1 file:px-2.5 file:rounded-md file:border-0 file:text-[10px] file:bg-slate-100 file:font-semibold hover:file:bg-slate-200 cursor-pointer"
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-purple-600 focus:ring-4 focus:ring-purple-100 transition-all duration-200"
+                    />
+                  </div>
+
+                  {/* Photo Change */}
+                  <div className="min-w-0">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Update Photo
+                    </label>
+                    <div className="flex items-center gap-2">
+                      {previewPhoto ? (
+                        <img
+                          src={previewPhoto}
+                          alt="Preview"
+                          className="w-8 h-8 rounded-lg object-cover border border-slate-200 shrink-0"
+                        />
+                      ) : (
+                        <div className="w-8 h-8 rounded-lg bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200 shrink-0">
+                          <UploadCloud className="w-4 h-4" />
+                        </div>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        onChange={handlePhotoChange}
+                        disabled={isSubmitting}
+                        className="text-[11px] text-slate-600 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[10px] file:font-bold file:bg-purple-50 file:text-purple-700 hover:file:bg-purple-100 cursor-pointer min-w-0 flex-1"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 2. Employment Details */}
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-4 h-4 rounded-full bg-blue-100 text-blue-700 font-mono text-[9px] font-bold flex items-center justify-center">
+                    2
+                  </span>
+                  <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    Employment &amp; Territory
+                  </h4>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  <div className="min-w-0">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Designation
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.designation}
+                      onChange={(e) => handleChange('designation', e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all duration-200"
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Department
+                    </label>
+                    <select
+                      value={formData.department}
+                      onChange={(e) => handleChange('department', e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all duration-200 cursor-pointer"
+                    >
+                      {DEPARTMENTS.map((d) => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="min-w-0">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Employment Type
+                    </label>
+                    <select
+                      value={formData.employment_type}
+                      onChange={(e) => handleChange('employment_type', e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all duration-200 cursor-pointer"
+                    >
+                      {EMPLOYMENT_TYPES.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="min-w-0">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Joining Date
+                    </label>
+                    <input
+                      type="date"
+                      value={formData.joining_date}
+                      onChange={(e) => handleChange('joining_date', e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all duration-200"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-2 min-w-0">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Territory / Sales Area
+                    </label>
+                    <select
+                      value={formData.territory}
+                      onChange={(e) => handleChange('territory', e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all duration-200 cursor-pointer"
+                    >
+                      {TERRITORIES.map((t) => (
+                        <option key={t} value={t}>
+                          {t}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              {/* 3. Location */}
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-4 h-4 rounded-full bg-amber-100 text-amber-700 font-mono text-[9px] font-bold flex items-center justify-center">
+                    3
+                  </span>
+                  <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    Location &amp; Address
+                  </h4>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                  <div className="min-w-0">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      City
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.city}
+                      onChange={(e) => handleChange('city', e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-amber-600 focus:ring-4 focus:ring-amber-100 transition-all duration-200"
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      State
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.state}
+                      onChange={(e) => handleChange('state', e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-amber-600 focus:ring-4 focus:ring-amber-100 transition-all duration-200"
+                    />
+                  </div>
+
+                  <div className="min-w-0">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Country
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.country}
+                      onChange={(e) => handleChange('country', e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-amber-600 focus:ring-4 focus:ring-amber-100 transition-all duration-200"
+                    />
+                  </div>
+
+                  <div className="sm:col-span-3 min-w-0">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Complete Address
+                    </label>
+                    <textarea
+                      rows={2}
+                      value={formData.address}
+                      onChange={(e) => handleChange('address', e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-amber-600 focus:ring-4 focus:ring-amber-100 transition-all duration-200 resize-none"
                     />
                   </div>
                 </div>
               </div>
-            </div>
 
-            {/* 2. Employment Info */}
-            <div>
-              <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5">
-                2. Employment Details
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Designation
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.designation}
-                    onChange={(e) => handleChange('designation', e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all"
-                  />
+              {/* 4. Notes & Status */}
+              <div className="space-y-2.5">
+                <div className="flex items-center gap-2">
+                  <span className="w-4 h-4 rounded-full bg-slate-100 text-slate-700 font-mono text-[9px] font-bold flex items-center justify-center">
+                    4
+                  </span>
+                  <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                    Notes &amp; Status
+                  </h4>
                 </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Department
-                  </label>
-                  <select
-                    value={formData.department}
-                    onChange={(e) => handleChange('department', e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer"
-                  >
-                    {DEPARTMENTS.map((d) => (
-                      <option key={d} value={d}>
-                        {d}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Employment Type
-                  </label>
-                  <select
-                    value={formData.employment_type}
-                    onChange={(e) => handleChange('employment_type', e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer"
-                  >
-                    {EMPLOYMENT_TYPES.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Territory
-                  </label>
-                  <select
-                    value={formData.territory}
-                    onChange={(e) => handleChange('territory', e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all cursor-pointer"
-                  >
-                    {TERRITORIES.map((t) => (
-                      <option key={t} value={t}>
-                        {t}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Joining Date
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.joining_date}
-                    onChange={(e) => handleChange('joining_date', e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* 3. Location Details */}
-            <div>
-              <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5">
-                3. Location Details
-              </h4>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    City
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.city}
-                    onChange={(e) => handleChange('city', e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    State
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.state}
-                    onChange={(e) => handleChange('state', e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Country
-                  </label>
-                  <input
-                    type="text"
-                    value={formData.country}
-                    onChange={(e) => handleChange('country', e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all"
-                  />
-                </div>
-
-                <div className="sm:col-span-3">
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Address
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={formData.address}
-                    onChange={(e) => handleChange('address', e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all resize-none"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* 4. Notes & Account Status */}
-            <div>
-              <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2.5">
-                4. Notes & Account Status
-              </h4>
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Internal Notes
-                  </label>
-                  <textarea
-                    rows={2}
-                    value={formData.notes}
-                    onChange={(e) => handleChange('notes', e.target.value)}
-                    disabled={isSubmitting}
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-2 focus:ring-blue-100 transition-all resize-none"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Account Status
-                  </label>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                    <label
-                      className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all ${
-                        formData.status === 'active'
-                          ? 'border-emerald-500 bg-emerald-50/50 text-emerald-900 ring-2 ring-emerald-500/20'
-                          : 'border-slate-200 hover:bg-slate-50 text-slate-700'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="edit_sales_status"
-                        value="active"
-                        checked={formData.status === 'active'}
-                        onChange={(e) => handleChange('status', e.target.value)}
-                        className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer"
-                      />
-                      <div className="text-xs">
-                        <span className="font-bold block">Active</span>
-                        <span className="text-[10px] text-slate-500">Authorized for operations</span>
-                      </div>
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Internal Notes
                     </label>
+                    <textarea
+                      rows={2}
+                      value={formData.notes}
+                      onChange={(e) => handleChange('notes', e.target.value)}
+                      disabled={isSubmitting}
+                      className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:border-blue-600 focus:ring-4 focus:ring-blue-100 transition-all duration-200 resize-none"
+                    />
+                  </div>
 
-                    <label
-                      className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all ${
-                        formData.status === 'inactive'
-                          ? 'border-amber-500 bg-amber-50/50 text-amber-900 ring-2 ring-amber-500/20'
-                          : 'border-slate-200 hover:bg-slate-50 text-slate-700'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="edit_sales_status"
-                        value="inactive"
-                        checked={formData.status === 'inactive'}
-                        onChange={(e) => handleChange('status', e.target.value)}
-                        className="w-4 h-4 text-amber-600 focus:ring-amber-500 cursor-pointer"
-                      />
-                      <div className="text-xs">
-                        <span className="font-bold block">Inactive</span>
-                        <span className="text-[10px] text-slate-500">Temporarily on leave</span>
-                      </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                      Account Status
                     </label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <label
+                        className={`flex items-center gap-2.5 p-3 rounded-2xl border cursor-pointer transition-all ${
+                          formData.status === 'active'
+                            ? 'border-emerald-500 bg-emerald-50/60 text-emerald-900 ring-2 ring-emerald-500/20 shadow-xs'
+                            : 'border-slate-200 hover:bg-slate-50 text-slate-700'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="edit_sales_status"
+                          value="active"
+                          checked={formData.status === 'active'}
+                          onChange={(e) => handleChange('status', e.target.value)}
+                          className="w-4 h-4 text-emerald-600 focus:ring-emerald-500 cursor-pointer shrink-0"
+                        />
+                        <div className="text-xs min-w-0">
+                          <span className="font-bold block">Active</span>
+                          <span className="text-[10px] text-slate-500 block truncate">Field Authorized</span>
+                        </div>
+                      </label>
 
-                    <label
-                      className={`flex items-center gap-2.5 p-3 rounded-xl border cursor-pointer transition-all ${
-                        formData.status === 'blocked'
-                          ? 'border-rose-500 bg-rose-50/50 text-rose-900 ring-2 ring-rose-500/20'
-                          : 'border-slate-200 hover:bg-slate-50 text-slate-700'
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="edit_sales_status"
-                        value="blocked"
-                        checked={formData.status === 'blocked'}
-                        onChange={(e) => handleChange('status', e.target.value)}
-                        className="w-4 h-4 text-rose-600 focus:ring-rose-500 cursor-pointer"
-                      />
-                      <div className="text-xs">
-                        <span className="font-bold block">Blocked</span>
-                        <span className="text-[10px] text-slate-500">Suspended</span>
-                      </div>
-                    </label>
+                      <label
+                        className={`flex items-center gap-2.5 p-3 rounded-2xl border cursor-pointer transition-all ${
+                          formData.status === 'inactive'
+                            ? 'border-amber-500 bg-amber-50/60 text-amber-900 ring-2 ring-amber-500/20 shadow-xs'
+                            : 'border-slate-200 hover:bg-slate-50 text-slate-700'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="edit_sales_status"
+                          value="inactive"
+                          checked={formData.status === 'inactive'}
+                          onChange={(e) => handleChange('status', e.target.value)}
+                          className="w-4 h-4 text-amber-600 focus:ring-amber-500 cursor-pointer shrink-0"
+                        />
+                        <div className="text-xs min-w-0">
+                          <span className="font-bold block">Inactive</span>
+                          <span className="text-[10px] text-slate-500 block truncate">Leave / Inactive</span>
+                        </div>
+                      </label>
+
+                      <label
+                        className={`flex items-center gap-2.5 p-3 rounded-2xl border cursor-pointer transition-all ${
+                          formData.status === 'blocked'
+                            ? 'border-rose-500 bg-rose-50/60 text-rose-900 ring-2 ring-rose-500/20 shadow-xs'
+                            : 'border-slate-200 hover:bg-slate-50 text-slate-700'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="edit_sales_status"
+                          value="blocked"
+                          checked={formData.status === 'blocked'}
+                          onChange={(e) => handleChange('status', e.target.value)}
+                          className="w-4 h-4 text-rose-600 focus:ring-rose-500 cursor-pointer shrink-0"
+                        />
+                        <div className="text-xs min-w-0">
+                          <span className="font-bold block">Blocked</span>
+                          <span className="text-[10px] text-slate-500 block truncate">Suspended</span>
+                        </div>
+                      </label>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Actions */}
-            <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+            {/* Actions (sticky footer) */}
+            <div className="flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 px-5 sm:px-6 py-3.5 border-t border-slate-100 bg-slate-50/70 shrink-0">
               <button
                 type="button"
                 onClick={onClose}
                 disabled={isSubmitting}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors disabled:opacity-50 cursor-pointer"
+                className="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-200/60 rounded-xl transition-colors disabled:opacity-50 cursor-pointer text-center"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="inline-flex items-center gap-2 px-5 py-2 text-xs font-bold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-xs transition-colors disabled:opacity-50 cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-md shadow-purple-500/20 transition-all disabled:opacity-50 cursor-pointer"
               >
                 {isSubmitting ? (
                   <>
@@ -696,4 +714,3 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
     </div>
   );
 }
-
