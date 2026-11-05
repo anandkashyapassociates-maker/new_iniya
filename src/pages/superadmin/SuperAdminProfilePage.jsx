@@ -14,6 +14,8 @@ import {
   Calendar,
   Clock,
   CheckCircle2,
+  Sparkles,
+  Key,
 } from 'lucide-react';
 import { useSuperAdminAuth } from '../../superadmin/auth/SuperAdminAuthContext';
 import superAdminAuthService from '../../superadmin/auth/superAdminAuthService';
@@ -101,123 +103,153 @@ export default function SuperAdminProfilePage() {
   };
 
   return (
-    <div className="w-full space-y-6 pb-8">
+    <div className="w-full space-y-6 pb-8 min-w-0">
       {/* Breadcrumb Navigation */}
       <nav className="flex items-center gap-2 text-xs text-slate-500 font-medium">
-        <Link to="/superadmin/dashboard" className="hover:text-slate-900 transition-colors">
+        <Link to="/superadmin/dashboard" className="hover:text-blue-600 transition-colors">
           Superadmin
         </Link>
         <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
         <span className="text-blue-600 font-semibold">Profile &amp; Security</span>
       </nav>
 
-      {/* Page Title & Description */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200">
-        <div>
-          <div className="flex items-center gap-2.5">
-            <div className="w-9 h-9 rounded-xl bg-blue-600/10 text-blue-600 flex items-center justify-center shadow-xs">
-              <ShieldCheck className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-semibold text-slate-900 tracking-tight">
-                Profile &amp; Security Settings
-              </h1>
-              <p className="text-xs text-slate-500">
-                Manage your executive root account credentials, security profile, and credentials.
-              </p>
-            </div>
+      {/* Page Title & Description with 3D Badge */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-200/80 animate-fade-in">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-sky-400 text-white flex items-center justify-center shrink-0 icon-3d shadow-md shadow-blue-500/20">
+            <ShieldCheck className="w-6 h-6 drop-shadow-sm" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2 flex-wrap">
+              Profile &amp; Security Settings
+              <span className="text-[11px] font-semibold font-mono px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                Root Clearance
+              </span>
+            </h1>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Manage your executive root account credentials, personal contact, and encryption secrets.
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Account Identity Card */}
-      <div className="bg-gradient-to-r from-slate-900 via-slate-900 to-blue-950 p-6 rounded-2xl border border-slate-800 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-sm">
-        <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-2xl bg-blue-600/20 border border-blue-500/30 text-blue-400 flex items-center justify-center text-xl font-semibold shadow-inner">
+      {/* Account Identity Card (Elevated 3D Banner) */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-indigo-950 p-6 sm:p-7 rounded-3xl border border-slate-800 text-white flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-xl animate-slide-up stagger-1">
+        {/* Ambient decorative glow */}
+        <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl pointer-events-none -mr-20 -mt-20" />
+        <div className="absolute bottom-0 left-1/3 w-60 h-60 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none" />
+
+        <div className="relative flex items-center gap-4 min-w-0">
+          <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-500 to-purple-500 text-white flex items-center justify-center text-2xl font-bold shadow-lg icon-3d shrink-0">
             {user?.name ? user.name.charAt(0).toUpperCase() : 'S'}
           </div>
-          <div>
-            <div className="flex items-center gap-2.5">
-              <h2 className="text-base font-bold text-white">{user?.name || 'Super Administrator'}</h2>
-              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-500/20 text-blue-300 border border-blue-500/30">
-                <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2.5 flex-wrap">
+              <h2 className="text-lg font-bold text-white truncate">{user?.name || 'Super Administrator'}</h2>
+              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full text-[11px] font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
                 Root Executive
               </span>
             </div>
-            <p className="text-xs text-slate-300 font-mono mt-1">{user?.email || 'superadmin@example.com'}</p>
+            <p className="text-xs text-slate-300 font-mono mt-1 truncate">{user?.email || 'superadmin@example.com'}</p>
           </div>
         </div>
 
-        <div className="text-xs text-slate-400 space-y-1.5 sm:text-right border-t sm:border-t-0 border-slate-800 pt-3 sm:pt-0">
-          <div className="flex items-center sm:justify-end gap-1.5">
-            <Calendar className="w-3.5 h-3.5 text-slate-500" />
-            <span>Account Created:</span>
-            <span className="text-slate-200 font-medium">
-              {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Active'}
+        <div className="relative text-xs text-slate-300 space-y-2 md:text-right border-t md:border-t-0 border-slate-800/80 pt-4 md:pt-0 shrink-0">
+          <div className="flex items-center md:justify-end gap-2">
+            <Calendar className="w-3.5 h-3.5 text-blue-400" />
+            <span className="text-slate-400">Account Created:</span>
+            <span className="text-white font-medium">
+              {user?.created_at ? new Date(user.created_at).toLocaleDateString() : 'Active System'}
             </span>
           </div>
-          <div className="flex items-center sm:justify-end gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-slate-500" />
-            <span>Session Status:</span>
-            <span className="text-emerald-400 font-medium">Verified Active</span>
+          <div className="flex items-center md:justify-end gap-2">
+            <Clock className="w-3.5 h-3.5 text-emerald-400" />
+            <span className="text-slate-400">Session Status:</span>
+            <span className="text-emerald-400 font-semibold flex items-center gap-1">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              Verified Active
+            </span>
           </div>
         </div>
       </div>
 
       {/* 2-Column Forms Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 min-w-0">
         {/* Profile Information Form */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col justify-between">
+        <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-7 shadow-xs hover:border-blue-200/80 transition-all duration-300 flex flex-col justify-between animate-slide-up stagger-2 group">
           <div>
-            <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 mb-5">
-              <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
-                <User className="w-4 h-4" />
+            <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-6">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-500 via-indigo-500 to-indigo-700 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
+                <User className="w-5 h-5 drop-shadow-sm" />
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">Personal Information</h3>
-                <p className="text-[11px] text-slate-400">Update your executive profile details</p>
+              <div className="min-w-0">
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                  Personal Information
+                </h3>
+                <p className="text-xs text-slate-500">Update your executive name &amp; email identity</p>
               </div>
             </div>
 
             <form id="profile-form" onSubmit={handleUpdateProfile} className="space-y-4">
-              <div>
+              <div className="min-w-0">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Display Name
+                  Display Name <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="text"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
-                    placeholder="Super Admin Name"
-                    className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 text-slate-900 font-medium"
+                    placeholder="e.g. Super Administrator"
+                    className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 ${
+                      profileErrors.name
+                        ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/15'
+                        : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500/15'
+                    }`}
                   />
                 </div>
                 {profileErrors.name && (
-                  <p className="text-[11px] text-rose-500 font-medium mt-1.5">{profileErrors.name[0]}</p>
+                  <p className="text-[11px] text-rose-500 font-medium mt-1">
+                    {profileErrors.name[0]}
+                  </p>
                 )}
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Primary Email Address
+                  Email Address <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    placeholder="superadmin@example.com"
-                    className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 text-slate-900 font-medium"
+                    placeholder="superadmin@iniya.com"
+                    className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 ${
+                      profileErrors.email
+                        ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/15'
+                        : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500/15'
+                    }`}
                   />
                 </div>
                 {profileErrors.email && (
-                  <p className="text-[11px] text-rose-500 font-medium mt-1.5">{profileErrors.email[0]}</p>
+                  <p className="text-[11px] text-rose-500 font-medium mt-1">
+                    {profileErrors.email[0]}
+                  </p>
                 )}
+              </div>
+
+              {/* Informational callout */}
+              <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs text-slate-600 flex items-start gap-2.5">
+                <Sparkles className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
+                <p className="text-[11px] leading-relaxed">
+                  Changing your root email will update where system alerts, database snapshots, and critical incident logs are delivered.
+                </p>
               </div>
             </form>
           </div>
@@ -227,107 +259,109 @@ export default function SuperAdminProfilePage() {
               type="submit"
               form="profile-form"
               disabled={profileSaving}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 rounded-xl shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 rounded-xl shadow-md shadow-blue-500/20 transition-all cursor-pointer disabled:opacity-50"
             >
               {profileSaving ? (
                 <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <Save className="w-3.5 h-3.5" />
               )}
-              <span>{profileSaving ? 'Saving...' : 'Save Profile Changes'}</span>
+              <span>{profileSaving ? 'Saving Changes...' : 'Save Profile Changes'}</span>
             </button>
           </div>
         </div>
 
         {/* Change Password Form */}
-        <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs flex flex-col justify-between">
+        <div className="bg-white rounded-3xl border border-slate-200/90 p-6 sm:p-7 shadow-xs hover:border-indigo-200/80 transition-all duration-300 flex flex-col justify-between animate-slide-up stagger-3 group">
           <div>
-            <div className="flex items-center gap-2.5 pb-4 border-b border-slate-100 mb-5">
-              <div className="w-7 h-7 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center">
-                <KeyRound className="w-4 h-4" />
+            <div className="flex items-center gap-3 pb-4 border-b border-slate-100 mb-6">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-indigo-500 via-purple-500 to-indigo-700 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
+                <Key className="w-5 h-5 drop-shadow-sm" />
               </div>
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">Change Password</h3>
-                <p className="text-[11px] text-slate-400">Update your executive authentication password</p>
+              <div className="min-w-0">
+                <h3 className="text-sm font-bold text-slate-900 uppercase tracking-wider">
+                  Security &amp; Password
+                </h3>
+                <p className="text-xs text-slate-500">Rotate master password for root clearance</p>
               </div>
             </div>
 
             <form id="password-form" onSubmit={handleChangePassword} className="space-y-4">
-              <div>
+              <div className="min-w-0">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Current Password
+                  Current Password <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type={showCurrentPassword ? 'text' : 'password'}
                     value={currentPassword}
                     onChange={(e) => setCurrentPassword(e.target.value)}
                     placeholder="••••••••••••"
                     required
-                    className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 text-slate-900 font-medium"
+                    className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/15 focus:border-indigo-500 text-slate-900 font-medium transition-all duration-200"
                   />
                   <button
                     type="button"
                     onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
                   >
                     {showCurrentPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
                 {passwordErrors.current_password && (
-                  <p className="text-[11px] text-rose-500 font-medium mt-1.5">
+                  <p className="text-[11px] text-rose-500 font-medium mt-1">
                     {passwordErrors.current_password[0]}
                   </p>
                 )}
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  New Password
+                  New Password <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type={showNewPassword ? 'text' : 'password'}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Minimum 8 characters"
                     required
-                    className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 text-slate-900 font-medium"
+                    className="w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/15 focus:border-indigo-500 text-slate-900 font-medium transition-all duration-200"
                   />
                   <button
                     type="button"
                     onClick={() => setShowNewPassword(!showNewPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
                   >
                     {showNewPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                   </button>
                 </div>
                 {passwordErrors.password && (
-                  <p className="text-[11px] text-rose-500 font-medium mt-1.5">
+                  <p className="text-[11px] text-rose-500 font-medium mt-1">
                     {passwordErrors.password[0]}
                   </p>
                 )}
               </div>
 
-              <div>
+              <div className="min-w-0">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                  Confirm New Password
+                  Confirm New Password <span className="text-rose-500">*</span>
                 </label>
                 <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                   <input
                     type={showNewPassword ? 'text' : 'password'}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="••••••••••••"
                     required
-                    className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-600 text-slate-900 font-medium"
+                    className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white border border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-indigo-500/15 focus:border-indigo-500 text-slate-900 font-medium transition-all duration-200"
                   />
                 </div>
                 {passwordErrors.password_confirmation && (
-                  <p className="text-[11px] text-rose-500 font-medium mt-1.5">
+                  <p className="text-[11px] text-rose-500 font-medium mt-1">
                     {passwordErrors.password_confirmation[0]}
                   </p>
                 )}
@@ -340,14 +374,14 @@ export default function SuperAdminProfilePage() {
               type="submit"
               form="password-form"
               disabled={passwordSaving}
-              className="inline-flex items-center gap-2 px-5 py-2.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-xs transition-all disabled:opacity-50 cursor-pointer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-md transition-all disabled:opacity-50 cursor-pointer"
             >
               {passwordSaving ? (
                 <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
               ) : (
                 <Lock className="w-3.5 h-3.5" />
               )}
-              <span>{passwordSaving ? 'Updating...' : 'Update Password'}</span>
+              <span>{passwordSaving ? 'Updating Password...' : 'Update Password'}</span>
             </button>
           </div>
         </div>
