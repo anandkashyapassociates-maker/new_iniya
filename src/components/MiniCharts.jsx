@@ -359,12 +359,12 @@ export function SplineAreaChart({
 
   // Resolve dataset based on activePeriod or direct data prop
   const rawData = (dataByPeriod && dataByPeriod[activePeriod]) || data || [
-    { label: 'M1', value: 0, display: '₹0' },
-    { label: 'M2', value: 0, display: '₹0' },
-    { label: 'M3', value: 0, display: '₹0' },
-    { label: 'M4', value: 0, display: '₹0' },
-    { label: 'M5', value: 0, display: '₹0' },
-    { label: 'M6', value: 0, display: '₹0' },
+    { label: 'Jun', value: 0, display: '₹0' },
+    { label: 'Jul', value: 0, display: '₹0' },
+    { label: 'Aug', value: 0, display: '₹0' },
+    { label: 'Sep', value: 0, display: '₹0' },
+    { label: 'Oct', value: 0, display: '₹0' },
+    { label: 'Nov', value: 0, display: '₹0' },
   ];
 
   const chartData = Array.isArray(rawData) && rawData.length > 0 ? rawData : [
@@ -394,11 +394,11 @@ export function SplineAreaChart({
   };
 
   const w = 540;
-  const h = 210;
-  const padLeft = 45;
-  const padRight = 25;
-  const padTop = 25;
-  const padBottom = 35;
+  const h = 180;
+  const padLeft = 40;
+  const padRight = 20;
+  const padTop = 20;
+  const padBottom = 20;
   const chartW = w - padLeft - padRight;
   const chartH = h - padTop - padBottom;
 
@@ -484,11 +484,11 @@ export function SplineAreaChart({
   }
 
   return (
-    <div className={`bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs hover:shadow-xl transition-all duration-300 relative overflow-hidden group flex flex-col min-w-0 ${className}`}>
+    <div className={`bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs hover:shadow-xl transition-all duration-300 relative overflow-hidden group flex flex-col min-w-0 font-sans ${className}`}>
       {/* Ambient Background Decorative Glow */}
       <div className="absolute -top-12 -right-12 w-48 h-48 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent rounded-full blur-2xl pointer-events-none group-hover:scale-110 transition-transform duration-500" />
 
-      {/* Header & Metric Row (Grouped cleanly at top - no awkward gap) */}
+      {/* Header & Metric Row */}
       <div className="pb-4 border-b border-slate-100/90 relative z-10 space-y-3.5">
         {/* Title & Filter Dropdown Row */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -499,10 +499,10 @@ export function SplineAreaChart({
               </div>
             )}
             <div className="min-w-0">
-              <h2 className="text-sm sm:text-base font-bold font-display tracking-tight text-slate-900 truncate">
+              <h2 className="text-sm sm:text-base font-bold font-sans tracking-tight text-slate-900 truncate">
                 {title}
               </h2>
-              <p className="text-xs text-slate-500 mt-0.5 truncate">
+              <p className="text-xs text-slate-500 mt-0.5 truncate font-normal">
                 Live telemetry &bull; Interactive monthly spline trend
               </p>
             </div>
@@ -513,7 +513,7 @@ export function SplineAreaChart({
             <select
               value={activePeriod}
               onChange={handlePeriodChange}
-              className="text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100/90 border border-slate-200/90 rounded-xl px-3.5 py-2 cursor-pointer outline-none transition-colors shadow-2xs"
+              className="text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100/90 border border-slate-200/90 rounded-xl px-3.5 py-2 cursor-pointer outline-none transition-colors shadow-2xs font-sans"
             >
               {periods.map((p) => (
                 <option key={p} value={p}>
@@ -526,54 +526,62 @@ export function SplineAreaChart({
 
         {/* Large Headline & Trend Badge */}
         <div className="flex items-center gap-3 pt-1 flex-wrap">
-          <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-display text-slate-900 tracking-tight tabular-numbers">
+          <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-sans text-slate-900 tracking-tight tabular-nums">
             {animatedHeadline}
           </div>
           {trendBadge && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs font-sans">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {trendBadge}
             </span>
           )}
-          <span className="text-[11px] text-slate-400 font-medium hidden sm:inline-block ml-auto">
+          <span className="text-[11px] text-slate-400 font-medium hidden sm:inline-block ml-auto font-sans">
             Hover points for monthly breakdown
           </span>
         </div>
       </div>
 
-      {/* SVG Canvas Area (Takes remaining height fluidly without huge void) */}
-      <div className="relative w-full flex-1 min-h-[220px] sm:min-h-[260px] pt-4 flex flex-col justify-end">
+      {/* Interactive Chart Canvas Area */}
+      <div className="relative w-full flex-1 min-h-[220px] sm:min-h-[260px] pt-4 flex flex-col justify-between">
+        {/* Crisp HTML Y-Axis Labels Column on Left (Zero SVG distortion) */}
+        <div className="absolute left-0 top-4 bottom-12 flex flex-col justify-between text-[11px] font-semibold text-slate-400 pointer-events-none select-none pl-1 z-10 font-sans">
+          {computedYLabels.map((lbl, idx) => (
+            <span key={lbl + idx} className="leading-none tabular-nums">
+              {lbl}
+            </span>
+          ))}
+        </div>
+
         {/* Subtle zero-state helper if all values are 0 */}
         {rawMax <= 0 && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
-            <span className="px-3.5 py-1 rounded-full bg-slate-50 border border-slate-200/70 text-slate-400 text-xs font-medium shadow-2xs">
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-10 z-10">
+            <span className="px-3.5 py-1.5 rounded-full bg-slate-50/90 backdrop-blur-xs border border-slate-200/80 text-slate-400 text-xs font-medium shadow-2xs font-sans">
               No transactions recorded in {activePeriod}
             </span>
           </div>
         )}
 
-        <svg
-          viewBox={`0 0 ${w} ${h}`}
-          className="w-full h-full min-h-[200px] overflow-visible"
-          preserveAspectRatio="none"
-        >
-          <defs>
-            <linearGradient id="splineAreaBlue" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.32" />
-              <stop offset="70%" stopColor="#93c5fd" stopOpacity="0.08" />
-              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
-            </linearGradient>
-            <filter id="badgeShadow" x="-20%" y="-20%" width="140%" height="140%">
-              <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.12" />
-            </filter>
-          </defs>
+        {/* SVG Graphic (Only renders vector shapes, curves, and dots - no distorted text) */}
+        <div className="relative w-full flex-1 min-h-[170px]">
+          <svg
+            viewBox={`0 0 ${w} ${h}`}
+            className="w-full h-full min-h-[170px] overflow-visible"
+            preserveAspectRatio="none"
+          >
+            <defs>
+              <linearGradient id="splineAreaBlue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.28" />
+                <stop offset="70%" stopColor="#93c5fd" stopOpacity="0.06" />
+                <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
+              </linearGradient>
+            </defs>
 
-          {/* Horizontal Gridlines & Y-Axis Labels */}
-          {computedYLabels.map((label, idx) => {
-            const y = padTop + (idx / Math.max(computedYLabels.length - 1, 1)) * chartH;
-            return (
-              <g key={label + idx}>
+            {/* Horizontal Gridlines */}
+            {computedYLabels.map((_, idx) => {
+              const y = padTop + (idx / Math.max(computedYLabels.length - 1, 1)) * chartH;
+              return (
                 <line
+                  key={idx}
                   x1={padLeft}
                   y1={y}
                   x2={w - padRight}
@@ -582,126 +590,117 @@ export function SplineAreaChart({
                   strokeWidth="1"
                   strokeDasharray="4 4"
                 />
-                <text
-                  x={padLeft - 10}
-                  y={y + 4}
-                  fill="#94a3b8"
-                  fontSize="11"
-                  fontFamily="monospace"
-                  textAnchor="end"
+              );
+            })}
+
+            {/* Area Gradient */}
+            <path
+              d={areaD}
+              fill="url(#splineAreaBlue)"
+              style={{
+                opacity: isAnimated ? 1 : 0,
+                transition: 'opacity 0.9s ease-out 0.25s',
+              }}
+            />
+
+            {/* Spline Line */}
+            <path
+              d={pathD}
+              fill="none"
+              stroke="#2563eb"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeDasharray="1000"
+              strokeDashoffset={isAnimated ? 0 : 1000}
+              style={{
+                transition: 'stroke-dashoffset 1.3s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+            />
+
+            {/* Data Points */}
+            {points.map((p, i) => {
+              const isActive = i === activeIdx;
+              return (
+                <g
+                  key={p.label + i}
+                  className="cursor-pointer"
+                  onMouseEnter={() => setActiveIdx(i)}
+                  onClick={() => setActiveIdx(i)}
                 >
-                  {label}
-                </text>
-              </g>
-            );
-          })}
-
-          {/* Area Gradient with smooth fade-in */}
-          <path
-            d={areaD}
-            fill="url(#splineAreaBlue)"
-            style={{
-              opacity: isAnimated ? 1 : 0,
-              transition: 'opacity 0.9s ease-out 0.25s',
-            }}
-          />
-
-          {/* Spline Line with smooth SVG line-drawing animation */}
-          <path
-            d={pathD}
-            fill="none"
-            stroke="#2563eb"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeDasharray="1000"
-            strokeDashoffset={isAnimated ? 0 : 1000}
-            style={{
-              transition: 'stroke-dashoffset 1.3s cubic-bezier(0.16, 1, 0.3, 1)',
-            }}
-          />
-
-          {/* Data Points */}
-          {points.map((p, i) => {
-            const isActive = i === activeIdx;
-            return (
-              <g
-                key={p.label + i}
-                className="cursor-pointer"
-                onMouseEnter={() => setActiveIdx(i)}
-              >
-                {isActive && (
+                  {isActive && (
+                    <circle
+                      cx={p.x}
+                      cy={p.y}
+                      r="10"
+                      fill="#3b82f6"
+                      fillOpacity="0.2"
+                      className="animate-ping"
+                    />
+                  )}
                   <circle
                     cx={p.x}
                     cy={p.y}
-                    r="9"
-                    fill="#3b82f6"
-                    fillOpacity="0.25"
-                    className="animate-ping"
+                    r={isActive ? '6' : '4'}
+                    fill={isActive ? '#2563eb' : '#3b82f6'}
+                    stroke="#ffffff"
+                    strokeWidth="2.5"
+                    style={{
+                      transformOrigin: `${p.x}px ${p.y}px`,
+                      transform: isAnimated ? 'scale(1)' : 'scale(0)',
+                      transition: `transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) ${0.08 + i * 0.05}s, r 0.2s ease`,
+                    }}
                   />
-                )}
-                <circle
-                  cx={p.x}
-                  cy={p.y}
-                  r={isActive ? '5.5' : '4'}
-                  fill={isActive ? '#2563eb' : '#3b82f6'}
-                  stroke="#ffffff"
-                  strokeWidth="2"
-                  style={{
-                    transformOrigin: `${p.x}px ${p.y}px`,
-                    transform: isAnimated ? 'scale(1)' : 'scale(0)',
-                    transition: `transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) ${0.1 + i * 0.08}s, r 0.2s ease`,
-                  }}
-                />
+                </g>
+              );
+            })}
+          </svg>
 
-                {/* X-Axis Month / Category Label */}
-                <text
-                  x={p.x}
-                  y={h - 10}
-                  fill={isActive ? '#1e293b' : '#94a3b8'}
-                  fontSize="11"
-                  fontWeight={isActive ? '700' : '500'}
-                  textAnchor="middle"
-                >
-                  {p.label}
-                </text>
-              </g>
+          {/* Premium Crisp HTML Floating Tooltip Badge (Zero distortion, Normal Premium Typography) */}
+          {activePoint && (
+            <div
+              className="absolute z-30 pointer-events-none transition-all duration-200 ease-out flex flex-col items-center"
+              style={{
+                left: `${(activePoint.x / w) * 100}%`,
+                top: `${(activePoint.y / h) * 100}%`,
+                transform: 'translate(-50%, -125%)',
+              }}
+            >
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/95 text-white shadow-xl shadow-slate-900/20 border border-slate-700/60 backdrop-blur-md whitespace-nowrap">
+                <span className="text-[10px] font-semibold text-slate-400 font-sans uppercase tracking-wider">
+                  {activePoint.label}:
+                </span>
+                <span className="text-xs font-bold text-white font-sans tracking-tight tabular-nums">
+                  {activePoint.display || (typeof activePoint.value === 'number' ? `₹${activePoint.value.toLocaleString('en-IN')}` : activePoint.value)}
+                </span>
+              </div>
+              {/* Tooltip Caret */}
+              <div className="w-2 h-2 bg-slate-900/95 rotate-45 -mt-1 border-r border-b border-slate-700/60" />
+            </div>
+          )}
+        </div>
+
+        {/* Crisp HTML X-Axis Month / Category Labels (Pure Plus Jakarta Sans / Inter - No condensation) */}
+        <div className="flex items-center justify-between pl-9 pr-3 pt-2 border-t border-slate-100/90 mt-1 select-none font-sans">
+          {chartData.map((d, i) => {
+            const isActive = i === activeIdx;
+            return (
+              <button
+                key={d.label + i}
+                type="button"
+                onClick={() => setActiveIdx(i)}
+                onMouseEnter={() => setActiveIdx(i)}
+                className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer text-center font-sans ${
+                  isActive
+                    ? 'text-blue-600 bg-blue-50/90 font-bold shadow-2xs scale-105 ring-1 ring-blue-500/20'
+                    : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'
+                }`}
+              >
+                {d.label}
+              </button>
             );
           })}
-
-          {/* Floating Tooltip Pill for Active Point */}
-          {activePoint && (
-            <g
-              style={{
-                transform: `translate(${Math.max(Math.min(activePoint.x, w - padRight - 50), padLeft + 50)}px, ${activePoint.y - 32}px)`,
-                transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-              }}
-              filter="url(#badgeShadow)"
-            >
-              <rect
-                x="-48"
-                y="-14"
-                width="96"
-                height="24"
-                rx="12"
-                fill="#ffffff"
-                stroke="#2563eb"
-                strokeWidth="1.5"
-              />
-              <text
-                x="0"
-                y="2"
-                fill="#1e293b"
-                fontSize="11"
-                fontWeight="700"
-                fontFamily="sans-serif"
-                textAnchor="middle"
-              >
-                {activePoint.display || activePoint.value}
-              </text>
-            </g>
-          )}
-        </svg>
+        </div>
       </div>
     </div>
   );
