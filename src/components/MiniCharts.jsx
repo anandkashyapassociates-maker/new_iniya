@@ -394,10 +394,10 @@ export function SplineAreaChart({
   };
 
   const w = 540;
-  const h = 200;
+  const h = 210;
   const padLeft = 45;
-  const padRight = 30;
-  const padTop = 30;
+  const padRight = 25;
+  const padTop = 25;
   const padBottom = 35;
   const chartW = w - padLeft - padRight;
   const chartH = h - padTop - padBottom;
@@ -406,10 +406,12 @@ export function SplineAreaChart({
   const numericValues = chartData.map((d) =>
     typeof d.value === 'number' ? d.value : parseFloat(d.value) || 0
   );
-  const rawMax = Math.max(...numericValues, 1);
+  const rawMax = Math.max(...numericValues, 0);
 
   let maxVal = rawMax;
-  if (rawMax <= 5) {
+  if (rawMax <= 0) {
+    maxVal = 10;
+  } else if (rawMax <= 5) {
     maxVal = 5;
   } else if (rawMax <= 10) {
     maxVal = 10;
@@ -424,7 +426,6 @@ export function SplineAreaChart({
   } else {
     maxVal = Math.ceil(rawMax / 50000) * 50000;
   }
-  if (maxVal === 0) maxVal = 10;
 
   const formatTick = (val) => {
     if (val >= 100000) {
@@ -483,53 +484,77 @@ export function SplineAreaChart({
   }
 
   return (
-    <div className={`bg-white rounded-2xl border border-slate-100 p-5 shadow-xs flex flex-col justify-between ${className}`}>
-      {/* Header Row */}
-      <div className="flex items-center justify-between gap-3 pb-3">
-        <div className="flex items-center gap-2">
-          {Icon && (
-            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
-              <Icon className="w-4 h-4" />
+    <div className={`bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs hover:shadow-xl transition-all duration-300 relative overflow-hidden group flex flex-col min-w-0 ${className}`}>
+      {/* Ambient Background Decorative Glow */}
+      <div className="absolute -top-12 -right-12 w-48 h-48 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent rounded-full blur-2xl pointer-events-none group-hover:scale-110 transition-transform duration-500" />
+
+      {/* Header & Metric Row (Grouped cleanly at top - no awkward gap) */}
+      <div className="pb-4 border-b border-slate-100/90 relative z-10 space-y-3.5">
+        {/* Title & Filter Dropdown Row */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-3 min-w-0">
+            {Icon && (
+              <div className="w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-sky-400 text-white flex items-center justify-center icon-3d shadow-md shadow-blue-500/25 shrink-0 group-hover:scale-105 group-hover:-rotate-2 transition-all duration-300">
+                <Icon className="w-5 h-5 sm:w-6 sm:h-6 drop-shadow-sm" />
+              </div>
+            )}
+            <div className="min-w-0">
+              <h2 className="text-sm sm:text-base font-bold font-display tracking-tight text-slate-900 truncate">
+                {title}
+              </h2>
+              <p className="text-xs text-slate-500 mt-0.5 truncate">
+                Live telemetry &bull; Interactive monthly spline trend
+              </p>
             </div>
+          </div>
+
+          {/* Dropdown filter */}
+          <div className="relative self-start sm:self-auto shrink-0">
+            <select
+              value={activePeriod}
+              onChange={handlePeriodChange}
+              className="text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100/90 border border-slate-200/90 rounded-xl px-3.5 py-2 cursor-pointer outline-none transition-colors shadow-2xs"
+            >
+              {periods.map((p) => (
+                <option key={p} value={p}>
+                  {p}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Large Headline & Trend Badge */}
+        <div className="flex items-center gap-3 pt-1 flex-wrap">
+          <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-display text-slate-900 tracking-tight tabular-numbers">
+            {animatedHeadline}
+          </div>
+          {trendBadge && (
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              {trendBadge}
+            </span>
           )}
-          <h2 className="text-sm font-bold font-display tracking-tight text-slate-800">
-            {title}
-          </h2>
-        </div>
-
-        {/* Dropdown filter */}
-        <div className="relative">
-          <select
-            value={activePeriod}
-            onChange={handlePeriodChange}
-            className="text-xs font-semibold text-slate-600 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-xl px-3 py-1.5 cursor-pointer outline-none transition-colors"
-          >
-            {periods.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Large Headline & Trend */}
-      <div className="flex items-baseline gap-3 mt-1 mb-2">
-        <div className="text-2xl sm:text-3xl font-extrabold font-display text-slate-900 tracking-tight tabular-numbers">
-          {animatedHeadline}
-        </div>
-        {trendBadge && (
-          <span className="text-xs font-bold text-emerald-600 font-mono tracking-tight">
-            {trendBadge}
+          <span className="text-[11px] text-slate-400 font-medium hidden sm:inline-block ml-auto">
+            Hover points for monthly breakdown
           </span>
-        )}
+        </div>
       </div>
 
-      {/* SVG Canvas */}
-      <div className="relative w-full h-48 sm:h-52">
+      {/* SVG Canvas Area (Takes remaining height fluidly without huge void) */}
+      <div className="relative w-full flex-1 min-h-[220px] sm:min-h-[260px] pt-4 flex flex-col justify-end">
+        {/* Subtle zero-state helper if all values are 0 */}
+        {rawMax <= 0 && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-8">
+            <span className="px-3.5 py-1 rounded-full bg-slate-50 border border-slate-200/70 text-slate-400 text-xs font-medium shadow-2xs">
+              No transactions recorded in {activePeriod}
+            </span>
+          </div>
+        )}
+
         <svg
           viewBox={`0 0 ${w} ${h}`}
-          className="w-full h-full overflow-visible"
+          className="w-full h-full min-h-[200px] overflow-visible"
           preserveAspectRatio="none"
         >
           <defs>

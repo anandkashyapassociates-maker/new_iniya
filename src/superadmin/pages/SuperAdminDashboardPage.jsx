@@ -1026,7 +1026,7 @@ export default function SuperAdminDashboardPage() {
       {/* ======================================================== */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Left (Col 1-7): Genuine Monthly Account Onboarding Spline Chart */}
-        <div className="lg:col-span-7 flex flex-col">
+        <div className="lg:col-span-7 flex flex-col min-w-0">
           <SplineAreaChart
             title="Enterprise Growth & Department Distribution"
             icon={Activity}
