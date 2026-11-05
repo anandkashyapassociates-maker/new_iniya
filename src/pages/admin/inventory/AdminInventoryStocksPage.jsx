@@ -30,6 +30,7 @@ import DataTable from '../../../components/DataTable';
 import adminInventoryService from '../../../services/adminInventoryService';
 import { useToast } from '../../../context/ToastContext';
 import { useAdminAuth } from '../../../features/auth/AdminAuthContext';
+import { getImageUrl } from '../../../utils/imageUrl';
 
 const commonBusinessUnits = [
   'Piece',
@@ -363,7 +364,7 @@ export default function AdminInventoryStocksPage() {
             <Package className="w-5 h-5 text-slate-400" />
             {(p.product_image || p.image_url) && (
               <img
-                src={p.image_url || p.product_image}
+                src={getImageUrl(p.image_url || p.product_image)}
                 alt={p.product_name}
                 className="absolute inset-0 w-full h-full object-cover rounded-xl"
                 onError={(e) => {
@@ -711,7 +712,7 @@ export default function AdminInventoryStocksPage() {
                 <Package className="w-5 h-5 text-slate-400" />
                 {(stockModal.product.product_image || stockModal.product.image_url) && (
                   <img
-                    src={stockModal.product.image_url || stockModal.product.product_image}
+                    src={getImageUrl(stockModal.product.image_url || stockModal.product.product_image)}
                     alt={stockModal.product.product_name}
                     className="absolute inset-0 w-full h-full object-cover rounded-xl"
                     onError={(e) => {
@@ -952,7 +953,7 @@ export default function AdminInventoryStocksPage() {
                 <Package className="w-5 h-5 text-slate-400" />
                 {(issueModal.product.product_image || issueModal.product.image_url) && (
                   <img
-                    src={issueModal.product.image_url || issueModal.product.product_image}
+                    src={getImageUrl(issueModal.product.image_url || issueModal.product.product_image)}
                     alt={issueModal.product.product_name}
                     className="absolute inset-0 w-full h-full object-cover rounded-xl"
                     onError={(e) => {

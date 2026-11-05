@@ -17,11 +17,11 @@ export default defineConfig({
     host: 'localhost',
     proxy: {
       '/api': {
-        target: 'https://apptesting.fun',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
       '/storage': {
-        target: 'https://apptesting.fun',
+        target: 'http://127.0.0.1:8000',
         changeOrigin: true,
       },
     },

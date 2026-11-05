@@ -23,6 +23,7 @@ import {
 import SalesMemberStatusBadge from './SalesMemberStatusBadge';
 import SalesMemberEditModal from './SalesMemberEditModal';
 import salesMemberManagementService from '../services/salesMemberManagementService';
+import { getImageUrl } from '../../utils/imageUrl';
 import { useToast } from '../../context/ToastContext';
 
 export default function SalesMemberDetailsPage() {
@@ -410,7 +411,7 @@ export default function SalesMemberDetailsPage() {
                     <td className="py-3 px-4">
                       {member.profile_photo ? (
                         <img
-                          src={member.profile_photo.startsWith('http') || member.profile_photo.startsWith('blob:') ? member.profile_photo : `/storage/${member.profile_photo}`}
+                          src={getImageUrl(member.image_url || member.profile_photo)}
                           alt={member.name}
                           className="w-8 h-8 rounded-full object-cover border border-slate-200 shadow-2xs"
                         />

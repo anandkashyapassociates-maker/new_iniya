@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Menu, ChevronDown, User, LogOut, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import LiveClock from '../components/LiveClock';
+import { getImageUrl } from '../utils/imageUrl';
 
 export default function Topbar({
   role = 'admin',
@@ -72,8 +73,8 @@ export default function Topbar({
                   : 'bg-gradient-to-tr from-blue-600 to-cyan-500'
               }`}
             >
-              {user?.image_url ? (
-                <img src={user.image_url} alt={user.name || 'User'} className="w-full h-full object-cover" />
+              {user?.image_url || user?.image ? (
+                <img src={getImageUrl(user.image_url || user.image)} alt={user.name || 'User'} className="w-full h-full object-cover" />
               ) : (
                 user?.name ? user.name.charAt(0).toUpperCase() : 'U'
               )}

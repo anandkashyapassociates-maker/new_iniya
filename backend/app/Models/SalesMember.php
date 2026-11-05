@@ -48,6 +48,30 @@ class SalesMember extends Model
     ];
 
     /**
+     * Appended attributes.
+     */
+    protected $appends = [
+        'image_url',
+    ];
+
+    /**
+     * Accessor for full image URL.
+     */
+    public function getImageUrlAttribute(): ?string
+    {
+        $photo = $this->profile_photo;
+        if (! $photo) {
+            return null;
+        }
+
+        if (str_starts_with($photo, 'http://') || str_starts_with($photo, 'https://')) {
+            return $photo;
+        }
+
+        return asset('storage/'.ltrim($photo, '/'));
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

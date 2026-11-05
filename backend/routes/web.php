@@ -11,4 +11,4 @@ Route::get('/{any?}', function () {
     }
 
     return view('welcome');
-})->where('any', '^(?!api|sanctum|up).*$');
+})->where('any', '^(?!api|sanctum|up|storage).*$');

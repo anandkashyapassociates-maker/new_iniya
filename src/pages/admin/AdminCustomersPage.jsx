@@ -30,6 +30,7 @@ import ConfirmDialog from '../../components/ConfirmDialog';
 import adminService from '../../services/adminService';
 import { useToast } from '../../context/ToastContext';
 import { useAdminAuth } from '../../features/auth/AdminAuthContext';
+import { getImageUrl } from '../../utils/imageUrl';
 
 function CustomerAvatar({ customer, size = 'sm' }) {
   const [imgError, setImgError] = useState(false);
@@ -50,7 +51,7 @@ function CustomerAvatar({ customer, size = 'sm' }) {
   if (customer?.image_url && !imgError) {
     return (
       <img
-        src={customer.image_url}
+        src={getImageUrl(customer.image_url || customer.image)}
         alt={customer.name}
         className={`${sizeClass} object-cover border-2 border-white shadow-xs shrink-0 ring-1 ring-slate-200/80`}
         onError={() => setImgError(true)}

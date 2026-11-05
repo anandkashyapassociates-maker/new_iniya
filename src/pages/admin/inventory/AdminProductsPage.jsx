@@ -27,6 +27,7 @@ import ConfirmDialog from '../../../components/ConfirmDialog';
 import adminInventoryService from '../../../services/adminInventoryService';
 import { useToast } from '../../../context/ToastContext';
 import { useAdminAuth } from '../../../features/auth/AdminAuthContext';
+import { getImageUrl } from '../../../utils/imageUrl';
 
 export default function AdminProductsPage() {
   const toast = useToast();
@@ -148,9 +149,9 @@ export default function AdminProductsPage() {
       className: 'w-[32%]',
       render: (p) => (
         <div className="flex items-center gap-3">
-          {p.image_url ? (
+          {p.image_url || p.product_image ? (
             <img
-              src={p.image_url}
+              src={getImageUrl(p.image_url || p.product_image)}
               alt={p.product_name}
               className="w-10 h-10 rounded-xl object-cover border border-slate-200/80 shadow-2xs shrink-0 bg-slate-50"
             />
@@ -466,9 +467,9 @@ export default function AdminProductsPage() {
             {/* Modal Header */}
             <div className="flex items-start justify-between pb-3.5 border-b border-slate-100">
               <div className="flex items-center gap-3.5">
-                {viewProduct.image_url ? (
+                {viewProduct.image_url || viewProduct.product_image ? (
                   <img
-                    src={viewProduct.image_url}
+                    src={getImageUrl(viewProduct.image_url || viewProduct.product_image)}
                     alt={viewProduct.product_name}
                     className="w-14 h-14 rounded-2xl object-cover border border-slate-200 shadow-xs"
                   />

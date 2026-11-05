@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import salesMemberManagementService from '../services/salesMemberManagementService';
 import { useToast } from '../../context/ToastContext';
+import { getImageUrl } from '../../utils/imageUrl';
 
 const DEPARTMENTS = [
   'Enterprise Sales',
@@ -405,7 +406,7 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
                   <div className="flex items-center gap-2">
                     {previewPhoto && (
                       <img
-                        src={previewPhoto.startsWith('blob:') || previewPhoto.startsWith('http') ? previewPhoto : `/storage/${previewPhoto}`}
+                        src={getImageUrl(previewPhoto)}
                         alt="Photo"
                         className="w-8 h-8 rounded-lg object-cover border border-slate-200"
                       />

@@ -17,6 +17,7 @@ import {
 import DataTable from '../../components/DataTable';
 import superAdminInventoryService from '../services/superAdminInventoryService';
 import { useToast } from '../../context/ToastContext';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export default function SuperAdminInventoryStocksPage() {
   const toast = useToast();
@@ -120,7 +121,7 @@ export default function SuperAdminInventoryStocksPage() {
             <Package className="w-4 h-4 text-slate-400" />
             {(p.product_image || p.image_url) && (
               <img
-                src={p.image_url || p.product_image}
+                src={getImageUrl(p.image_url || p.product_image)}
                 alt={p.product_name}
                 className="absolute inset-0 w-full h-full object-cover rounded-xl"
                 onError={(e) => {
