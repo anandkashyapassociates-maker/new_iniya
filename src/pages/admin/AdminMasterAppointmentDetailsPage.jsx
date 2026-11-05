@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, Navigate } from 'react-router-dom';
 import {
   Calendar,
@@ -336,16 +336,14 @@ export default function AdminMasterAppointmentDetailsPage() {
 
   const sessions = appointment.sessions || [];
 
-  const totalAppointmentFees = useMemo(() => {
-    if (sessions && sessions.length > 0) {
-      const sum = sessions.reduce((acc, s) => {
-        const p = s.service?.price !== undefined ? Number(s.service.price) : Number(s.payment_amount || 0);
-        return acc + (isNaN(p) ? 0 : p);
-      }, 0);
-      if (sum > 0) return sum;
-    }
-    return Number(appointment?.appointment_fees || 0);
-  }, [sessions, appointment?.appointment_fees]);
+  const computedSessionsFee = sessions.reduce((acc, s) => {
+    const p = s.service?.price !== undefined ? Number(s.service.price) : Number(s.payment_amount || 0);
+    return acc + (isNaN(p) ? 0 : p);
+  }, 0);
+
+  const totalAppointmentFees = computedSessionsFee > 0
+    ? computedSessionsFee
+    : Number(appointment?.appointment_fees || 0);
 
   return (
     <div className="space-y-6 pb-12">
@@ -508,15 +506,17 @@ export default function AdminMasterAppointmentDetailsPage() {
           <table className="w-full text-left text-sm">
             <thead className="bg-slate-50/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-y border-slate-200/70">
               <tr>
-                <th className="py-3 px-3.5 text-center w-16 whitespace-nowrap">S.NO.</th>
-                <th className="py-3 px-4">Treatment / Procedure</th>
-                <th className="py-3 px-4">Date & Time</th>
-                <th className="py-3 px-4">Assigned Staff</th>
-                <th className="py-3 px-4">Commission</th>
-                <th className="py-3 px-4">Product Used</th>
-                <th className="py-3 px-4 text-center">Session Photo</th>
-                <th className="py-3 px-4">Status</th>
-                <th className="py-3 px-4 text-center">Actions</th>
+                <th className="py-3 px-3.5 text-center w-12 whitespace-nowrap">S.NO.</th>
+                <th className="py-3 px-4 min-w-[200px]">Treatment / Procedure</th>
+                <th className="py-3 px-4 whitespace-nowrap">Date & Time</th>
+                <th className="py-3 px-4 min-w-[140px]">Assigned Staff</th>
+                <th className="py-3 px-4 whitespace-nowrap">Commission</th>
+                <th className="py-3 px-4 min-w-[140px]">Product Used</th>
+                <th className="py-3 px-3 text-center whitespace-nowrap">Session Photo</th>
+                <th className="py-3 px-4 whitespace-nowrap">Status</th>
+                <th className="py-3 px-4 text-center whitespace-nowrap">Reschedule</th>
+                <th className="py-3 px-3 text-center whitespace-nowrap">View</th>
+                <th className="py-3 px-3 text-center whitespace-nowrap">Delete</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -626,82 +626,101 @@ export default function AdminMasterAppointmentDetailsPage() {
                       )}
                     </td>
 
-                    {/* Status Dropdown */}
-                    <td className="py-3 px-4">
-                      <select
-                        value={ses.status}
-                        onChange={(e) => handleStatusChange(ses.id, e.target.value)}
-                        className={`text-xs font-bold px-2.5 py-1 rounded-lg border focus:outline-none transition-colors ${
+                    {/* Status Badge (Read-Only for Admin - power given to Staff) */}
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold uppercase tracking-wider ${
                           ses.status === 'pending'
-                            ? 'bg-amber-50 text-amber-700 border-amber-200'
+                            ? 'bg-amber-50 text-amber-700 border border-amber-200'
                             : ses.status === 'in_progress'
-                            ? 'bg-purple-50 text-purple-700 border-purple-200'
+                            ? 'bg-purple-50 text-purple-700 border border-purple-200'
                             : ses.status === 'completed'
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                            : 'bg-rose-50 text-rose-700 border-rose-200'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                            : 'bg-rose-50 text-rose-700 border border-rose-200'
                         }`}
                       >
-                        <option value="pending">Pending</option>
-                        <option value="in_progress">In Progress</option>
-                        <option value="completed">Completed</option>
-                        <option value="cancelled">Cancelled</option>
-                      </select>
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            ses.status === 'pending'
+                              ? 'bg-amber-500'
+                              : ses.status === 'in_progress'
+                              ? 'bg-purple-500 animate-pulse'
+                              : ses.status === 'completed'
+                              ? 'bg-emerald-500'
+                              : 'bg-rose-500'
+                          }`}
+                        />
+                        <span>
+                          {ses.status === 'pending'
+                            ? 'Pending'
+                            : ses.status === 'in_progress'
+                            ? 'In Progress'
+                            : ses.status === 'completed'
+                            ? 'Completed'
+                            : 'Cancelled'}
+                        </span>
+                      </span>
                     </td>
 
-                    {/* Actions */}
-                    <td className="py-3 px-4 text-center">
-                      <div className="flex items-center justify-center space-x-1.5">
-                        {/* Session Receipt Button */}
-                        <button
-                          type="button"
-                          onClick={() => handleOpenSessionReceipt(ses)}
-                          title="View & Download Session Payment Receipt (₹)"
-                          className="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
-                        >
-                          <ReceiptIndianRupee className="w-4 h-4" />
-                        </button>
-
-                        {/* Reschedule Button */}
+                    {/* Dedicated Column: Reschedule & Audit Log (Directly after Status) */}
+                    <td className="py-3 px-4 text-center whitespace-nowrap">
+                      <div className="inline-flex items-center justify-center gap-1.5">
                         <button
                           type="button"
                           onClick={() => setRescheduleSession(ses)}
                           disabled={!isPending}
                           title={
                             isPending
-                              ? 'Reschedule Session'
-                              : `Reschedule blocked: Status is ${ses.status}`
+                              ? 'Reschedule Session to different date, time or doctor'
+                              : `Reschedule locked: Status is ${ses.status}`
                           }
-                          className={`p-1.5 rounded-lg transition-colors ${
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-semibold rounded-xl border transition-all whitespace-nowrap shadow-xs ${
                             isPending
-                              ? 'text-indigo-600 hover:text-indigo-800 hover:bg-indigo-50 cursor-pointer'
-                              : 'text-slate-300 cursor-not-allowed opacity-50'
+                              ? 'text-indigo-700 bg-indigo-50 hover:bg-indigo-100 hover:text-indigo-800 border-indigo-200 cursor-pointer'
+                              : 'text-slate-400 bg-slate-100 border-slate-200 cursor-not-allowed opacity-60'
                           }`}
                         >
-                          <RotateCw className="w-4 h-4" />
+                          <RotateCw className="w-3.5 h-3.5 text-indigo-500" />
+                          <span>Reschedule</span>
                         </button>
-
-                        {/* History Button */}
                         <button
                           type="button"
                           onClick={() => setHistorySession(ses)}
-                          title="View Reschedule Audit History"
-                          className="p-1.5 text-slate-600 hover:text-slate-900 hover:bg-slate-100 rounded-lg transition-colors"
+                          title="View Session Reschedule Audit History"
+                          className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold text-slate-600 bg-slate-50 hover:bg-slate-100 hover:text-slate-900 border border-slate-200 rounded-xl transition-all cursor-pointer whitespace-nowrap shadow-xs"
                         >
-                          <History className="w-4 h-4" />
+                          <History className="w-3.5 h-3.5 text-slate-400" />
+                          <span>History</span>
                         </button>
-
-                        {/* Delete Session Button */}
-                        {sessions.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => setDeleteSessionId(ses.id)}
-                            title="Delete this session"
-                            className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
                       </div>
+                    </td>
+
+                    {/* Dedicated Column: View Receipt (Icon Only, as before) */}
+                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenSessionReceipt(ses)}
+                        title="View Payment Receipt (₹)"
+                        className="p-1.5 text-emerald-600 hover:text-emerald-800 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
+                      >
+                        <ReceiptIndianRupee className="w-4 h-4" />
+                      </button>
+                    </td>
+
+                    {/* Dedicated Column: Delete Session (Icon Only, as before) */}
+                    <td className="py-3 px-3 text-center whitespace-nowrap">
+                      {sessions.length > 1 ? (
+                        <button
+                          type="button"
+                          onClick={() => setDeleteSessionId(ses.id)}
+                          title="Delete this session"
+                          className="p-1.5 text-rose-500 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      ) : (
+                        <span className="text-slate-300 font-mono text-sm select-none" title="Primary session cannot be deleted">—</span>
+                      )}
                     </td>
                   </tr>
                 );
