@@ -27,6 +27,8 @@ import {
   Clock,
 } from 'lucide-react';
 
+import { getImageUrl } from '../utils/imageUrl';
+
 export default function Sidebar({
   role = 'admin', // 'superadmin' | 'admin'
   user,
@@ -478,8 +480,8 @@ export default function Sidebar({
         <div className="p-4 border-t border-slate-800/80 bg-slate-950/40 space-y-3 shrink-0">
           <div className="flex items-center gap-3 px-1 pt-1">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-xs shrink-0 font-display overflow-hidden">
-              {user?.image_url ? (
-                <img src={user.image_url} alt={user.name || 'User'} className="w-full h-full object-cover" />
+              {user?.image_url || user?.image ? (
+                <img src={getImageUrl(user.image_url || user.image)} alt={user.name || 'User'} className="w-full h-full object-cover" />
               ) : (
                 user?.name ? user.name.charAt(0).toUpperCase() : 'U'
               )}

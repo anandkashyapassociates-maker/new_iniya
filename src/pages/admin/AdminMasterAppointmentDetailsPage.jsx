@@ -35,6 +35,7 @@ import AppointmentReceiptModal from '../../components/admin/AppointmentReceiptMo
 import SessionProductsModal from '../../components/admin/SessionProductsModal';
 import { useToast } from '../../context/ToastContext';
 import { useAdminAuth } from '../../features/auth/AdminAuthContext';
+import { getImageUrl } from '../../utils/imageUrl';
 
 export default function AdminMasterAppointmentDetailsPage() {
   const { id } = useParams();
@@ -444,14 +445,14 @@ export default function AdminMasterAppointmentDetailsPage() {
         <div className="bg-white rounded-2xl p-4 sm:p-5 border border-slate-100 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3.5 min-w-0">
             <a
-              href={appointment.image_url}
+              href={getImageUrl(appointment.image_url || appointment.image)}
               target="_blank"
               rel="noreferrer"
               className="relative w-14 h-14 sm:w-16 sm:h-16 rounded-xl overflow-hidden border border-slate-200 bg-slate-50 shrink-0 group block shadow-xs"
               title="Click to view full image"
             >
               <img
-                src={appointment.image_url}
+                src={getImageUrl(appointment.image_url || appointment.image)}
                 alt="Consultation Document"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform"
               />
@@ -473,7 +474,7 @@ export default function AdminMasterAppointmentDetailsPage() {
           </div>
 
           <a
-            href={appointment.image_url}
+            href={getImageUrl(appointment.image_url || appointment.image)}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center justify-center gap-1.5 px-4 py-2 text-xs font-semibold text-purple-700 bg-purple-50 hover:bg-purple-100 border border-purple-200 rounded-xl transition-all shrink-0 cursor-pointer shadow-xs whitespace-nowrap"
@@ -609,14 +610,14 @@ export default function AdminMasterAppointmentDetailsPage() {
                     <td className="py-3 px-4 text-center">
                       {ses.image_url ? (
                         <a
-                          href={ses.image_url}
+                          href={getImageUrl(ses.image_url || ses.image)}
                           target="_blank"
                           rel="noreferrer"
                           className="inline-block relative w-10 h-10 rounded-xl overflow-hidden border border-slate-200 hover:border-purple-500 bg-slate-50 shadow-xs transition-all group align-middle"
                           title="Click to view session photo full size"
                         >
                           <img
-                            src={ses.image_url}
+                            src={getImageUrl(ses.image_url || ses.image)}
                             alt={`Session #${ses.session_number}`}
                             className="w-full h-full object-cover group-hover:scale-110 transition-transform"
                           />
