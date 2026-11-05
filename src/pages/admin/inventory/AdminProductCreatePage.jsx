@@ -278,7 +278,7 @@ export default function AdminProductCreatePage() {
             Add New Inventory Product
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 font-normal mt-0.5 max-w-2xl leading-relaxed">
-            Enroll medical supplies, pharmaceuticals, hospital consumables, and surgical equipment with designated categorization.
+            Enroll medical supplies, pharmaceuticals, clinic consumables, and surgical equipment with designated categorization.
           </p>
         </div>
 

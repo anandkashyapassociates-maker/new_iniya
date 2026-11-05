@@ -209,7 +209,7 @@ export default function SuperAdminCategoriesPage() {
             Category Oversight &amp; Audit
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 font-normal mt-0.5 max-w-2xl leading-relaxed">
-            Monitor clinical departments enrolled by hospital administrators with centralized deletion and audit rights.
+            Monitor clinical departments enrolled by clinic administrators with centralized deletion and audit rights.
           </p>
         </div>
 
@@ -350,7 +350,7 @@ export default function SuperAdminCategoriesPage() {
               <div className="p-4 rounded-2xl bg-purple-50/70 border border-purple-200/70 space-y-2">
                 <div className="flex items-center gap-2 text-xs font-medium text-purple-900">
                   <UserCheck className="w-4 h-4 text-purple-600" />
-                  <span>Enrolled by Hospital Administrator</span>
+                  <span>Enrolled by Clinic Administrator</span>
                 </div>
                 <div className="text-xs text-slate-800 font-medium">
                   {selectedCategory.admin?.name || 'Administrator'}

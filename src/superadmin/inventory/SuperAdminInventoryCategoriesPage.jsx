@@ -164,7 +164,7 @@ export default function SuperAdminInventoryCategoriesPage() {
             Inventory Categories
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 font-normal mt-0.5 max-w-2xl leading-relaxed">
-            Monitor and govern all inventory categories and hospital departments created across clinic accounts.
+            Monitor and govern all inventory categories and clinic departments created across clinic accounts.
           </p>
         </div>
 

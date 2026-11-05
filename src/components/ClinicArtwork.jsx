@@ -151,7 +151,7 @@ export function ClinicAuthIllustration({ isSuperAdmin = false }) {
           </filter>
         </defs>
 
-        {/* Central Hospital / Clinic Glass Panel */}
+        {/* Central Clinic Glass Panel */}
         <rect
           x="30"
           y="25"
@@ -238,7 +238,7 @@ export function ClinicAuthIllustration({ isSuperAdmin = false }) {
         <line x1="105" y1="225" x2="150" y2="170" stroke="#334155" strokeWidth="1" strokeDasharray="2 2" />
         <line x1="275" y1="225" x2="230" y2="170" stroke="#334155" strokeWidth="1" strokeDasharray="2 2" />
 
-        {/* Bottom Hospital Status Pill */}
+        {/* Bottom Clinic Status Pill */}
         <rect x="110" y="240" width="160" height="24" rx="12" fill="#0f172a" stroke="#38bdf8" strokeWidth="1" />
         <circle cx="125" cy="252" r="3.5" fill="#10b981" />
         <text x="135" y="256" fill="#e2e8f0" fontSize="9" fontFamily="sans-serif" fontWeight="600" letterSpacing="0.8">

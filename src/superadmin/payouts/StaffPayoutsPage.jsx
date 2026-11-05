@@ -244,7 +244,7 @@ export default function StaffPayoutsPage() {
           <div>
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Staff Payouts</h1>
             <p className="text-xs sm:text-sm text-slate-500">
-              Disburse salaries, allowances, and track total payouts, paid disbursements, and remaining balances.
+              Disburse payouts, allowances, and track total payouts, paid disbursements, and remaining balances.
             </p>
           </div>
         </div>
@@ -288,7 +288,7 @@ export default function StaffPayoutsPage() {
             >
               {formatCurrency(summary.total_payout_amount || summary.total_amount)}
             </p>
-            <p className="text-xs text-slate-500 mt-0.5">Total payable salary & dues</p>
+            <p className="text-xs text-slate-500 mt-0.5">Total payable payouts & dues</p>
           </div>
 
           {/* Total Paid */}
@@ -710,7 +710,7 @@ export default function StaffPayoutsPage() {
                   <p className="text-xs text-slate-500">
                     {editingPayout
                       ? 'Modify disbursement details, payment mode, or remarks'
-                      : 'Disburse salary, allowance, advance or expense reimbursement'}
+                      : 'Disburse payout, allowance, advance or expense reimbursement'}
                   </p>
                 </div>
               </div>
@@ -880,7 +880,7 @@ export default function StaffPayoutsPage() {
                 </label>
                 <textarea
                   rows="3"
-                  placeholder="e.g. Salary disbursement for current month, travel allowance..."
+                  placeholder="e.g. Payout disbursement for current month, travel allowance..."
                   value={formData.note}
                   onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                   className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-800 resize-none"

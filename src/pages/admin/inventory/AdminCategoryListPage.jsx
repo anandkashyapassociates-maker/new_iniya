@@ -239,7 +239,7 @@ export default function AdminCategoryListPage() {
             Inventory Categories
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 font-normal mt-0.5 max-w-2xl leading-relaxed">
-            Manage product classification tiers, hospital stock departments, and medical supply categories.
+            Manage product classification tiers, clinic stock departments, and medical supply categories.
           </p>
         </div>
 

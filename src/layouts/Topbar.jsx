@@ -46,7 +46,7 @@ export default function Topbar({
           >
             <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
             <span className="sm:hidden">{isSuperAdmin ? 'HQ' : 'OPD Live'}</span>
-            <span className="hidden sm:inline">{isSuperAdmin ? 'Hospital Governance HQ' : 'OPD Live • Doctors On Duty'}</span>
+            <span className="hidden sm:inline">{isSuperAdmin ? 'Clinic Governance HQ' : 'OPD Live • Doctors On Duty'}</span>
           </span>
         </div>
       </div>

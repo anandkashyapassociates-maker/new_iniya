@@ -62,7 +62,7 @@ export default function SuperAdminAuthLayout({
             </div>
             <div className="flex items-center gap-2">
               <HeartPulse className="w-4 h-4 text-rose-400 shrink-0 animate-pulse" />
-              <span>Hospital Staff, Vendor &amp; OPD Telemetry Control</span>
+              <span>Clinic Staff, Vendor &amp; OPD Telemetry Control</span>
             </div>
           </div>
         </div>
@@ -115,7 +115,7 @@ export default function SuperAdminAuthLayout({
               <span>TLS / AES-256 Encrypted Session</span>
             </div>
             <div>
-              &copy; {new Date().getFullYear()} Iniya Hospital &amp; Clinic Suite.
+              &copy; {new Date().getFullYear()} Iniya Aesthetics &amp; Clinic Suite.
             </div>
           </div>
 

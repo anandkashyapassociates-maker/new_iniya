@@ -131,7 +131,7 @@ export default function AdminBrandCreatePage() {
             Add New Brand
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 font-normal mt-0.5 max-w-2xl leading-relaxed">
-            Register medical manufacturers, pharmaceutical suppliers, and hospital equipment brands.
+            Register medical manufacturers, pharmaceutical suppliers, and clinic equipment brands.
           </p>
         </div>
 

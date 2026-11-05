@@ -308,7 +308,7 @@ export default function AdminProductsPage() {
             Inventory Products Directory
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 font-normal mt-0.5 max-w-2xl leading-relaxed">
-            Manage hospital supplies, surgical gear, pharmaceutical stocks, and consumable medical units.
+            Manage clinic supplies, surgical gear, pharmaceutical stocks, and consumable medical units.
           </p>
         </div>
 

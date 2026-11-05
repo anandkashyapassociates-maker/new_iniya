@@ -1034,7 +1034,7 @@ export default function AdminInventoryStocksPage() {
                 <div className="flex items-center gap-2 px-3 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50 text-slate-700">
                   <UserCheck className="w-4 h-4 text-emerald-600 shrink-0" />
                   <span className="font-semibold">{user?.name || 'Admin User'}</span>
-                  <span className="text-slate-400 font-normal">({user?.email || 'admin@hospital.com'})</span>
+                  <span className="text-slate-400 font-normal">({user?.email || 'admin@clinic.com'})</span>
                 </div>
               </div>
 

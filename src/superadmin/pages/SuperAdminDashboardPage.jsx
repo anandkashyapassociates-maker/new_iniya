@@ -99,7 +99,7 @@ export default function SuperAdminDashboardPage() {
   }, []);
 
   if (loading) {
-    return <DashboardSkeleton title="Loading Executive Hospital Command Center..." />;
+    return <DashboardSkeleton title="Loading Executive Clinic Command Center..." />;
   }
 
   const summary = dashboardData?.summary || {
@@ -193,7 +193,7 @@ export default function SuperAdminDashboardPage() {
           </h1>
 
           <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-xs sm:max-w-sm leading-relaxed">
-            Hospital administrative governance, clinical reports, inventory supplies, and payout settlements.
+            Clinic administrative governance, clinical reports, inventory supplies, and payout settlements.
           </p>
 
           <div className="mt-4 flex items-center gap-3 flex-wrap">
@@ -232,7 +232,7 @@ export default function SuperAdminDashboardPage() {
                 </span>
               </div>
               <p className="text-xs text-amber-800 mt-1 leading-relaxed">
-                Hospital supplies require replenishment. Notify branch administrators to restock depleting medical supplies.
+                Clinic supplies require replenishment. Notify branch administrators to restock depleting medical supplies.
               </p>
             </div>
           </div>
@@ -269,7 +269,7 @@ export default function SuperAdminDashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
-          {/* Card A1: Hospital Admins */}
+          {/* Card A1: Clinic Admins */}
           <div className="bg-white rounded-3xl p-6 border border-slate-200/90 shadow-2xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 flex flex-col justify-between group">
             <div>
               {/* Top Row: 3D Royal Blue Shield + Active Rate Pill */}
@@ -284,7 +284,7 @@ export default function SuperAdminDashboardPage() {
 
               {/* Title & Subtitle */}
               <h3 className="text-base font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
-                Hospital Admins
+                Clinic Admins
               </h3>
               <p className="text-xs text-slate-500 mt-1">
                 Branch governance &amp; security
@@ -541,7 +541,7 @@ export default function SuperAdminDashboardPage() {
               Executive Domain Overview
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
-              High-level status across hospital clinical desk, inventory assets, and payout settlements.
+              High-level status across clinic desk, inventory assets, and payout settlements.
             </p>
           </div>
           <span className="text-xs font-semibold px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200/80 text-emerald-700 shadow-2xs">
@@ -968,11 +968,11 @@ export default function SuperAdminDashboardPage() {
                   </div>
                   <div className="min-w-0">
                     <span className="text-sm font-bold text-slate-800 block truncate">Patients &amp; Treatments</span>
-                    <span className="text-[11px] text-slate-400 font-medium block">Hospital registry</span>
+                    <span className="text-[11px] text-slate-400 font-medium block">Clinic registry</span>
                   </div>
                 </div>
                 <span className="px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 text-[10px] font-extrabold uppercase tracking-wide border border-blue-200/60 shadow-2xs shrink-0">
-                  Hospital Catalog
+                  Clinic Catalog
                 </span>
               </div>
 
@@ -1075,7 +1075,7 @@ export default function SuperAdminDashboardPage() {
                 )}
               </div>
               <p className="text-xs text-slate-500 mt-0.5">
-                Current hospital stock levels, valuation, catalog categories, and depletion warnings.
+                Current clinic stock levels, valuation, catalog categories, and depletion warnings.
               </p>
             </div>
           </div>
@@ -1244,7 +1244,7 @@ export default function SuperAdminDashboardPage() {
                 <div className="py-8 text-center bg-emerald-50/40 rounded-xl border border-emerald-100">
                   <CheckCircle2 className="w-7 h-7 text-emerald-500 mx-auto mb-1.5" />
                   <p className="text-xs font-semibold text-emerald-800">
-                    All hospital inventory items are currently optimal.
+                    All clinic inventory items are currently optimal.
                   </p>
                 </div>
               )}
@@ -1281,7 +1281,7 @@ export default function SuperAdminDashboardPage() {
                 Payout Settlements &amp; Financial Ledger
               </h2>
               <p className="text-xs text-slate-500 mt-0.5">
-                Staff salary disbursements, vendor supply invoices, and pending liability balance.
+                Staff payout disbursements, vendor supply invoices, and pending liability balance.
               </p>
             </div>
           </div>
@@ -1295,7 +1295,7 @@ export default function SuperAdminDashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {/* Card 1: Staff Salary Payouts */}
+          {/* Card 1: Staff Payouts */}
           <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 group flex flex-col justify-between relative overflow-hidden">
             <div className="absolute -top-12 -right-12 w-36 h-36 bg-purple-500/5 rounded-full blur-2xl group-hover:bg-purple-500/10 transition-colors pointer-events-none" />
 
@@ -1312,7 +1312,7 @@ export default function SuperAdminDashboardPage() {
 
               {/* Title & Subtitle */}
               <h3 className="text-base font-bold text-slate-900 group-hover:text-purple-600 transition-colors">
-                Staff Salary Payouts
+                Staff Payouts
               </h3>
               <p className="text-xs text-slate-500 mt-1">
                 Medical staff compensation vouchers &amp; payroll

@@ -36,7 +36,7 @@ const INDIAN_HOLIDAYS_BY_YEAR = {
   '2026-03-26': { title: 'Ram Navami', category: 'Gazetted Festival Holiday', status: 'Morning Shift (09:00 AM – 01:00 PM)', icon: '🏹' },
   '2026-03-31': { title: 'Mahavir Jayanti', category: 'Gazetted Holiday', status: 'Regular Clinical Shift', icon: '🕊️' },
   '2026-04-03': { title: 'Good Friday', category: 'Gazetted Holiday', status: 'Special Shift (10:00 AM – 02:00 PM)', icon: '✝️' },
-  '2026-04-05': { title: 'Easter Sunday', category: 'Restricted Holiday', status: 'Weekend Hospital Roster', icon: '🐣' },
+  '2026-04-05': { title: 'Easter Sunday', category: 'Restricted Holiday', status: 'Weekend Clinic Roster', icon: '🐣' },
   '2026-04-07': { title: 'World Health Day', category: 'Health Observance', status: 'Annual Full Body Health Camp', icon: '🩺' },
   '2026-04-14': { title: 'Dr. B.R. Ambedkar Jayanti / Vaisakhi', category: 'Gazetted Holiday', status: 'Regular Clinical Shift', icon: '🇮🇳' },
   '2026-04-15': { title: 'Poila Boishakh / Bahag Bihu', category: 'Restricted Holiday', status: 'Regular Clinical Shift', icon: '🌾' },
@@ -74,7 +74,7 @@ const INDIAN_HOLIDAYS_BY_YEAR = {
   '2026-11-09': { title: 'Govardhan Puja / Annakut', category: 'Restricted Holiday', status: 'Special Shift (10:00 AM – 02:00 PM)', icon: '⛰️' },
   '2026-11-11': { title: 'Bhai Dooj (Bhratri Dwitiya)', category: 'Restricted Holiday', status: 'Morning Shift (09:00 AM – 01:00 PM)', icon: '🏵️' },
   '2026-11-14': { title: "Children's Day & World Diabetes Day", category: 'Health & National Observance', status: 'Free Blood Glucose & Pediatric Camp', icon: '🎈' },
-  '2026-11-15': { title: 'Chhath Puja (Kharna)', category: 'Restricted Holiday', status: 'Weekend Hospital Roster', icon: '🌅' },
+  '2026-11-15': { title: 'Chhath Puja (Kharna)', category: 'Restricted Holiday', status: 'Weekend Clinic Roster', icon: '🌅' },
   '2026-11-17': { title: 'Chhath Puja (Surya Sashthi Arghya)', category: 'Restricted Holiday', status: 'Special Shift (10:00 AM – 02:00 PM)', icon: '🌅' },
   '2026-11-24': { title: 'Guru Nanak Jayanti (Gurpurab)', category: 'Gazetted Festival Holiday', status: 'Morning Shift (09:00 AM – 01:00 PM)', icon: '☬' },
   '2026-11-28': { title: 'Guru Tegh Bahadur Martyrdom Day', category: 'Restricted Holiday', status: 'Regular Clinical Shift', icon: '☬' },
@@ -451,7 +451,7 @@ export default function ClinicCalendarModal({ isOpen, onClose }) {
             ) : isSelectedSunday ? (
               <>
                 <span className="text-sm">☀️</span>
-                <span>Weekend Hospital OPD Roster</span>
+                <span>Weekend Clinic OPD Roster</span>
               </>
             ) : (
               <>
@@ -461,7 +461,7 @@ export default function ClinicCalendarModal({ isOpen, onClose }) {
             )}
           </div>
 
-          {/* Hospital Shift Info */}
+          {/* Clinic Shift Info */}
           <div className="flex items-center justify-between text-[11px] text-slate-500 pt-1 border-t border-slate-200/60">
             <span className="flex items-center gap-1">
               <Clock className="w-3 h-3 text-blue-500" />

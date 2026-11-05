@@ -58,7 +58,7 @@ export default function AuthLayout({
             <h2 className="text-lg sm:text-xl font-bold text-white tracking-tight leading-snug font-display">
               {isSuperAdmin
                 ? 'Clinical Governance & Enterprise Control'
-                : 'Doctor Consultation & Hospital Records Desk'}
+                : 'Doctor Consultation & Clinic Records Desk'}
             </h2>
             <p className="text-xs text-slate-300 mt-1.5 font-normal leading-relaxed">
               {isSuperAdmin
@@ -72,7 +72,7 @@ export default function AuthLayout({
             <ClinicAuthIllustration isSuperAdmin={isSuperAdmin} />
           </div>
 
-          {/* Bottom Security / Hospital Highlights */}
+          {/* Bottom Security / Clinic Highlights */}
           <div className="relative z-10 pt-3 border-t border-slate-800/80 space-y-2 text-xs text-slate-400">
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />

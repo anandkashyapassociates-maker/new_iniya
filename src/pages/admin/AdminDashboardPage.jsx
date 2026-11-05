@@ -338,7 +338,7 @@ export default function AdminDashboardPage() {
                 </span>
               </h4>
               <p className="text-xs text-slate-600 mt-0.5">
-                Hospital supplies require replenishment. Ensure adequate consumables before performing clinical treatments.
+                Clinic supplies require replenishment. Ensure adequate consumables before performing clinical treatments.
               </p>
             </div>
           </div>

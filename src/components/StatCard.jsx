@@ -2,7 +2,7 @@ import React from 'react';
 import useCountUp from '../hooks/useCountUp';
 
 /**
- * Executive StatCard for Hospital Administrative & Clinical Command Center.
+ * Executive StatCard for Clinic Administrative & Clinical Command Center.
  * Displays 100% real database metrics with 3D gradient icons, honest status pills,
  * and clean action indicators. No fake waves or hardcoded dummy values.
  */
