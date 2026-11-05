@@ -178,6 +178,7 @@ export default function AppRoutes() {
           <Route path="/admin/dashboard" element={<AdminDashboardPage />} />
           <Route path="/admin/profile" element={<AdminProfilePage />} />
           <Route path="/admin/change-password" element={<AdminChangePasswordPage />} />
+          <Route path="/admin/appointments/calendar" element={<AdminAppointmentCalendarPage />} />
 
           {/* Staff Personal Portal: Accessible only to Staff */}
           <Route path="/admin/my-appointments" element={<StaffMyAppointmentsPage />} />
@@ -190,7 +191,6 @@ export default function AppRoutes() {
             <Route path="/admin/appointments/create" element={<AdminMasterAppointmentCreatePage />} />
             <Route path="/admin/appointments/services" element={<AdminServicesManagementPage />} />
             <Route path="/admin/services" element={<Navigate to="/admin/appointments/services" replace />} />
-            <Route path="/admin/appointments/calendar" element={<AdminAppointmentCalendarPage />} />
             <Route path="/admin/appointments/:id" element={<AdminMasterAppointmentDetailsPage />} />
             <Route path="/admin/appointments/:id/edit" element={<AdminMasterAppointmentEditPage />} />
 
