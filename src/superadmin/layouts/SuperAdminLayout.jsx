@@ -211,6 +211,7 @@ export default function SuperAdminLayout() {
             {/* Dashboard Link */}
             <NavLink
               to="/superadmin/dashboard"
+              end
               onClick={() => setMobileMenuOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
@@ -229,6 +230,7 @@ export default function SuperAdminLayout() {
             {/* Profile & Security Link */}
             <NavLink
               to="/superadmin/profile"
+              end
               onClick={() => setMobileMenuOpen(false)}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all group ${
@@ -278,6 +280,7 @@ export default function SuperAdminLayout() {
                   {/* 1. Admin Creation */}
                   <NavLink
                     to="/superadmin/admin-management/create"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -294,6 +297,7 @@ export default function SuperAdminLayout() {
                   {/* 2. Admin Details */}
                   <NavLink
                     to="/superadmin/admin-management/details"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -344,6 +348,7 @@ export default function SuperAdminLayout() {
                   {/* 1. Staff Creation */}
                   <NavLink
                     to="/superadmin/staff-management/create"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -360,6 +365,7 @@ export default function SuperAdminLayout() {
                   {/* 2. Staff Details */}
                   <NavLink
                     to="/superadmin/staff-management/details"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -410,6 +416,7 @@ export default function SuperAdminLayout() {
                   {/* 1. Vendor Creation */}
                   <NavLink
                     to="/superadmin/vendors/create"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -428,6 +435,7 @@ export default function SuperAdminLayout() {
                   {/* 2. Vendor Details */}
                   <NavLink
                     to="/superadmin/vendors"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -481,6 +489,7 @@ export default function SuperAdminLayout() {
                   {/* 1. Sales Member Creation */}
                   <NavLink
                     to="/superadmin/sales-members/create"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -499,6 +508,7 @@ export default function SuperAdminLayout() {
                   {/* 2. Sales Member Details */}
                   <NavLink
                     to="/superadmin/sales-members"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -551,6 +561,7 @@ export default function SuperAdminLayout() {
                   {/* 1. Inventory Overview */}
                   <NavLink
                     to="/superadmin/inventory/overview"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -567,6 +578,7 @@ export default function SuperAdminLayout() {
                   {/* 2. All Products */}
                   <NavLink
                     to="/superadmin/inventory/products"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -583,6 +595,7 @@ export default function SuperAdminLayout() {
                   {/* 3. Stock Ledger */}
                   <NavLink
                     to="/superadmin/inventory/stocks"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -599,6 +612,7 @@ export default function SuperAdminLayout() {
                   {/* 4. Categories */}
                   <NavLink
                     to="/superadmin/inventory/categories"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -615,6 +629,7 @@ export default function SuperAdminLayout() {
                   {/* 4. Brands */}
                   <NavLink
                     to="/superadmin/inventory/brands"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -664,6 +679,7 @@ export default function SuperAdminLayout() {
                 <div className="pl-6 pr-1 pt-1.5 pb-1 space-y-1">
                   <NavLink
                     to="/superadmin/reports/appointments"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -679,6 +695,7 @@ export default function SuperAdminLayout() {
 
                   <NavLink
                     to="/superadmin/reports/sessions"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -694,6 +711,7 @@ export default function SuperAdminLayout() {
 
                   <NavLink
                     to="/superadmin/inventory/reports"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -744,6 +762,7 @@ export default function SuperAdminLayout() {
                   {/* 1. Staff Payouts */}
                   <NavLink
                     to="/superadmin/payouts/staff"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -760,6 +779,7 @@ export default function SuperAdminLayout() {
                   {/* 2. Vendor Payouts */}
                   <NavLink
                     to="/superadmin/payouts/vendors"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
@@ -776,6 +796,7 @@ export default function SuperAdminLayout() {
                   {/* 3. Payouts Ledger */}
                   <NavLink
                     to="/superadmin/payouts/ledger"
+                    end
                     onClick={() => setMobileMenuOpen(false)}
                     className={({ isActive }) =>
                       `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
