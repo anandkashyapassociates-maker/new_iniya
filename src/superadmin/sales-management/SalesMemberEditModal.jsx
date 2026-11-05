@@ -369,17 +369,24 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
                     </select>
                   </div>
 
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Update Profile Photo
-                  </label>
-                  <div className="flex items-center gap-2">
-                    {previewPhoto && (
-                      <img
-                        src={getImageUrl(previewPhoto)}
-                        alt="Photo"
-                        className="w-8 h-8 rounded-lg object-cover border border-slate-200"
-                      />
+                  <div className="min-w-0">
+                    <label className="block text-xs font-semibold text-slate-700 mb-1">
+                      Primary Mobile <span className="text-rose-500">*</span>
+                    </label>
+                    <input
+                      type="text"
+                      value={formData.mobile}
+                      onChange={(e) => handleChange('mobile', e.target.value)}
+                      required
+                      disabled={isSubmitting}
+                      className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white focus:outline-none focus:ring-4 transition-all duration-200 ${
+                        errors.mobile
+                          ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-200'
+                          : 'border-slate-300 focus:border-purple-600 focus:ring-purple-100'
+                      }`}
+                    />
+                    {errors.mobile && (
+                      <p className="text-[10px] text-rose-600 mt-1">{errors.mobile}</p>
                     )}
                   </div>
 
@@ -404,7 +411,7 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
                     <div className="flex items-center gap-2">
                       {previewPhoto ? (
                         <img
-                          src={previewPhoto}
+                          src={getImageUrl(previewPhoto)}
                           alt="Preview"
                           className="w-8 h-8 rounded-lg object-cover border border-slate-200 shrink-0"
                         />
