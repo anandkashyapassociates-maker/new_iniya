@@ -86,17 +86,22 @@ export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
       errs.email = 'Please provide a valid email format.';
     }
 
-    if (formData.mobile && formData.mobile.trim()) {
-      if (!/^(\+?\d{1,4}[-.\s]?)?(\(?\d{2,5}\)?[-.\s]?)?\d{3,5}[-.\s]?\d{3,5}$/.test(formData.mobile.trim()) || formData.mobile.replace(/\D/g, '').length < 7) {
-        errs.mobile = 'Please enter a valid mobile number (min 7 digits).';
-      }
+    if (!formData.mobile.trim()) {
+      errs.mobile = 'Mobile number is required.';
+    } else if (
+      !/^(\+?\d{1,4}[-.\s]?)?(\(?\d{2,5}\)?[-.\s]?)?\d{3,5}[-.\s]?\d{3,5}$/.test(
+        formData.mobile.trim()
+      ) ||
+      formData.mobile.replace(/\D/g, '').length < 7
+    ) {
+      errs.mobile = 'Please enter a valid mobile number (min 7 digits).';
     }
 
     if (formData.changePassword) {
       if (!formData.password) {
         errs.password = 'New password is required.';
       } else if (formData.password.length < 8) {
-        errs.password = 'Password must be at least 8 characters long.';
+        errs.password = 'Password must be at least 8 characters.';
       }
 
       if (!formData.password_confirmation) {
@@ -124,23 +129,18 @@ export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
     try {
       const payload = {
         name: formData.name.trim(),
-        email: formData.email.trim(),
-        mobile: formData.mobile.trim() || null,
+        email: formData.email.trim().toLowerCase(),
+        mobile: formData.mobile.trim(),
         status: formData.status,
       };
 
-      if (formData.changePassword && formData.password) {
+      if (formData.changePassword) {
         payload.password = formData.password;
         payload.password_confirmation = formData.password_confirmation;
       }
 
       const response = await adminManagementService.updateAdmin(admin.id, payload);
-
-      toast.success(
-        formData.status === 'blocked'
-          ? `Admin '${formData.name}' has been updated and blocked from logging in.`
-          : `Admin '${formData.name}' updated successfully.`
-      );
+      toast.success(`Admin account '${formData.name}' updated successfully.`);
 
       if (onSuccess) {
         onSuccess(response.admin || response.data || response);
@@ -165,332 +165,342 @@ export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-50 overflow-y-auto">
+      {/* Backdrop */}
       <div
-        className="bg-white w-full max-w-xl rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Modal Header */}
-        <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-600/10 text-blue-600 flex items-center justify-center font-bold">
-              <Shield className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h2 className="text-base font-bold text-slate-900">Edit Administrator</h2>
-                <span className="font-mono text-xs px-2 py-0.5 rounded-full bg-slate-200 text-slate-700 font-semibold">
-                  #{admin.id}
-                </span>
+        className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs transition-opacity animate-fade-in"
+        onClick={!isSubmitting ? onClose : undefined}
+      />
+
+      <div className="min-h-full flex items-center justify-center p-3 sm:p-4">
+        <div
+          className="relative bg-white w-full max-w-xl rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col max-h-[92vh] my-4 sm:my-8 animate-slide-up"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Modal Header */}
+          <div className="px-5 sm:px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70 shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white flex items-center justify-center shrink-0 icon-3d shadow-md">
+                <Shield className="w-5 h-5 drop-shadow-sm" />
               </div>
-              <p className="text-xs text-slate-500">
-                Update account details, change login status, or reset credentials.
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            disabled={isSubmitting}
-            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors cursor-pointer"
-          >
-            <X className="w-4 h-4" />
-          </button>
-        </div>
-
-        {/* Modal Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto">
-          {/* General Error Banner */}
-          {errors.general && (
-            <div className="p-3 rounded-xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{errors.general}</span>
-            </div>
-          )}
-
-          {/* Full Name */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Full Name <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="e.g., Alexander Wright"
-                className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 text-slate-900 border rounded-xl focus:bg-white focus:outline-none transition-all ${
-                  errors.name
-                    ? 'border-rose-400 focus:ring-2 focus:ring-rose-500/20'
-                    : 'border-slate-200 focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600'
-                }`}
-              />
-            </div>
-            {errors.name && <p className="text-[11px] text-rose-600 mt-1">{errors.name}</p>}
-          </div>
-
-          {/* Email Address */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Email Address <span className="text-rose-500">*</span>
-            </label>
-            <div className="relative">
-              <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="admin@company.com"
-                className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 text-slate-900 border rounded-xl focus:bg-white focus:outline-none transition-all ${
-                  errors.email
-                    ? 'border-rose-400 focus:ring-2 focus:ring-rose-500/20'
-                    : 'border-slate-200 focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600'
-                }`}
-              />
-            </div>
-            {errors.email && <p className="text-[11px] text-rose-600 mt-1">{errors.email}</p>}
-          </div>
-
-          {/* Mobile Number */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Mobile Number
-            </label>
-            <div className="relative">
-              <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={formData.mobile}
-                onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
-                placeholder="+1 555 123 4567"
-                className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 text-slate-900 border rounded-xl focus:bg-white focus:outline-none transition-all ${
-                  errors.mobile
-                    ? 'border-rose-400 focus:ring-2 focus:ring-rose-500/20'
-                    : 'border-slate-200 focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600'
-                }`}
-              />
-            </div>
-            {errors.mobile && <p className="text-[11px] text-rose-600 mt-1">{errors.mobile}</p>}
-          </div>
-
-          {/* Account Status Selection (Active, Inactive, Blocked) */}
-          <div>
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-              Account Login Status <span className="text-rose-500">*</span>
-            </label>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-              {/* Option 1: Active */}
-              <label
-                className={`relative flex flex-col p-3 rounded-xl border cursor-pointer transition-all ${
-                  formData.status === 'active'
-                    ? 'border-emerald-500 bg-emerald-50/40 ring-2 ring-emerald-500/20'
-                    : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-1.5 text-emerald-700 font-bold text-xs">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
-                    <span>Active</span>
-                  </div>
-                  <input
-                    type="radio"
-                    name="admin_status"
-                    value="active"
-                    checked={formData.status === 'active'}
-                    onChange={() => setFormData({ ...formData, status: 'active' })}
-                    className="text-emerald-600 focus:ring-emerald-500"
-                  />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-slate-900 truncate">Edit Administrator</h2>
+                  <span className="font-mono text-xs px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-semibold border border-slate-200/60 shrink-0">
+                    #{admin.id}
+                  </span>
                 </div>
-                <p className="text-[11px] text-slate-500 leading-tight">
-                  Authorized. Admin can log into the system normally.
+                <p className="text-xs text-slate-500 truncate">
+                  Update account details, change login status, or reset credentials.
                 </p>
-              </label>
-
-              {/* Option 2: Inactive */}
-              <label
-                className={`relative flex flex-col p-3 rounded-xl border cursor-pointer transition-all ${
-                  formData.status === 'inactive'
-                    ? 'border-amber-500 bg-amber-50/40 ring-2 ring-amber-500/20'
-                    : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-1.5 text-amber-700 font-bold text-xs">
-                    <AlertCircle className="w-4 h-4 text-amber-600" />
-                    <span>Inactive</span>
-                  </div>
-                  <input
-                    type="radio"
-                    name="admin_status"
-                    value="inactive"
-                    checked={formData.status === 'inactive'}
-                    onChange={() => setFormData({ ...formData, status: 'inactive' })}
-                    className="text-amber-600 focus:ring-amber-500"
-                  />
-                </div>
-                <p className="text-[11px] text-slate-500 leading-tight">
-                  Deactivated. Admin cannot log in until reactivated.
-                </p>
-              </label>
-
-              {/* Option 3: Blocked */}
-              <label
-                className={`relative flex flex-col p-3 rounded-xl border cursor-pointer transition-all ${
-                  formData.status === 'blocked'
-                    ? 'border-rose-500 bg-rose-50/50 ring-2 ring-rose-500/20'
-                    : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50'
-                }`}
-              >
-                <div className="flex items-center justify-between mb-1">
-                  <div className="flex items-center gap-1.5 text-rose-700 font-bold text-xs">
-                    <Ban className="w-4 h-4 text-rose-600" />
-                    <span>Blocked</span>
-                  </div>
-                  <input
-                    type="radio"
-                    name="admin_status"
-                    value="blocked"
-                    checked={formData.status === 'blocked'}
-                    onChange={() => setFormData({ ...formData, status: 'blocked' })}
-                    className="text-rose-600 focus:ring-rose-500"
-                  />
-                </div>
-                <p className="text-[11px] text-slate-500 leading-tight">
-                  Access denied. Login rejected and active sessions revoked.
-                </p>
-              </label>
-            </div>
-            {errors.status && <p className="text-[11px] text-rose-600 mt-1">{errors.status}</p>}
-          </div>
-
-          {/* Change Password Checkbox Accordion */}
-          <div className="pt-2 border-t border-slate-100">
-            <label className="flex items-center gap-2 cursor-pointer select-none">
-              <input
-                type="checkbox"
-                checked={formData.changePassword}
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    changePassword: e.target.checked,
-                    password: '',
-                    password_confirmation: '',
-                  })
-                }
-                className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500"
-              />
-              <span className="text-xs font-bold text-slate-700">
-                Change Administrator Password
-              </span>
-            </label>
-
-            {formData.changePassword && (
-              <div className="mt-3 space-y-3 p-3.5 rounded-xl bg-slate-50 border border-slate-200">
-                {/* New Password */}
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    New Password (Min 8 Characters)
-                  </label>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      value={formData.password}
-                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                      placeholder="••••••••••••"
-                      className={`w-full pl-10 pr-10 py-2 text-xs bg-white text-slate-900 border rounded-lg focus:outline-none transition-all ${
-                        errors.password
-                          ? 'border-rose-400 focus:ring-2 focus:ring-rose-500/20'
-                          : 'border-slate-200 focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600'
-                      }`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                    >
-                      {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                    </button>
-                  </div>
-                  {errors.password && <p className="text-[11px] text-rose-600 mt-1">{errors.password}</p>}
-                </div>
-
-                {/* Confirm New Password */}
-                <div>
-                  <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">
-                    Confirm New Password
-                  </label>
-                  <div className="relative">
-                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-                    <input
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      value={formData.password_confirmation}
-                      onChange={(e) =>
-                        setFormData({ ...formData, password_confirmation: e.target.value })
-                      }
-                      placeholder="••••••••••••"
-                      className={`w-full pl-10 pr-10 py-2 text-xs bg-white text-slate-900 border rounded-lg focus:outline-none transition-all ${
-                        errors.password_confirmation
-                          ? 'border-rose-400 focus:ring-2 focus:ring-rose-500/20'
-                          : 'border-slate-200 focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600'
-                      }`}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
-                    >
-                      {showConfirmPassword ? (
-                        <EyeOff className="w-3.5 h-3.5" />
-                      ) : (
-                        <Eye className="w-3.5 h-3.5" />
-                      )}
-                    </button>
-                  </div>
-                  {errors.password_confirmation && (
-                    <p className="text-[11px] text-rose-600 mt-1">{errors.password_confirmation}</p>
-                  )}
-                </div>
               </div>
-            )}
-          </div>
-
-          {/* Modal Footer Buttons */}
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+            </div>
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-200/60 transition-colors disabled:opacity-50 cursor-pointer shrink-0 ml-2"
+              title="Close"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className={`inline-flex items-center gap-2 px-5 py-2 rounded-xl text-white text-xs font-bold shadow-md transition-all cursor-pointer disabled:opacity-60 ${
-                formData.status === 'blocked'
-                  ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'
-                  : 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/20'
-              }`}
-            >
-              {isSubmitting ? (
-                <>
-                  <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span>Saving Changes...</span>
-                </>
-              ) : (
-                <>
-                  <Save className="w-3.5 h-3.5" />
-                  <span>{formData.status === 'blocked' ? 'Save & Block Admin' : 'Save Changes'}</span>
-                </>
-              )}
+              <X className="w-5 h-5" />
             </button>
           </div>
-        </form>
+
+          {/* Modal Body */}
+          <form onSubmit={handleSubmit} className="flex flex-col flex-1 min-h-0 overflow-hidden">
+            <div className="p-5 sm:p-6 space-y-4 overflow-y-auto flex-1 min-h-0">
+              {/* General Error Banner */}
+              {errors.general && (
+                <div className="p-3.5 rounded-2xl bg-rose-50 border border-rose-200 text-rose-700 text-xs flex items-center gap-2 shadow-xs">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+                  <span className="font-medium">{errors.general}</span>
+                </div>
+              )}
+
+              {/* Full Name */}
+              <div className="min-w-0">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Full Name <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="e.g., Alexander Wright"
+                    className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 text-slate-900 border rounded-xl focus:bg-white focus:outline-none focus:ring-4 transition-all duration-200 ${
+                      errors.name
+                        ? 'border-rose-400 focus:ring-rose-500/15'
+                        : 'border-slate-200 focus:ring-blue-500/15 focus:border-blue-500'
+                    }`}
+                  />
+                </div>
+                {errors.name && <p className="text-[11px] text-rose-600 mt-1 font-medium">{errors.name}</p>}
+              </div>
+
+              {/* Email Address */}
+              <div className="min-w-0">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Email Address <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="admin@company.com"
+                    className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 text-slate-900 border rounded-xl focus:bg-white focus:outline-none focus:ring-4 transition-all duration-200 ${
+                      errors.email
+                        ? 'border-rose-400 focus:ring-rose-500/15'
+                        : 'border-slate-200 focus:ring-blue-500/15 focus:border-blue-500'
+                    }`}
+                  />
+                </div>
+                {errors.email && <p className="text-[11px] text-rose-600 mt-1 font-medium">{errors.email}</p>}
+              </div>
+
+              {/* Mobile Number */}
+              <div className="min-w-0">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                  Mobile Number <span className="text-rose-500">*</span>
+                </label>
+                <div className="relative">
+                  <Phone className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <input
+                    type="tel"
+                    value={formData.mobile}
+                    onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
+                    placeholder="+91 98765 43210"
+                    className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50 text-slate-900 border rounded-xl focus:bg-white focus:outline-none focus:ring-4 transition-all duration-200 ${
+                      errors.mobile
+                        ? 'border-rose-400 focus:ring-rose-500/15'
+                        : 'border-slate-200 focus:ring-blue-500/15 focus:border-blue-500'
+                    }`}
+                  />
+                </div>
+                {errors.mobile && <p className="text-[11px] text-rose-600 mt-1 font-medium">{errors.mobile}</p>}
+              </div>
+
+              {/* Account Status Radio Cards */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+                  Account Status <span className="text-rose-500">*</span>
+                </label>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                  {/* Active */}
+                  <label
+                    className={`relative flex flex-col p-3 rounded-2xl border cursor-pointer transition-all ${
+                      formData.status === 'active'
+                        ? 'border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-500/20 shadow-xs'
+                        : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5 text-emerald-700 font-bold text-xs">
+                        <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                        <span>Active</span>
+                      </div>
+                      <input
+                        type="radio"
+                        name="admin_status"
+                        value="active"
+                        checked={formData.status === 'active'}
+                        onChange={() => setFormData({ ...formData, status: 'active' })}
+                        className="text-emerald-600 focus:ring-emerald-500"
+                      />
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-tight">
+                      Authorized for Panel 2 access.
+                    </p>
+                  </label>
+
+                  {/* Inactive */}
+                  <label
+                    className={`relative flex flex-col p-3 rounded-2xl border cursor-pointer transition-all ${
+                      formData.status === 'inactive'
+                        ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-500/20 shadow-xs'
+                        : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5 text-amber-700 font-bold text-xs">
+                        <AlertCircle className="w-4 h-4 text-amber-600" />
+                        <span>Inactive</span>
+                      </div>
+                      <input
+                        type="radio"
+                        name="admin_status"
+                        value="inactive"
+                        checked={formData.status === 'inactive'}
+                        onChange={() => setFormData({ ...formData, status: 'inactive' })}
+                        className="text-amber-600 focus:ring-amber-500"
+                      />
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-tight">
+                      Temporarily suspended.
+                    </p>
+                  </label>
+
+                  {/* Blocked */}
+                  <label
+                    className={`relative flex flex-col p-3 rounded-2xl border cursor-pointer transition-all ${
+                      formData.status === 'blocked'
+                        ? 'border-rose-500 bg-rose-50/60 ring-2 ring-rose-500/20 shadow-xs'
+                        : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-1.5 text-rose-700 font-bold text-xs">
+                        <Ban className="w-4 h-4 text-rose-600" />
+                        <span>Blocked</span>
+                      </div>
+                      <input
+                        type="radio"
+                        name="admin_status"
+                        value="blocked"
+                        checked={formData.status === 'blocked'}
+                        onChange={() => setFormData({ ...formData, status: 'blocked' })}
+                        className="text-rose-600 focus:ring-rose-500"
+                      />
+                    </div>
+                    <p className="text-[11px] text-slate-500 leading-tight">
+                      Access denied &amp; sessions revoked.
+                    </p>
+                  </label>
+                </div>
+                {errors.status && <p className="text-[11px] text-rose-600 mt-1">{errors.status}</p>}
+              </div>
+
+              {/* Change Password Checkbox Accordion */}
+              <div className="pt-2 border-t border-slate-100">
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={formData.changePassword}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        changePassword: e.target.checked,
+                        password: '',
+                        password_confirmation: '',
+                      })
+                    }
+                    className="w-4 h-4 rounded text-blue-600 border-slate-300 focus:ring-blue-500 cursor-pointer"
+                  />
+                  <span className="text-xs font-bold text-slate-700">
+                    Change Administrator Password
+                  </span>
+                </label>
+
+                {formData.changePassword && (
+                  <div className="mt-3 space-y-3 p-4 rounded-2xl bg-slate-50/80 border border-slate-200/90 animate-slide-up">
+                    {/* New Password */}
+                    <div className="min-w-0">
+                      <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                        New Password (Min 8 Characters)
+                      </label>
+                      <div className="relative">
+                        <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type={showPassword ? 'text' : 'password'}
+                          value={formData.password}
+                          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                          placeholder="••••••••••••"
+                          className={`w-full pl-10 pr-10 py-2.5 text-xs bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 ${
+                            errors.password
+                              ? 'border-rose-400 focus:ring-rose-500/15'
+                              : 'border-slate-200 focus:ring-blue-500/15 focus:border-blue-500'
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer p-1"
+                        >
+                          {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                      {errors.password && <p className="text-[11px] text-rose-600 mt-1 font-medium">{errors.password}</p>}
+                    </div>
+
+                    {/* Confirm New Password */}
+                    <div className="min-w-0">
+                      <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">
+                        Confirm New Password
+                      </label>
+                      <div className="relative">
+                        <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                        <input
+                          type={showConfirmPassword ? 'text' : 'password'}
+                          value={formData.password_confirmation}
+                          onChange={(e) =>
+                            setFormData({ ...formData, password_confirmation: e.target.value })
+                          }
+                          placeholder="••••••••••••"
+                          className={`w-full pl-10 pr-10 py-2.5 text-xs bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 ${
+                            errors.password_confirmation
+                              ? 'border-rose-400 focus:ring-rose-500/15'
+                              : 'border-slate-200 focus:ring-blue-500/15 focus:border-blue-500'
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700 cursor-pointer p-1"
+                        >
+                          {showConfirmPassword ? (
+                            <EyeOff className="w-3.5 h-3.5" />
+                          ) : (
+                            <Eye className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                      </div>
+                      {errors.password_confirmation && (
+                        <p className="text-[11px] text-rose-600 mt-1 font-medium">{errors.password_confirmation}</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer Buttons (Sticky, Responsive) */}
+            <div className="px-5 sm:px-6 py-3.5 border-t border-slate-100 bg-slate-50/70 flex flex-col-reverse sm:flex-row items-center justify-end gap-2.5 shrink-0">
+              <button
+                type="button"
+                onClick={onClose}
+                disabled={isSubmitting}
+                className="w-full sm:w-auto px-5 py-2.5 rounded-xl border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 text-xs font-semibold transition-all cursor-pointer disabled:opacity-50 text-center"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-white text-xs font-bold shadow-md transition-all cursor-pointer disabled:opacity-60 ${
+                  formData.status === 'blocked'
+                    ? 'bg-rose-600 hover:bg-rose-700 shadow-rose-600/20'
+                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 shadow-blue-500/20'
+                }`}
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <span>Saving Changes...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-3.5 h-3.5" />
+                    <span>{formData.status === 'blocked' ? 'Save & Block Admin' : 'Save Changes'}</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
     </div>
   );
 }
-
