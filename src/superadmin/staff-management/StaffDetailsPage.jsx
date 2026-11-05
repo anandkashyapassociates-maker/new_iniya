@@ -54,11 +54,35 @@ const formatJoiningDate = (dateString) => {
   }
 };
 
+const COMMON_DEPARTMENTS = [
+  'Dental',
+  'Dermatology',
+  'Physiotherapy',
+  'Aesthetics & Cosmetology',
+  'Trichology (Hair Care)',
+  'General Medicine / OPD',
+  'Plastic & Cosmetic Surgery',
+  'Nutrition & Dietetics',
+  'Ayurveda & Wellness',
+  'Orthopedics',
+  'Gynecology & Obstetrics',
+  'Pediatrics',
+  'Cardiology',
+  'ENT (Ear, Nose, Throat)',
+  'Ophthalmology',
+  'Psychiatry & Psychology',
+  'Radiology & Diagnostics',
+  'Pathology & Laboratory',
+  'Nursing & Patient Care',
+  'Pharmacy',
+  'Clinical Administration',
+];
+
 export default function StaffDetailsPage() {
   const toast = useToast();
 
   const [staffList, setStaffList] = useState([]);
-  const [departmentsList, setDepartmentsList] = useState([]);
+  const [departmentsList, setDepartmentsList] = useState(COMMON_DEPARTMENTS);
   const [pagination, setPagination] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -113,7 +137,10 @@ export default function StaffDetailsPage() {
     staffManagementService
       .getDepartments()
       .then((data) => {
-        if (Array.isArray(data)) setDepartmentsList(data);
+        if (Array.isArray(data)) {
+          const merged = Array.from(new Set([...COMMON_DEPARTMENTS, ...data])).filter(Boolean);
+          setDepartmentsList(merged);
+        }
       })
       .catch(() => {});
   }, []);

@@ -19,14 +19,27 @@ import staffManagementService from '../services/staffManagementService';
 import { useToast } from '../../context/ToastContext';
 
 const COMMON_DEPARTMENTS = [
-  'Engineering',
-  'Human Resources',
-  'Finance & Accounts',
-  'Operations',
-  'Sales & Marketing',
-  'Customer Support',
-  'Legal & Compliance',
-  'Administration',
+  'Dental',
+  'Dermatology',
+  'Physiotherapy',
+  'Aesthetics & Cosmetology',
+  'Trichology (Hair Care)',
+  'General Medicine / OPD',
+  'Plastic & Cosmetic Surgery',
+  'Nutrition & Dietetics',
+  'Ayurveda & Wellness',
+  'Orthopedics',
+  'Gynecology & Obstetrics',
+  'Pediatrics',
+  'Cardiology',
+  'ENT (Ear, Nose, Throat)',
+  'Ophthalmology',
+  'Psychiatry & Psychology',
+  'Radiology & Diagnostics',
+  'Pathology & Laboratory',
+  'Nursing & Patient Care',
+  'Pharmacy',
+  'Clinical Administration',
 ];
 
 const EMPLOYMENT_TYPES = [
@@ -68,7 +81,7 @@ export default function StaffEditModal({ staff, isOpen, onClose, onSuccess }) {
         email: staff.email || '',
         password: '',
         mobile: staff.mobile || '',
-        department: staff.department || 'Engineering',
+        department: staff.department || 'Dental',
         designation: staff.designation || '',
         employment_type: staff.employment_type || 'Full-Time',
         joining_date: staff.joining_date ? staff.joining_date.split('T')[0] : '',
@@ -336,7 +349,7 @@ export default function StaffEditModal({ staff, isOpen, onClose, onSuccess }) {
                   type="text"
                   value={formData.designation}
                   onChange={(e) => setFormData({ ...formData, designation: e.target.value })}
-                  placeholder="e.g., Software Architect"
+                  placeholder="e.g., Dental Surgeon, Consultant Dermatologist"
                   className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
                 />
               </div>

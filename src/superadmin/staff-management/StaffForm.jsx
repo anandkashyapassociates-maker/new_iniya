@@ -17,14 +17,27 @@ import { Link } from 'react-router-dom';
 import staffManagementService from '../services/staffManagementService';
 
 const COMMON_DEPARTMENTS = [
-  'Engineering',
-  'Human Resources',
-  'Finance & Accounts',
-  'Operations',
-  'Sales & Marketing',
-  'Customer Support',
-  'Legal & Compliance',
-  'Administration',
+  'Dental',
+  'Dermatology',
+  'Physiotherapy',
+  'Aesthetics & Cosmetology',
+  'Trichology (Hair Care)',
+  'General Medicine / OPD',
+  'Plastic & Cosmetic Surgery',
+  'Nutrition & Dietetics',
+  'Ayurveda & Wellness',
+  'Orthopedics',
+  'Gynecology & Obstetrics',
+  'Pediatrics',
+  'Cardiology',
+  'ENT (Ear, Nose, Throat)',
+  'Ophthalmology',
+  'Psychiatry & Psychology',
+  'Radiology & Diagnostics',
+  'Pathology & Laboratory',
+  'Nursing & Patient Care',
+  'Pharmacy',
+  'Clinical Administration',
 ];
 
 const EMPLOYMENT_TYPES = [
@@ -44,7 +57,7 @@ export default function StaffForm({
     email: '',
     password: '',
     mobile: '',
-    department: 'Engineering',
+    department: 'Dental',
     designation: '',
     employment_type: 'Full-Time',
     joining_date: new Date().toISOString().split('T')[0],
@@ -144,7 +157,7 @@ export default function StaffForm({
         email: '',
         password: '',
         mobile: '',
-        department: 'Engineering',
+        department: 'Dental',
         designation: '',
         employment_type: 'Full-Time',
         joining_date: new Date().toISOString().split('T')[0],
@@ -351,7 +364,7 @@ export default function StaffForm({
               type="text"
               value={formData.designation}
               onChange={(e) => handleChange('designation', e.target.value)}
-              placeholder="e.g., Lead Systems Engineer"
+              placeholder="e.g., Dental Surgeon, Consultant Dermatologist"
               disabled={isLoading}
               className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/80 text-slate-900 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:border-blue-600 focus:ring-blue-600/20 transition-all"
             />
