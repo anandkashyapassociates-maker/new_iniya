@@ -368,14 +368,13 @@ export function SplineAreaChart({
   ];
 
   const chartData = Array.isArray(rawData) && rawData.length > 0 ? rawData : [
-    { label: 'Start', value: 0, display: '0' },
-    { label: 'Current', value: 1, display: '1' },
+    { label: 'Start', value: 0, display: '₹0' },
+    { label: 'Current', value: 0, display: '₹0' },
   ];
 
   const [activeIdx, setActiveIdx] = useState(chartData.length - 1);
   const [isAnimated, setIsAnimated] = useState(false);
 
-  // Trigger draw animation on mount and whenever activePeriod or chartData changes
   useEffect(() => {
     setIsAnimated(false);
     setActiveIdx(chartData.length - 1);
@@ -395,55 +394,78 @@ export function SplineAreaChart({
 
   const w = 540;
   const h = 180;
-  const padLeft = 40;
+  const padLeft = 48;
   const padRight = 20;
   const padTop = 20;
-  const padBottom = 20;
+  const padBottom = 28;
   const chartW = w - padLeft - padRight;
   const chartH = h - padTop - padBottom;
+
+  // Currency detection
+  const isCurrency =
+    (typeof headline === 'string' && (headline.includes('₹') || headline.toLowerCase().includes('rs'))) ||
+    chartData.some((d) => typeof d.display === 'string' && d.display.includes('₹'));
 
   // Extract numeric values and determine dynamic ceiling
   const numericValues = chartData.map((d) =>
     typeof d.value === 'number' ? d.value : parseFloat(d.value) || 0
   );
   const rawMax = Math.max(...numericValues, 0);
+  const totalSum = numericValues.reduce((acc, v) => acc + v, 0);
+  const avgVal = chartData.length > 0 ? Math.round(totalSum / chartData.length) : 0;
+  const peakVal = rawMax;
 
+  // Realistic dynamic scale
   let maxVal = rawMax;
-  if (rawMax <= 0) {
-    maxVal = 10;
-  } else if (rawMax <= 5) {
-    maxVal = 5;
-  } else if (rawMax <= 10) {
-    maxVal = 10;
-  } else if (rawMax <= 50) {
-    maxVal = Math.ceil(rawMax / 10) * 10;
-  } else if (rawMax <= 100) {
-    maxVal = Math.ceil(rawMax / 20) * 20;
-  } else if (rawMax <= 1000) {
-    maxVal = Math.ceil(rawMax / 100) * 100;
-  } else if (rawMax <= 100000) {
-    maxVal = Math.ceil(rawMax / 10000) * 10000;
+  if (isCurrency) {
+    if (rawMax <= 0) {
+      maxVal = 10000; // Realistic ₹10,000 scale so the user immediately understands it's in Rupees!
+    } else if (rawMax <= 1000) {
+      maxVal = 1000;
+    } else if (rawMax <= 5000) {
+      maxVal = 5000;
+    } else if (rawMax <= 10000) {
+      maxVal = 10000;
+    } else if (rawMax <= 50000) {
+      maxVal = Math.ceil(rawMax / 10000) * 10000;
+    } else if (rawMax <= 100000) {
+      maxVal = Math.ceil(rawMax / 25000) * 25000;
+    } else {
+      maxVal = Math.ceil(rawMax / 50000) * 50000;
+    }
   } else {
-    maxVal = Math.ceil(rawMax / 50000) * 50000;
+    if (rawMax <= 0) {
+      maxVal = 10;
+    } else if (rawMax <= 10) {
+      maxVal = 10;
+    } else if (rawMax <= 50) {
+      maxVal = Math.ceil(rawMax / 10) * 10;
+    } else {
+      maxVal = Math.ceil(rawMax / 25) * 25;
+    }
   }
 
   const formatTick = (val) => {
+    if (!isCurrency) {
+      return `${Math.round(val)}`;
+    }
+    if (val === 0) return '₹0';
     if (val >= 100000) {
       const lakhs = val / 100000;
-      return `${lakhs % 1 === 0 ? lakhs : lakhs.toFixed(1)}L`;
+      return `₹${lakhs % 1 === 0 ? lakhs : lakhs.toFixed(1)}L`;
     }
     if (val >= 1000) {
       const k = val / 1000;
-      return `${k % 1 === 0 ? k : k.toFixed(1)}k`;
+      return `₹${k % 1 === 0 ? k : k.toFixed(0)}k`;
     }
-    return Math.round(val).toString();
+    return `₹${Math.round(val)}`;
   };
 
   const computedYLabels = yAxisLabels || [
     formatTick(maxVal),
-    formatTick(maxVal * 0.66),
-    formatTick(maxVal * 0.33),
-    '0',
+    formatTick(Math.round(maxVal * 0.66)),
+    formatTick(Math.round(maxVal * 0.33)),
+    isCurrency ? '₹0' : '0',
   ];
 
   const points = chartData.map((d, i) => {
@@ -479,18 +501,18 @@ export function SplineAreaChart({
 
   let animatedHeadline = headline;
   if (matchNumeric && headlineNum !== null) {
-    const formattedCount = headlineNum >= 1000 ? countUpValue.toLocaleString() : countUpValue;
+    const formattedCount = headlineNum >= 1000 ? countUpValue.toLocaleString('en-IN') : countUpValue;
     animatedHeadline = `${matchNumeric[1]}${formattedCount}${matchNumeric[4] || ''}`;
   }
 
   return (
-    <div className={`bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs hover:shadow-xl transition-all duration-300 relative overflow-hidden group flex flex-col min-w-0 font-sans ${className}`}>
-      {/* Ambient Background Decorative Glow */}
-      <div className="absolute -top-12 -right-12 w-48 h-48 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent rounded-full blur-2xl pointer-events-none group-hover:scale-110 transition-transform duration-500" />
+    <div className={`bg-white rounded-3xl border border-slate-200/90 p-5 sm:p-6 shadow-2xs hover:shadow-xl transition-all duration-300 relative overflow-hidden group flex flex-col justify-between min-w-0 font-sans ${className}`}>
+      {/* Ambient Radial Mesh Glow */}
+      <div className="absolute -top-16 -right-16 w-56 h-56 bg-gradient-to-br from-blue-500/10 via-indigo-500/5 to-transparent rounded-full blur-3xl pointer-events-none group-hover:scale-110 transition-transform duration-500" />
+      <div className="absolute -bottom-16 -left-16 w-48 h-48 bg-gradient-to-tr from-sky-400/8 to-transparent rounded-full blur-2xl pointer-events-none" />
 
-      {/* Header & Metric Row */}
-      <div className="pb-4 border-b border-slate-100/90 relative z-10 space-y-3.5">
-        {/* Title & Filter Dropdown Row */}
+      {/* TOP HEADER: Title, Icon, Dropdown */}
+      <div className="pb-4 border-b border-slate-100 relative z-10 space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             {Icon && (
@@ -503,17 +525,17 @@ export function SplineAreaChart({
                 {title}
               </h2>
               <p className="text-xs text-slate-500 mt-0.5 truncate font-normal">
-                Live telemetry &bull; Interactive monthly spline trend
+                Monthly analytics trend &amp; session execution telemetry
               </p>
             </div>
           </div>
 
-          {/* Dropdown filter */}
+          {/* Timeframe Dropdown */}
           <div className="relative self-start sm:self-auto shrink-0">
             <select
               value={activePeriod}
               onChange={handlePeriodChange}
-              className="text-xs font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100/90 border border-slate-200/90 rounded-xl px-3.5 py-2 cursor-pointer outline-none transition-colors shadow-2xs font-sans"
+              className="text-xs font-semibold text-slate-700 bg-slate-50/90 hover:bg-slate-100 border border-slate-200/90 rounded-xl px-3.5 py-2 cursor-pointer outline-none transition-all shadow-2xs font-sans hover:border-blue-300"
             >
               {periods.map((p) => (
                 <option key={p} value={p}>
@@ -524,55 +546,82 @@ export function SplineAreaChart({
           </div>
         </div>
 
-        {/* Large Headline & Trend Badge */}
-        <div className="flex items-center gap-3 pt-1 flex-wrap">
-          <div className="text-2xl sm:text-3xl lg:text-4xl font-extrabold font-sans text-slate-900 tracking-tight tabular-nums">
-            {animatedHeadline}
+        {/* METRIC ROW: Amount, Badge, Quick Chips */}
+        <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+          <div className="flex items-center gap-3 flex-wrap">
+            <div className="text-2xl sm:text-3xl font-extrabold font-sans text-slate-900 tracking-tight tabular-nums">
+              {animatedHeadline}
+            </div>
+            {trendBadge && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs font-sans">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                {trendBadge}
+              </span>
+            )}
           </div>
-          {trendBadge && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/80 shadow-2xs font-sans">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-              {trendBadge}
-            </span>
-          )}
-          <span className="text-[11px] text-slate-400 font-medium hidden sm:inline-block ml-auto font-sans">
-            Hover points for monthly breakdown
-          </span>
+
+          <div className="flex items-center gap-2 text-xs font-medium text-slate-500 font-sans">
+            <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/70 text-slate-600 text-[11px]">
+              <span className="text-slate-400 font-normal">Monthly Avg:</span>
+              <span className="font-bold text-slate-800">
+                {isCurrency ? `₹${avgVal.toLocaleString('en-IN')}` : avgVal}
+              </span>
+            </div>
+            <div className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-50 border border-slate-200/70 text-slate-600 text-[11px] hidden sm:inline-flex">
+              <span className="text-slate-400 font-normal">Peak:</span>
+              <span className="font-bold text-slate-800">
+                {isCurrency ? `₹${peakVal.toLocaleString('en-IN')}` : peakVal}
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Interactive Chart Canvas Area */}
-      <div className="relative w-full flex-1 min-h-[220px] sm:min-h-[260px] pt-4 flex flex-col justify-between">
-        {/* Crisp HTML Y-Axis Labels Column on Left (Zero SVG distortion) */}
-        <div className="absolute left-0 top-4 bottom-12 flex flex-col justify-between text-[11px] font-semibold text-slate-400 pointer-events-none select-none pl-1 z-10 font-sans">
+      {/* CHART CANVAS: Clean Inset Plate */}
+      <div className="relative w-full flex-1 min-h-[190px] sm:min-h-[220px] my-3 rounded-2xl bg-gradient-to-b from-slate-50/60 via-slate-50/20 to-blue-50/10 border border-slate-200/70 p-3 flex flex-col justify-between overflow-hidden shadow-2xs">
+        {/* Crisp HTML Y-Axis Column on Left (Clearly shows ₹10k, ₹7k, ₹3k, ₹0) */}
+        <div className="absolute left-2.5 top-2.5 bottom-8 flex flex-col justify-between text-[11px] font-semibold text-slate-400 pointer-events-none select-none z-10 font-sans">
           {computedYLabels.map((lbl, idx) => (
-            <span key={lbl + idx} className="leading-none tabular-nums">
+            <span key={lbl + idx} className="leading-none tabular-nums text-left">
               {lbl}
             </span>
           ))}
         </div>
 
-        {/* Subtle zero-state helper if all values are 0 */}
-        {rawMax <= 0 && (
-          <div className="absolute inset-0 flex items-center justify-center pointer-events-none pb-10 z-10">
-            <span className="px-3.5 py-1.5 rounded-full bg-slate-50/90 backdrop-blur-xs border border-slate-200/80 text-slate-400 text-xs font-medium shadow-2xs font-sans">
-              No transactions recorded in {activePeriod}
-            </span>
+        {/* Clear Zero-State Indicator (if no revenue or counts recorded yet) */}
+        {rawMax === 0 && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10 px-4">
+            <div className="px-3.5 py-1.5 rounded-full bg-white/90 backdrop-blur-xs border border-slate-200/80 shadow-2xs flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-blue-500 animate-ping shrink-0" />
+              <span className="text-xs font-medium text-slate-600 font-sans">
+                {isCurrency
+                  ? 'No billing ledger transactions recorded in this period'
+                  : 'No account activity logged in this period'}
+              </span>
+            </div>
           </div>
         )}
 
-        {/* SVG Graphic (Only renders vector shapes, curves, and dots - no distorted text) */}
-        <div className="relative w-full flex-1 min-h-[170px]">
+        {/* SVG Drawing Canvas */}
+        <div className="relative w-full flex-1 min-h-[145px]">
           <svg
             viewBox={`0 0 ${w} ${h}`}
-            className="w-full h-full min-h-[170px] overflow-visible"
+            className="w-full h-full min-h-[145px] overflow-visible"
             preserveAspectRatio="none"
           >
             <defs>
-              <linearGradient id="splineAreaBlue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.28" />
-                <stop offset="70%" stopColor="#93c5fd" stopOpacity="0.06" />
+              {/* Premium Area Gradient */}
+              <linearGradient id="ultraAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.30" />
+                <stop offset="50%" stopColor="#6366f1" stopOpacity="0.12" />
                 <stop offset="100%" stopColor="#ffffff" stopOpacity="0.0" />
+              </linearGradient>
+
+              {/* Glowing Spline Stroke Gradient */}
+              <linearGradient id="ultraStrokeGradient" x1="0" y1="0" x2="1" y2="0">
+                <stop offset="0%" stopColor="#3b82f6" />
+                <stop offset="50%" stopColor="#4f46e5" />
+                <stop offset="100%" stopColor="#06b6d4" />
               </linearGradient>
             </defs>
 
@@ -586,39 +635,35 @@ export function SplineAreaChart({
                   y1={y}
                   x2={w - padRight}
                   y2={y}
-                  stroke="#f1f5f9"
+                  stroke="#e2e8f0"
                   strokeWidth="1"
                   strokeDasharray="4 4"
+                  opacity="0.8"
                 />
               );
             })}
 
-            {/* Area Gradient */}
+            {/* Area Gradient with smooth fade-in */}
             <path
               d={areaD}
-              fill="url(#splineAreaBlue)"
+              fill="url(#ultraAreaGradient)"
               style={{
                 opacity: isAnimated ? 1 : 0,
-                transition: 'opacity 0.9s ease-out 0.25s',
+                transition: 'opacity 0.9s ease-out 0.2s',
               }}
             />
 
-            {/* Spline Line */}
+            {/* Continuous Spline Curve */}
             <path
               d={pathD}
               fill="none"
-              stroke="#2563eb"
-              strokeWidth="2.5"
+              stroke="url(#ultraStrokeGradient)"
+              strokeWidth="3"
               strokeLinecap="round"
               strokeLinejoin="round"
-              strokeDasharray="1000"
-              strokeDashoffset={isAnimated ? 0 : 1000}
-              style={{
-                transition: 'stroke-dashoffset 1.3s cubic-bezier(0.16, 1, 0.3, 1)',
-              }}
             />
 
-            {/* Data Points */}
+            {/* Interactive Data Points (Nodes) */}
             {points.map((p, i) => {
               const isActive = i === activeIdx;
               return (
@@ -628,27 +673,29 @@ export function SplineAreaChart({
                   onMouseEnter={() => setActiveIdx(i)}
                   onClick={() => setActiveIdx(i)}
                 >
+                  {/* Outer Pulsing Halo Ring on Active */}
                   {isActive && (
                     <circle
                       cx={p.x}
                       cy={p.y}
-                      r="10"
-                      fill="#3b82f6"
-                      fillOpacity="0.2"
+                      r="12"
+                      fill="#6366f1"
+                      fillOpacity="0.25"
                       className="animate-ping"
                     />
                   )}
+                  {/* Dot */}
                   <circle
                     cx={p.x}
                     cy={p.y}
-                    r={isActive ? '6' : '4'}
-                    fill={isActive ? '#2563eb' : '#3b82f6'}
+                    r={isActive ? '6.5' : '4'}
+                    fill={isActive ? '#4f46e5' : '#3b82f6'}
                     stroke="#ffffff"
                     strokeWidth="2.5"
                     style={{
                       transformOrigin: `${p.x}px ${p.y}px`,
                       transform: isAnimated ? 'scale(1)' : 'scale(0)',
-                      transition: `transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1) ${0.08 + i * 0.05}s, r 0.2s ease`,
+                      transition: `transform 0.3s ease ${0.05 + i * 0.04}s`,
                     }}
                   />
                 </g>
@@ -656,32 +703,31 @@ export function SplineAreaChart({
             })}
           </svg>
 
-          {/* Premium Crisp HTML Floating Tooltip Badge (Zero distortion, Normal Premium Typography) */}
+          {/* Premium Floating Tooltip on Hover */}
           {activePoint && (
             <div
-              className="absolute z-30 pointer-events-none transition-all duration-200 ease-out flex flex-col items-center"
+              className="absolute z-20 pointer-events-none transition-all duration-200 ease-out flex flex-col items-center"
               style={{
                 left: `${(activePoint.x / w) * 100}%`,
                 top: `${(activePoint.y / h) * 100}%`,
                 transform: 'translate(-50%, -125%)',
               }}
             >
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900/95 text-white shadow-xl shadow-slate-900/20 border border-slate-700/60 backdrop-blur-md whitespace-nowrap">
-                <span className="text-[10px] font-semibold text-slate-400 font-sans uppercase tracking-wider">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 text-white shadow-xl border border-slate-700/80 whitespace-nowrap">
+                <span className="text-[10px] font-bold text-cyan-400 font-mono uppercase tracking-wider">
                   {activePoint.label}:
                 </span>
                 <span className="text-xs font-bold text-white font-sans tracking-tight tabular-nums">
-                  {activePoint.display || (typeof activePoint.value === 'number' ? `₹${activePoint.value.toLocaleString('en-IN')}` : activePoint.value)}
+                  {activePoint.display || (isCurrency ? `₹${(activePoint.value || 0).toLocaleString('en-IN')}` : activePoint.value || 0)}
                 </span>
               </div>
-              {/* Tooltip Caret */}
-              <div className="w-2 h-2 bg-slate-900/95 rotate-45 -mt-1 border-r border-b border-slate-700/60" />
+              <div className="w-2 h-2 bg-slate-900 rotate-45 -mt-1 border-r border-b border-slate-700/80" />
             </div>
           )}
         </div>
 
-        {/* Crisp HTML X-Axis Month / Category Labels (Pure Plus Jakarta Sans / Inter - No condensation) */}
-        <div className="flex items-center justify-between pl-9 pr-3 pt-2 border-t border-slate-100/90 mt-1 select-none font-sans">
+        {/* X-Axis Months Navigation Row */}
+        <div className="flex items-center justify-between pl-10 pr-2 pt-2 border-t border-slate-200/70 select-none font-sans">
           {chartData.map((d, i) => {
             const isActive = i === activeIdx;
             return (
@@ -690,14 +736,54 @@ export function SplineAreaChart({
                 type="button"
                 onClick={() => setActiveIdx(i)}
                 onMouseEnter={() => setActiveIdx(i)}
-                className={`px-2.5 py-1 rounded-xl text-xs font-semibold transition-all duration-200 cursor-pointer text-center font-sans ${
+                className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-all duration-200 cursor-pointer text-center font-sans ${
                   isActive
-                    ? 'text-blue-600 bg-blue-50/90 font-bold shadow-2xs scale-105 ring-1 ring-blue-500/20'
-                    : 'text-slate-400 hover:text-slate-700 hover:bg-slate-50'
+                    ? 'text-blue-600 bg-white shadow-xs ring-1 ring-blue-500/20 scale-105'
+                    : 'text-slate-400 hover:text-slate-700'
                 }`}
               >
                 {d.label}
               </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* BOTTOM MONTHLY BREAKDOWN TILES (Fills space with useful, 100% understandable business data) */}
+      <div className="pt-3 border-t border-slate-100">
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[11px] font-bold text-slate-600 uppercase tracking-wider font-sans">
+            Monthly Performance Breakdown
+          </span>
+          <span className="text-xs text-slate-500 font-semibold font-sans">
+            {isCurrency ? 'Total Billed: ' : 'Total: '}
+            <span className="text-slate-900 font-bold">
+              {isCurrency ? `₹${totalSum.toLocaleString('en-IN')}` : totalSum}
+            </span>
+          </span>
+        </div>
+
+        <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+          {chartData.map((d, i) => {
+            const isSelected = i === activeIdx;
+            const valNum = typeof d.value === 'number' ? d.value : parseFloat(d.value) || 0;
+            return (
+              <div
+                key={d.label + i}
+                onClick={() => setActiveIdx(i)}
+                className={`p-2 rounded-xl border text-center cursor-pointer transition-all duration-200 ${
+                  isSelected
+                    ? 'bg-blue-50/80 border-blue-300 ring-2 ring-blue-500/20 shadow-xs'
+                    : 'bg-slate-50/60 border-slate-200/80 hover:bg-slate-50'
+                }`}
+              >
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">
+                  {d.label}
+                </span>
+                <span className={`text-xs font-bold block mt-0.5 tabular-nums ${valNum > 0 ? 'text-emerald-600' : 'text-slate-700'}`}>
+                  {d.display || (isCurrency ? `₹${valNum.toLocaleString('en-IN')}` : valNum)}
+                </span>
+              </div>
             );
           })}
         </div>
