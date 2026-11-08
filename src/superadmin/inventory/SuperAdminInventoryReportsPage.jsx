@@ -435,17 +435,15 @@ export default function SuperAdminInventoryReportsPage() {
       {activeTab === 'products' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-4 sm:gap-5">
           {/* Card 1: Total Products */}
-          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-purple-50/40 border border-slate-200/90 p-5 shadow-xs hover:shadow-md hover:border-purple-200 transition-all duration-200 flex flex-col justify-between group">
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-purple-50/40 border border-slate-200/90 p-4 sm:p-4.5 xl:p-5 shadow-xs hover:shadow-md hover:border-purple-200 transition-all duration-200 flex flex-col justify-between group">
             <div>
               <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider truncate">
-                  Total Products
-                </span>
+                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider leading-tight">Total Products</span>
                 <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100 shadow-2xs group-hover:scale-105 transition-transform">
                   <Package className="w-4.5 h-4.5" />
                 </div>
               </div>
-              <div className="text-2xl sm:text-[26px] font-extrabold text-slate-900 font-mono tracking-tight leading-none mb-1.5 truncate">
+              <div className="text-xl sm:text-2xl xl:text-[22px] 2xl:text-[24px] font-extrabold text-slate-900 font-sans tracking-tight leading-none mb-1.5 whitespace-nowrap">
                 {(metrics.total_products || 0).toLocaleString()}
               </div>
             </div>
@@ -456,12 +454,10 @@ export default function SuperAdminInventoryReportsPage() {
           </div>
 
           {/* Card 2: Total Units In Stock */}
-          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-emerald-50/40 border border-slate-200/90 p-5 shadow-xs hover:shadow-md hover:border-emerald-200 transition-all duration-200 flex flex-col justify-between group">
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-emerald-50/40 border border-slate-200/90 p-4 sm:p-4.5 xl:p-5 shadow-xs hover:shadow-md hover:border-emerald-200 transition-all duration-200 flex flex-col justify-between group">
             <div>
               <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider truncate">
-                  Total In-Hand Stock
-                </span>
+                <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider leading-tight">In-Hand Stock</span>
                 <div className="w-9 h-9 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100 shadow-2xs group-hover:scale-105 transition-transform">
                   <Boxes className="w-4.5 h-4.5" />
                 </div>
@@ -480,21 +476,19 @@ export default function SuperAdminInventoryReportsPage() {
           </div>
 
           {/* Card 3: Inventory Valuation */}
-          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-indigo-50/40 border border-slate-200/90 p-5 shadow-xs hover:shadow-md hover:border-indigo-200 transition-all duration-200 flex flex-col justify-between group">
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-indigo-50/40 border border-slate-200/90 p-4 sm:p-4.5 xl:p-5 shadow-xs hover:shadow-md hover:border-indigo-200 transition-all duration-200 flex flex-col justify-between group">
             <div>
               <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="text-[11px] font-bold text-indigo-700 uppercase tracking-wider truncate">
-                  Stock Valuation (Cost)
-                </span>
+                <span className="text-[11px] font-bold text-indigo-700 uppercase tracking-wider leading-tight">Stock Valuation</span>
                 <div className="w-9 h-9 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100 shadow-2xs group-hover:scale-105 transition-transform">
                   <TrendingUp className="w-4.5 h-4.5" />
                 </div>
               </div>
               <div
-                className="text-2xl sm:text-[24px] xl:text-[26px] font-extrabold text-indigo-700 font-mono tracking-tight leading-none mb-1.5 truncate"
-                title={`₹${(metrics.total_valuation || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                className="text-xl sm:text-2xl xl:text-[22px] 2xl:text-[24px] font-extrabold text-indigo-700 font-sans tracking-tight leading-none mb-1.5 whitespace-nowrap"
+                title={formatCurrencySimple(metrics.total_valuation)}
               >
-                ₹{(metrics.total_valuation || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {formatCurrencySimple(metrics.total_valuation)}
               </div>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-indigo-600 font-medium pt-2 border-t border-slate-100/80 truncate">
@@ -504,21 +498,19 @@ export default function SuperAdminInventoryReportsPage() {
           </div>
 
           {/* Card 4: Potential Retail Value */}
-          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-purple-50/40 border border-slate-200/90 p-5 shadow-xs hover:shadow-md hover:border-purple-200 transition-all duration-200 flex flex-col justify-between group">
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-purple-50/40 border border-slate-200/90 p-4 sm:p-4.5 xl:p-5 shadow-xs hover:shadow-md hover:border-purple-200 transition-all duration-200 flex flex-col justify-between group">
             <div>
               <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider truncate">
-                  Total Retail Value (MRP)
-                </span>
+                <span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider leading-tight">Retail MRP Value</span>
                 <div className="w-9 h-9 rounded-xl bg-purple-50 text-purple-600 flex items-center justify-center shrink-0 border border-purple-100 shadow-2xs group-hover:scale-105 transition-transform">
                   <FileText className="w-4.5 h-4.5" />
                 </div>
               </div>
               <div
-                className="text-2xl sm:text-[24px] xl:text-[26px] font-extrabold text-purple-700 font-mono tracking-tight leading-none mb-1.5 truncate"
-                title={`₹${(metrics.total_retail_value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+                className="text-xl sm:text-2xl xl:text-[22px] 2xl:text-[24px] font-extrabold text-purple-700 font-sans tracking-tight leading-none mb-1.5 whitespace-nowrap"
+                title={formatCurrencySimple(metrics.total_retail_value)}
               >
-                ₹{(metrics.total_retail_value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                {formatCurrencySimple(metrics.total_retail_value)}
               </div>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-purple-600 font-medium pt-2 border-t border-slate-100/80 truncate">
@@ -528,12 +520,10 @@ export default function SuperAdminInventoryReportsPage() {
           </div>
 
           {/* Card 5: Reorder Alerts */}
-          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-amber-50/40 border border-slate-200/90 p-5 shadow-xs hover:shadow-md hover:border-amber-200 transition-all duration-200 flex flex-col justify-between group">
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-amber-50/40 border border-slate-200/90 p-4 sm:p-4.5 xl:p-5 shadow-xs hover:shadow-md hover:border-amber-200 transition-all duration-200 flex flex-col justify-between group">
             <div>
               <div className="flex items-center justify-between gap-2 mb-3">
-                <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider truncate">
-                  Reorder Alerts
-                </span>
+                <span className="text-[11px] font-bold text-amber-700 uppercase tracking-wider leading-tight">Reorder Alerts</span>
                 <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100 shadow-2xs group-hover:scale-105 transition-transform">
                   <AlertTriangle className="w-4.5 h-4.5" />
                 </div>
@@ -560,7 +550,7 @@ export default function SuperAdminInventoryReportsPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
           {/* Card 1: Total Transactions */}
-          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-slate-50/60 border border-slate-200/90 p-5 shadow-xs hover:shadow-md hover:border-slate-300 transition-all duration-200 flex flex-col justify-between group">
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-slate-50/60 border border-slate-200/90 p-4 sm:p-4.5 xl:p-5 shadow-xs hover:shadow-md hover:border-slate-300 transition-all duration-200 flex flex-col justify-between group">
             <div>
               <div className="flex items-center justify-between gap-2 mb-3">
                 <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider truncate">
@@ -570,7 +560,7 @@ export default function SuperAdminInventoryReportsPage() {
                   <FileText className="w-4.5 h-4.5" />
                 </div>
               </div>
-              <div className="text-2xl sm:text-[26px] font-extrabold text-slate-900 font-mono tracking-tight leading-none mb-1.5 truncate">
+              <div className="text-xl sm:text-2xl xl:text-[22px] 2xl:text-[24px] font-extrabold text-slate-900 font-sans tracking-tight leading-none mb-1.5 whitespace-nowrap">
                 {(metrics.total_records || 0).toLocaleString()}
               </div>
             </div>
@@ -581,7 +571,7 @@ export default function SuperAdminInventoryReportsPage() {
           </div>
 
           {/* Card 2: Total Added (Credit) */}
-          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-emerald-50/40 border border-slate-200/90 p-5 shadow-xs hover:shadow-md hover:border-emerald-200 transition-all duration-200 flex flex-col justify-between group">
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-emerald-50/40 border border-slate-200/90 p-4 sm:p-4.5 xl:p-5 shadow-xs hover:shadow-md hover:border-emerald-200 transition-all duration-200 flex flex-col justify-between group">
             <div>
               <div className="flex items-center justify-between gap-2 mb-3">
                 <span className="text-[11px] font-bold text-emerald-700 uppercase tracking-wider truncate">
@@ -599,12 +589,12 @@ export default function SuperAdminInventoryReportsPage() {
               </div>
             </div>
             <div className="text-xs font-mono text-emerald-600 font-bold pt-2 border-t border-slate-100/80 truncate">
-              Val: ₹{(metrics.total_credit_value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              Val: {formatCurrencySimple(metrics.total_credit_value)}
             </div>
           </div>
 
           {/* Card 3: Total Issued (Debit) */}
-          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-rose-50/40 border border-slate-200/90 p-5 shadow-xs hover:shadow-md hover:border-rose-200 transition-all duration-200 flex flex-col justify-between group">
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-rose-50/40 border border-slate-200/90 p-4 sm:p-4.5 xl:p-5 shadow-xs hover:shadow-md hover:border-rose-200 transition-all duration-200 flex flex-col justify-between group">
             <div>
               <div className="flex items-center justify-between gap-2 mb-3">
                 <span className="text-[11px] font-bold text-rose-700 uppercase tracking-wider truncate">
@@ -622,12 +612,12 @@ export default function SuperAdminInventoryReportsPage() {
               </div>
             </div>
             <div className="text-xs font-mono text-rose-600 font-bold pt-2 border-t border-slate-100/80 truncate">
-              Val: ₹{(metrics.total_debit_value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              Val: {formatCurrencySimple(metrics.total_debit_value)}
             </div>
           </div>
 
           {/* Card 4: Net Movement */}
-          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-purple-50/40 border border-slate-200/90 p-5 shadow-xs hover:shadow-md hover:border-purple-200 transition-all duration-200 flex flex-col justify-between group">
+          <div className="relative overflow-hidden rounded-2xl sm:rounded-3xl bg-gradient-to-br from-white via-white to-purple-50/40 border border-slate-200/90 p-4 sm:p-4.5 xl:p-5 shadow-xs hover:shadow-md hover:border-purple-200 transition-all duration-200 flex flex-col justify-between group">
             <div>
               <div className="flex items-center justify-between gap-2 mb-3">
                 <span className="text-[11px] font-bold text-purple-700 uppercase tracking-wider truncate">
@@ -645,14 +635,14 @@ export default function SuperAdminInventoryReportsPage() {
               </div>
             </div>
             <div className="text-xs font-mono text-purple-600 font-bold pt-2 border-t border-slate-100/80 truncate">
-              Net Val: ₹{(metrics.net_value || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              Net Val: {formatCurrencySimple(metrics.net_value)}
             </div>
           </div>
         </div>
       )}
 
       {/* Advanced Filter Control Card */}
-      <div className="bg-white rounded-3xl border border-slate-200/90 p-5 shadow-xs space-y-4">
+      <div className="bg-white rounded-3xl border border-slate-200/90 p-4 sm:p-4.5 xl:p-5 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2 text-xs font-bold text-slate-800 uppercase tracking-wider">
             <SlidersHorizontal className="w-4 h-4 text-purple-600" />
