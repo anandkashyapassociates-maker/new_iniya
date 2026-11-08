@@ -29,6 +29,12 @@ import {
 import superAdminInventoryService from '../services/superAdminInventoryService';
 import SearchableProductSelect from '../../components/SearchableProductSelect';
 
+// Clean currency formatter: simple numbers without redundant .00 or trailing dots
+const formatCurrencySimple = (val) => {
+  const num = Number(val) || 0;
+  return '₹' + (num % 1 === 0 ? num.toLocaleString('en-IN') : num.toLocaleString('en-IN', { maximumFractionDigits: 2 }));
+};
+
 export default function SuperAdminInventoryReportsPage() {
   // Tab View: 'products' (inventory_products table) | 'transactions' (inventory_stock_logs table)
   const [activeTab, setActiveTab] = useState('products');
