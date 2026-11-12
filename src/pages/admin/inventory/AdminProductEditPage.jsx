@@ -16,6 +16,11 @@ import {
   HelpCircle,
   UserCheck,
   Calendar,
+  Building2,
+  Lock,
+  Compass,
+  MapPin,
+  Phone,
 } from 'lucide-react';
 import adminInventoryService from '../../../services/adminInventoryService';
 import LoadingState from '../../../components/LoadingState';
@@ -29,12 +34,14 @@ export default function AdminProductEditPage() {
   const { user } = useAdminAuth();
   const fileInputRef = useRef(null);
 
+  const [clinics, setClinics] = useState([]);
   const [categories, setCategories] = useState([]);
   const [brands, setBrands] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // Form State
   const [formData, setFormData] = useState({
+    clinic_id: '',
     category_id: '',
     brand_id: '',
     product_name: '',
@@ -75,7 +82,8 @@ export default function AdminProductEditPage() {
     async function loadData() {
       setIsLoading(true);
       try {
-        const [cats, brs, prod] = await Promise.all([
+        const [clinsRes, cats, brs, prod] = await Promise.all([
+          adminInventoryService.getClinicDropdown(),
           adminInventoryService.getCategoryDropdown(),
           adminInventoryService.getBrandDropdown(),
           adminInventoryService.getProduct(id),
@@ -86,10 +94,13 @@ export default function AdminProductEditPage() {
           navigate('/admin/inventory/products');
           return;
         }
+        const clins = clinsRes?.clinics || clinsRes || [];
+        setClinics(clins);
         setCategories(cats || []);
         setBrands(brs || []);
 
         setFormData({
+          clinic_id: String(prod.clinic_id || (clins.length === 1 ? clins[0].id : '')),
           category_id: String(prod.category_id || ''),
           brand_id: String(prod.brand_id || ''),
           product_name: prod.product_name || '',
@@ -116,6 +127,11 @@ export default function AdminProductEditPage() {
     }
     loadData();
   }, [id, navigate, toast]);
+
+  // Selected clinic object for previewing branch info
+  const selectedClinic = clinics.find(
+    (c) => String(c.id) === String(formData.clinic_id)
+  ) || null;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -183,6 +199,7 @@ export default function AdminProductEditPage() {
     setIsSubmitting(true);
 
     const errs = {};
+    if (!formData.clinic_id) errs.clinic_id = 'Please select a clinic branch for this product.';
     if (!formData.category_id) errs.category_id = 'Category is required.';
     if (!formData.product_name?.trim()) errs.product_name = 'Product name is required.';
     if (!formData.business_unit?.trim()) errs.business_unit = 'Please select a business unit.';
@@ -205,6 +222,7 @@ export default function AdminProductEditPage() {
 
     try {
       const payload = new FormData();
+      if (formData.clinic_id) payload.append('clinic_id', formData.clinic_id);
       payload.append('category_id', formData.category_id);
       if (formData.brand_id) payload.append('brand_id', formData.brand_id);
       payload.append('product_name', formData.product_name.trim());
@@ -315,7 +333,103 @@ export default function AdminProductEditPage() {
             </div>
           )}
 
-          {/* SECTION 1: CLASSIFICATION (Category & Brand) */}
+          {/* SECTION 1: CLINIC BRANCH ASSIGNMENT */}
+          <div className="p-5 sm:p-7 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-5">
+            <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
+              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20 icon-3d">
+                <Building2 className="w-4 h-4 drop-shadow-sm" />
+              </div>
+              <div>
+                <h2 className="text-xs font-bold text-slate-800 tracking-wider uppercase micro-label">
+                  1. Clinic Branch Assignment
+                </h2>
+                <p className="text-[11px] text-slate-400 font-normal">
+                  Designated healthcare clinic location where this inventory product is stored and tracked.
+                </p>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                Assigned Clinic Branch <span className="text-rose-500">*</span>
+              </label>
+              <div className="relative">
+                <select
+                  name="clinic_id"
+                  value={formData.clinic_id}
+                  onChange={handleChange}
+                  disabled={isSubmitting}
+                  required
+                  className={`w-full px-4 py-2.5 text-xs bg-slate-50/80 hover:bg-slate-50 border rounded-2xl focus:outline-none focus:ring-2 transition-all font-normal text-slate-900 ${
+                    errors.clinic_id
+                      ? 'border-rose-400 focus:ring-rose-500/20'
+                      : 'border-slate-200 focus:border-indigo-600 focus:ring-indigo-500/20'
+                  }`}
+                >
+                  <option value="">Choose a clinic branch...</option>
+                  {clinics.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} {c.branch_name ? `(${c.branch_name})` : ''} - {c.clinic_code || `CLN-${String(c.id).padStart(4, '0')}`}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {errors.clinic_id && (
+                <p className="text-[11px] text-rose-500 font-normal mt-1.5">{errors.clinic_id}</p>
+              )}
+            </div>
+
+            {/* Readonly Clinic Info Preview Card */}
+            {selectedClinic && (
+              <div className="p-4 rounded-xl bg-gradient-to-r from-slate-50 via-indigo-50/20 to-purple-50/20 border border-indigo-100/70 space-y-3 animate-in fade-in duration-200">
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-2 border-b border-indigo-100/50">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-indigo-100 text-indigo-700 text-[11px] font-bold font-mono">
+                      <Lock className="w-3 h-3 text-indigo-500" />
+                      {selectedClinic.clinic_code || `CLN-${String(selectedClinic.id).padStart(4, '0')}`}
+                    </span>
+                    <span className="text-xs font-bold text-slate-800">
+                      {selectedClinic.name}
+                    </span>
+                    {selectedClinic.branch_name && (
+                      <span className="text-[11px] text-indigo-600 font-semibold">
+                        • {selectedClinic.branch_name}
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[10px] text-slate-400 font-medium">Auto-populated branch info</span>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                  <div className="flex items-start gap-2 text-slate-600">
+                    <Compass className="w-3.5 h-3.5 text-indigo-500 mt-0.5 shrink-0" />
+                    <div>
+                      <span className="block text-[10px] uppercase font-bold text-slate-400">Location Area</span>
+                      <span className="font-medium text-slate-700">{selectedClinic.location || '—'}</span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 text-slate-600">
+                    <MapPin className="w-3.5 h-3.5 text-indigo-500 mt-0.5 shrink-0" />
+                    <div>
+                      <span className="block text-[10px] uppercase font-bold text-slate-400">Full Address</span>
+                      <span className="font-medium text-slate-700">
+                        {[selectedClinic.address, selectedClinic.city, selectedClinic.state, selectedClinic.pincode].filter(Boolean).join(', ') || '—'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2 text-slate-600">
+                    <Phone className="w-3.5 h-3.5 text-indigo-500 mt-0.5 shrink-0" />
+                    <div>
+                      <span className="block text-[10px] uppercase font-bold text-slate-400">Contact Desk</span>
+                      <span className="font-medium text-slate-700">{selectedClinic.phone || selectedClinic.email || '—'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* SECTION 2: CLASSIFICATION (Category & Brand) */}
           <div className="p-5 sm:p-7 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-5">
             <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-md shadow-blue-500/20 icon-3d">
@@ -323,7 +437,7 @@ export default function AdminProductEditPage() {
               </div>
               <div>
                 <h2 className="text-xs font-bold text-slate-800 tracking-wider uppercase micro-label">
-                  1. Product Classification
+                  2. Product Classification
                 </h2>
                 <p className="text-[11px] text-slate-400 font-normal">
                   Assign clinical category tiers and certified manufacturing brand.
@@ -401,7 +515,7 @@ export default function AdminProductEditPage() {
             </div>
           </div>
 
-          {/* SECTION 2: PRODUCT IMAGE & MEDIA */}
+          {/* SECTION 3: PRODUCT IMAGE & MEDIA */}
           <div className="p-5 sm:p-7 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-5">
             <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 text-white flex items-center justify-center shadow-md shadow-indigo-500/20 icon-3d">
@@ -409,7 +523,7 @@ export default function AdminProductEditPage() {
               </div>
               <div>
                 <h2 className="text-xs font-bold text-slate-800 tracking-wider uppercase micro-label">
-                  2. Product Specimen Media
+                  3. Product Specimen Media
                 </h2>
                 <p className="text-[11px] text-slate-400 font-normal">
                   Update high resolution specimen image for packaging verification.
@@ -496,7 +610,7 @@ export default function AdminProductEditPage() {
             </div>
           </div>
 
-          {/* SECTION 3: SPECIFICATIONS (Name, Unit, Type, Status) */}
+          {/* SECTION 4: SPECIFICATIONS (Name, Unit, Type, Status) */}
           <div className="p-5 sm:p-7 rounded-2xl bg-white border border-slate-200/80 shadow-2xs space-y-5">
             <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 text-white flex items-center justify-center shadow-md shadow-emerald-500/20 icon-3d">
@@ -504,7 +618,7 @@ export default function AdminProductEditPage() {
               </div>
               <div>
                 <h2 className="text-xs font-bold text-slate-800 tracking-wider uppercase micro-label">
-                  3. Specifications &amp; Operational Details
+                  4. Specifications &amp; Operational Details
                 </h2>
                 <p className="text-[11px] text-slate-400 font-normal">
                   Core packaging units, item classification, and inventory status.

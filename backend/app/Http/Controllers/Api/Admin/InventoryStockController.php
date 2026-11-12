@@ -21,6 +21,7 @@ class InventoryStockController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = InventoryProduct::with([
+            'clinic:id,clinic_code,name,branch_name,location,city',
             'category:id,name',
             'brand:id,name',
             'vendor:id,vendor_code,vendor_name,company_name',
@@ -50,6 +51,12 @@ class InventoryStockController extends Controller
 
         if ($vendorId = $request->input('vendor_id')) {
             $query->where('vendor_id', $vendorId);
+        }
+
+        if ($clinicId = $request->input('clinic_id')) {
+            if ($clinicId !== '' && $clinicId !== 'all') {
+                $query->where('clinic_id', $clinicId);
+            }
         }
 
         // Filter by stock status
@@ -434,6 +441,7 @@ class InventoryStockController extends Controller
     public function logs(int $id): JsonResponse
     {
         $product = InventoryProduct::with([
+            'clinic:id,clinic_code,name,branch_name,location,city',
             'category:id,name',
             'brand:id,name',
             'vendor:id,vendor_code,vendor_name,company_name',
@@ -485,6 +493,7 @@ class InventoryStockController extends Controller
         // ================= 1. PRODUCTS VALUATION REPORT (inventory_products table) =================
         if ($reportType === 'products') {
             $query = InventoryProduct::with([
+                'clinic:id,clinic_code,name,branch_name,location,city',
                 'category:id,name',
                 'brand:id,name',
                 'vendor:id,vendor_code,vendor_name,company_name,mobile',
@@ -492,6 +501,12 @@ class InventoryStockController extends Controller
                 'inventoryUpdater:id,name,email',
                 'issueIssuer:id,name,email',
             ]);
+
+            if ($clinicId = $request->input('clinic_id')) {
+                if ($clinicId !== '' && $clinicId !== 'all') {
+                    $query->where('clinic_id', $clinicId);
+                }
+            }
 
             if ($search = $request->input('search')) {
                 $query->where(function ($q) use ($search) {
@@ -590,6 +605,12 @@ class InventoryStockController extends Controller
 
         if ($vendorId = $request->input('vendor_id')) {
             $query->where('vendor_id', $vendorId);
+        }
+
+        if ($clinicId = $request->input('clinic_id')) {
+            if ($clinicId !== '' && $clinicId !== 'all') {
+                $query->where('clinic_id', $clinicId);
+            }
         }
 
         if ($adminId = $request->input('admin_id')) {

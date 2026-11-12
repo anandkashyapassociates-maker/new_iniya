@@ -1,6 +1,12 @@
 import { adminApi } from './apiClient';
 
 export const adminInventoryService = {
+  // ================= CLINICS =================
+  async getClinicDropdown() {
+    const response = await adminApi.get('/admin/clinics/options');
+    return response.data;
+  },
+
   // ================= PRODUCTS =================
   async getProducts(params = {}) {
     const response = await adminApi.get('/admin/inventory/products', { params });

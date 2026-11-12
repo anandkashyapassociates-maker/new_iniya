@@ -125,6 +125,7 @@ Route::prefix('superadmin')
 
         // Inventory Management (SuperAdmin Reporting, Products, Categories, Brands)
         Route::prefix('inventory')->group(function () {
+            Route::get('/clinics/options', [ClinicManagementController::class, 'options']);
             Route::get('/overview', [SuperAdminInventoryController::class, 'overview']);
             Route::get('/reports', [SuperAdminInventoryController::class, 'reports']);
             Route::get('/reports/filter-options', [SuperAdminInventoryController::class, 'reportFilterOptions']);
@@ -224,6 +225,9 @@ Route::prefix('admin')
         Route::get('/calendar/sessions', [AppointmentSessionController::class, 'calendar']);
 
         Route::middleware('auth.admin_only')->group(function () {
+            // Clinic Options for Admin modules
+            Route::get('/clinics/options', [ClinicManagementController::class, 'options']);
+
             // Customer Management
             Route::get('/customers/stats', [CustomerController::class, 'stats']);
             Route::get('/customers', [CustomerController::class, 'index']);
@@ -279,6 +283,7 @@ Route::prefix('admin')
                 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
                 // Categories
+                Route::get('/clinics/dropdown', [ClinicManagementController::class, 'options']);
                 Route::get('/categories/dropdown', [InventoryCategoryController::class, 'dropdown']);
                 Route::get('/categories', [InventoryCategoryController::class, 'index']);
                 Route::post('/categories', [InventoryCategoryController::class, 'store']);

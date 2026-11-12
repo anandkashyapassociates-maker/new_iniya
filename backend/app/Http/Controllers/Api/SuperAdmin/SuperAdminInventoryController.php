@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\SuperAdmin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Admin;
+use App\Models\Clinic;
 use App\Models\InventoryBrand;
 use App\Models\InventoryCategory;
 use App\Models\InventoryProduct;
@@ -22,6 +23,7 @@ class SuperAdminInventoryController extends Controller
     public function overview(): JsonResponse
     {
         $totalProducts = InventoryProduct::count();
+        $totalClinics = Clinic::count();
         $activeProducts = InventoryProduct::where('status', 'active')->count();
         $inactiveProducts = InventoryProduct::where('status', 'inactive')->count();
         $totalCategories = InventoryCategory::count();
@@ -32,8 +34,13 @@ class SuperAdminInventoryController extends Controller
             ->count();
         $outOfStockProductsCount = InventoryProduct::where('quantity', '<=', 0)->count();
 
-        // Recently added products
-        $recentProducts = InventoryProduct::with(['category:id,name', 'brand:id,name', 'creator:id,name,email'])
+        // Recently added products with clinic branch
+        $recentProducts = InventoryProduct::with([
+            'clinic:id,clinic_code,name,branch_name,location,city',
+            'category:id,name',
+            'brand:id,name',
+            'creator:id,name,email',
+        ])
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get();
@@ -81,9 +88,23 @@ class SuperAdminInventoryController extends Controller
                 'count' => $admin->inventory_products_count,
             ]);
 
+        // Products breakdown by Clinic Branch
+        $productsByClinic = Clinic::withCount('products')
+            ->orderBy('products_count', 'desc')
+            ->limit(10)
+            ->get(['id', 'clinic_code', 'name', 'branch_name'])
+            ->map(fn ($c) => [
+                'id' => $c->id,
+                'code' => $c->clinic_code ?? sprintf('CLN-%04d', $c->id),
+                'name' => $c->name,
+                'branch' => $c->branch_name,
+                'count' => $c->products_count,
+            ]);
+
         return response()->json([
             'summary' => [
                 'total_products' => $totalProducts,
+                'total_clinics' => $totalClinics,
                 'active_products' => $activeProducts,
                 'inactive_products' => $inactiveProducts,
                 'total_categories' => $totalCategories,
@@ -94,6 +115,7 @@ class SuperAdminInventoryController extends Controller
                 'total_low_stock_alerts' => $lowStockProductsCount + $outOfStockProductsCount,
             ],
             'recent_products' => $recentProducts,
+            'products_by_clinic' => $productsByClinic,
             'products_by_category' => $productsByCategory,
             'products_by_brand' => $productsByBrand,
             'products_by_type' => $productsByType,
@@ -107,6 +129,7 @@ class SuperAdminInventoryController extends Controller
     public function products(Request $request): JsonResponse
     {
         $query = InventoryProduct::with([
+            'clinic:id,clinic_code,name,branch_name,location,city',
             'category:id,name,slug',
             'brand:id,name,slug',
             'creator:id,name,email,mobile',
@@ -114,6 +137,12 @@ class SuperAdminInventoryController extends Controller
 
         if ($search = $request->input('search')) {
             $query->where('product_name', 'like', "%{$search}%");
+        }
+
+        if ($clinicId = $request->input('clinic_id')) {
+            if ($clinicId !== '' && $clinicId !== 'all') {
+                $query->where('clinic_id', $clinicId);
+            }
         }
 
         if ($adminId = $request->input('admin_id')) {
@@ -150,7 +179,12 @@ class SuperAdminInventoryController extends Controller
      */
     public function showProduct(int $id): JsonResponse
     {
-        $product = InventoryProduct::with(['category', 'brand', 'creator'])->findOrFail($id);
+        $product = InventoryProduct::with([
+            'clinic:id,clinic_code,name,branch_name,location,city,address,phone,email',
+            'category',
+            'brand',
+            'creator',
+        ])->findOrFail($id);
 
         return response()->json($product);
     }
@@ -297,6 +331,7 @@ class SuperAdminInventoryController extends Controller
     public function stocks(Request $request): JsonResponse
     {
         $query = InventoryProduct::with([
+            'clinic:id,clinic_code,name,branch_name,location,city',
             'category:id,name',
             'brand:id,name',
             'vendor:id,vendor_code,vendor_name,company_name',
@@ -312,6 +347,12 @@ class SuperAdminInventoryController extends Controller
                     ->orWhereHas('brand', fn ($bq) => $bq->where('name', 'like', "%{$search}%"))
                     ->orWhereHas('vendor', fn ($vq) => $vq->where('vendor_name', 'like', "%{$search}%"));
             });
+        }
+
+        if ($clinicId = $request->input('clinic_id')) {
+            if ($clinicId !== '' && $clinicId !== 'all') {
+                $query->where('clinic_id', $clinicId);
+            }
         }
 
         if ($categoryId = $request->input('category_id')) {
@@ -380,6 +421,7 @@ class SuperAdminInventoryController extends Controller
     public function lowStock(Request $request): JsonResponse
     {
         $query = InventoryProduct::with([
+            'clinic:id,clinic_code,name,branch_name,location,city',
             'category:id,name',
             'brand:id,name',
             'vendor:id,vendor_code,vendor_name,company_name,mobile',
@@ -397,6 +439,12 @@ class SuperAdminInventoryController extends Controller
                     ->orWhereHas('brand', fn ($bq) => $bq->where('name', 'like', "%{$search}%"))
                     ->orWhereHas('vendor', fn ($vq) => $vq->where('vendor_name', 'like', "%{$search}%"));
             });
+        }
+
+        if ($clinicId = $request->input('clinic_id')) {
+            if ($clinicId !== '' && $clinicId !== 'all') {
+                $query->where('clinic_id', $clinicId);
+            }
         }
 
         $perPage = min((int) $request->input('per_page', 10), 100);
@@ -451,6 +499,7 @@ class SuperAdminInventoryController extends Controller
     public function stockLogs(int $id): JsonResponse
     {
         $product = InventoryProduct::with([
+            'clinic:id,clinic_code,name,branch_name,location,city',
             'category:id,name',
             'brand:id,name',
             'vendor:id,vendor_code,vendor_name,company_name',
@@ -484,6 +533,7 @@ class SuperAdminInventoryController extends Controller
         // ================= 1. PRODUCTS VALUATION REPORT (inventory_products table) =================
         if ($reportType === 'products') {
             $query = InventoryProduct::with([
+                'clinic:id,clinic_code,name,branch_name,location,city',
                 'category:id,name',
                 'brand:id,name',
                 'vendor:id,vendor_code,vendor_name,company_name,mobile',
@@ -491,6 +541,12 @@ class SuperAdminInventoryController extends Controller
                 'inventoryUpdater:id,name,email',
                 'issueIssuer:id,name,email',
             ]);
+
+            if ($clinicId = $request->input('clinic_id')) {
+                if ($clinicId !== '' && $clinicId !== 'all') {
+                    $query->where('clinic_id', $clinicId);
+                }
+            }
 
             if ($search = $request->input('search')) {
                 $query->where(function ($q) use ($search) {
@@ -576,7 +632,8 @@ class SuperAdminInventoryController extends Controller
 
         // ================= 2. TRANSACTIONS AUDIT REPORT (inventory_stock_logs table) =================
         $query = InventoryStockLog::with([
-            'product:id,product_name,category_id,brand_id,business_unit,quantity,buy_price,average_price',
+            'product:id,product_name,category_id,brand_id,clinic_id,business_unit,quantity,buy_price,average_price',
+            'product.clinic:id,clinic_code,name,branch_name',
             'product.category:id,name',
             'product.brand:id,name',
             'vendor:id,vendor_code,vendor_name,company_name,mobile',
@@ -585,6 +642,15 @@ class SuperAdminInventoryController extends Controller
 
         if ($productId = $request->input('product_id')) {
             $query->where('product_id', $productId);
+        }
+
+        if ($clinicId = $request->input('clinic_id')) {
+            if ($clinicId !== '' && $clinicId !== 'all') {
+                $query->where(function ($q) use ($clinicId) {
+                    $q->where('clinic_id', $clinicId)
+                        ->orWhereHas('product', fn ($pq) => $pq->where('clinic_id', $clinicId));
+                });
+            }
         }
 
         if ($vendorId = $request->input('vendor_id')) {
@@ -678,11 +744,15 @@ class SuperAdminInventoryController extends Controller
         $admins = Admin::orderBy('name', 'asc')
             ->get(['id', 'name', 'email']);
 
+        $clinics = Clinic::orderBy('name', 'asc')
+            ->get(['id', 'clinic_code', 'name', 'branch_name']);
+
         return response()->json([
             'products' => $products,
             'categories' => $categories,
             'vendors' => $vendors,
             'admins' => $admins,
+            'clinics' => $clinics,
         ]);
     }
 }

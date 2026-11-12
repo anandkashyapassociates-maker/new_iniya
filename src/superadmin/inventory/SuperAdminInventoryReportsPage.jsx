@@ -25,6 +25,8 @@ import {
   CheckCircle2,
   Clock,
   ArrowUpRight,
+  Building2,
+  Lock,
 } from 'lucide-react';
 import superAdminInventoryService from '../services/superAdminInventoryService';
 import SearchableProductSelect from '../../components/SearchableProductSelect';
@@ -46,11 +48,13 @@ export default function SuperAdminInventoryReportsPage() {
     categories: [],
     vendors: [],
     admins: [],
+    clinics: [],
   });
 
   // Filter States
   const [search, setSearch] = useState('');
   const [selectedProduct, setSelectedProduct] = useState('');
+  const [selectedClinic, setSelectedClinic] = useState('');
   const [selectedVendor, setSelectedVendor] = useState('');
   const [selectedAdmin, setSelectedAdmin] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -92,6 +96,7 @@ export default function SuperAdminInventoryReportsPage() {
           categories: res.categories || [],
           vendors: res.vendors || [],
           admins: res.admins || [],
+          clinics: res.clinics || [],
         });
       } catch (err) {
         console.error('Failed to load report filter options:', err);
@@ -144,6 +149,7 @@ export default function SuperAdminInventoryReportsPage() {
 
       if (search.trim()) params.search = search.trim();
       if (selectedProduct) params.product_id = selectedProduct;
+      if (selectedClinic) params.clinic_id = selectedClinic;
       if (selectedVendor) params.vendor_id = selectedVendor;
       if (selectedAdmin) params.admin_id = selectedAdmin;
       if (selectedCategory) params.category_id = selectedCategory;
@@ -178,6 +184,7 @@ export default function SuperAdminInventoryReportsPage() {
     activeTab,
     search,
     selectedProduct,
+    selectedClinic,
     selectedVendor,
     selectedAdmin,
     selectedCategory,
@@ -195,6 +202,7 @@ export default function SuperAdminInventoryReportsPage() {
   const handleResetFilters = () => {
     setSearch('');
     setSelectedProduct('');
+    setSelectedClinic('');
     setSelectedVendor('');
     setSelectedAdmin('');
     setSelectedCategory('');
@@ -209,6 +217,7 @@ export default function SuperAdminInventoryReportsPage() {
   const hasActiveFilters =
     Boolean(search) ||
     Boolean(selectedProduct) ||
+    Boolean(selectedClinic) ||
     Boolean(selectedVendor) ||
     Boolean(selectedCategory) ||
     selectedStockStatus !== 'all' ||
@@ -746,8 +755,8 @@ export default function SuperAdminInventoryReportsPage() {
           </div>
         </div>
 
-        {/* Filter Input Grid: 5 columns on desktop in ONE single row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 pt-1">
+        {/* Filter Input Grid: 6 columns on desktop */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3 pt-1">
           {/* 1. Keyword Search */}
           <div>
             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
@@ -784,7 +793,29 @@ export default function SuperAdminInventoryReportsPage() {
             />
           </div>
 
-          {/* 3. Category Filter */}
+          {/* 3. Clinic Branch Filter */}
+          <div>
+            <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
+              Clinic Branch
+            </label>
+            <select
+              value={selectedClinic}
+              onChange={(e) => {
+                setSelectedClinic(e.target.value);
+                setPage(1);
+              }}
+              className="w-full px-2.5 py-2 text-xs rounded-xl border border-slate-200 bg-slate-50/50 focus:bg-white focus:border-indigo-500 focus:outline-hidden transition-all text-slate-800 truncate font-medium"
+            >
+              <option value="">All Clinics (Branches)</option>
+              {(filterOptions.clinics || []).map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} {c.branch_name ? `(${c.branch_name})` : ''}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 4. Category Filter */}
           <div>
             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
               Category
@@ -806,7 +837,7 @@ export default function SuperAdminInventoryReportsPage() {
             </select>
           </div>
 
-          {/* 4. Vendor Filter */}
+          {/* 5. Vendor Filter */}
           <div>
             <label className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1">
               Vendor / Supplier
@@ -988,6 +1019,13 @@ export default function SuperAdminInventoryReportsPage() {
                             {prod.product_name}
                           </Link>
                           <div className="flex items-center gap-1.5 flex-wrap">
+                            {prod.clinic && (
+                              <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-100 font-mono">
+                                <Building2 className="w-2.5 h-2.5 text-indigo-500" />
+                                {prod.clinic.clinic_code || (prod.clinic.id ? `CLN-${String(prod.clinic.id).padStart(4, '0')}` : 'CLN-0001')}
+                                <span className="font-sans font-semibold text-slate-600 truncate max-w-[85px]">{prod.clinic.branch_name || prod.clinic.name}</span>
+                              </span>
+                            )}
                             <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md bg-slate-100 text-slate-600">
                               {prod.product_type || 'Standard'}
                             </span>
@@ -1178,6 +1216,12 @@ export default function SuperAdminInventoryReportsPage() {
                             <span className="font-bold text-slate-900">Product #{log.product_id}</span>
                           )}
                           <div className="flex items-center gap-2 text-[10px] text-slate-400">
+                            {log.product?.clinic && (
+                              <span className="inline-flex items-center gap-1 text-[9px] font-bold px-1.5 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-100 font-mono">
+                                <Building2 className="w-2.5 h-2.5 text-indigo-500" />
+                                {log.product.clinic.clinic_code || `CLN-${String(log.product.clinic.id).padStart(4, '0')}`}
+                              </span>
+                            )}
                             {log.product?.category?.name && <span>{log.product.category.name}</span>}
                             {!isIssue && log.vendor?.vendor_name && (
                               <span className="text-slate-500">• Sup: {log.vendor.vendor_name}</span>

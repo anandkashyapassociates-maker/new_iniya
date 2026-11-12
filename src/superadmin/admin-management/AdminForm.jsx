@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   User,
   Mail,
@@ -11,8 +11,13 @@ import {
   AlertCircle,
   Shield,
   KeyRound,
+  Building2,
+  Compass,
+  Globe,
+  MapPin,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import clinicManagementService from '../services/clinicManagementService';
 
 export default function AdminForm({
   onSubmit,
@@ -20,6 +25,7 @@ export default function AdminForm({
   cancelPath = '/superadmin/admin-management/details',
 }) {
   const [formData, setFormData] = useState({
+    clinic_id: '',
     name: '',
     email: '',
     mobile: '',
@@ -28,9 +34,42 @@ export default function AdminForm({
     is_active: true,
   });
 
+  const [clinics, setClinics] = useState([]);
+  const [isLoadingClinics, setIsLoadingClinics] = useState(false);
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadClinics = async () => {
+      setIsLoadingClinics(true);
+      try {
+        const res = await clinicManagementService.getClinicOptions();
+        const list = res?.clinics || (Array.isArray(res) ? res : []);
+        if (isMounted) {
+          setClinics(list);
+          if (list.length === 1) {
+            setFormData((prev) => ({ ...prev, clinic_id: String(list[0].id) }));
+          }
+        }
+      } catch (err) {
+        console.error('Failed to load clinic options:', err);
+      } finally {
+        if (isMounted) setIsLoadingClinics(false);
+      }
+    };
+
+    loadClinics();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const selectedClinic = clinics.find(
+    (c) => String(c.id) === String(formData.clinic_id)
+  );
 
   const calculateStrength = (pwd) => {
     let score = 0;
@@ -45,6 +84,10 @@ export default function AdminForm({
 
   const validateFrontend = () => {
     const newErrors = {};
+
+    if (!formData.clinic_id) {
+      newErrors.clinic_id = 'Please select a clinic branch for this administrator.';
+    }
 
     if (!formData.name.trim()) {
       newErrors.name = 'Full name is required.';
@@ -96,6 +139,7 @@ export default function AdminForm({
 
     try {
       await onSubmit({
+        clinic_id: parseInt(formData.clinic_id, 10),
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         mobile: formData.mobile.trim(),
@@ -104,8 +148,9 @@ export default function AdminForm({
         is_active: formData.is_active,
       });
 
-      // Reset form on success
+      // Reset form on success (preserve clinic if only 1 exists)
       setFormData({
+        clinic_id: clinics.length === 1 ? String(clinics[0].id) : '',
         name: '',
         email: '',
         mobile: '',
@@ -144,7 +189,171 @@ export default function AdminForm({
         </div>
       )}
 
-      {/* SECTION 1: IDENTITY & COMMUNICATION */}
+      {/* STEP 1: PRIMARY REQUIREMENT - SELECT CLINIC BRANCH */}
+      <div className="bg-white p-5 sm:p-6 rounded-3xl border-2 border-blue-500/30 shadow-md hover:border-blue-500/50 transition-all duration-300 space-y-4 animate-slide-up group">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shrink-0 icon-3d shadow-md group-hover:scale-105 transition-transform duration-300">
+              <Building2 className="w-5 h-5 drop-shadow-sm" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-mono text-[10px] font-bold flex items-center justify-center">
+                  1
+                </span>
+                <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+                  Clinic Branch Assignment
+                </h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60 uppercase">
+                  Step 1 (Mandatory)
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                First select which clinic branch this operational administrator will oversee and manage. Clinic details will load automatically.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Clinic Dropdown Selector */}
+        <div className="space-y-1.5">
+          <label htmlFor="admin-clinic" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Select Clinic Branch <span className="text-rose-500">*</span>
+          </label>
+          <div className="relative">
+            <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <select
+              id="admin-clinic"
+              value={formData.clinic_id}
+              onChange={(e) => handleChange('clinic_id', e.target.value)}
+              disabled={isLoading || isLoadingClinics}
+              required
+              className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 shadow-2xs cursor-pointer font-medium ${
+                errors.clinic_id
+                  ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/15'
+                  : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500/15'
+              }`}
+            >
+              <option value="">
+                {isLoadingClinics ? 'Loading available clinics...' : '-- Choose Clinic Branch --'}
+              </option>
+              {clinics.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.clinic_code}) {c.branch_name ? `— ${c.branch_name}` : ''} [Location: {c.location}]
+                </option>
+              ))}
+            </select>
+          </div>
+          {errors.clinic_id && (
+            <p className="text-[11px] text-rose-600 mt-1 font-medium flex items-center gap-1">
+              <AlertCircle className="w-3 h-3 shrink-0" />
+              <span>{Array.isArray(errors.clinic_id) ? errors.clinic_id[0] : errors.clinic_id}</span>
+            </p>
+          )}
+        </div>
+
+        {/* Selected Clinic Details Auto-Preview Card */}
+        {selectedClinic ? (
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-blue-50/70 via-indigo-50/40 to-slate-50 border border-blue-200/80 space-y-3.5 animate-scale-up">
+            <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-blue-200/60">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-bold text-blue-900">
+                  Assigned Clinic Profile Loaded
+                </span>
+              </div>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-white text-blue-700 border border-blue-200 shadow-2xs">
+                <Lock className="w-3 h-3" />
+                {selectedClinic.clinic_code}
+              </span>
+            </div>
+
+            {/* Read-only populated info inputs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {/* Clinic Name & Branch */}
+              <div className="min-w-0">
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  Clinic / Branch Name
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  disabled
+                  value={`${selectedClinic.name} ${selectedClinic.branch_name ? `(${selectedClinic.branch_name})` : ''}`}
+                  className="w-full px-3 py-2 text-xs bg-white/90 border border-blue-200/80 rounded-xl text-slate-800 font-semibold cursor-not-allowed shadow-2xs"
+                />
+              </div>
+
+              {/* Location / Area */}
+              <div className="min-w-0">
+                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
+                  <Compass className="w-3 h-3 text-blue-500" />
+                  <span>Location / Area</span>
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  disabled
+                  value={selectedClinic.location || '—'}
+                  className="w-full px-3 py-2 text-xs bg-white/90 border border-blue-200/80 rounded-xl text-slate-800 font-medium cursor-not-allowed shadow-2xs"
+                />
+              </div>
+
+              {/* City / State */}
+              <div className="min-w-0">
+                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
+                  <Globe className="w-3 h-3 text-blue-500" />
+                  <span>City / State</span>
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  disabled
+                  value={`${selectedClinic.city || '—'}, ${selectedClinic.state || '—'} ${selectedClinic.postal_code ? `(${selectedClinic.postal_code})` : ''}`}
+                  className="w-full px-3 py-2 text-xs bg-white/90 border border-blue-200/80 rounded-xl text-slate-800 font-medium cursor-not-allowed shadow-2xs"
+                />
+              </div>
+
+              {/* Full Physical Address */}
+              <div className="min-w-0 sm:col-span-2">
+                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-blue-500" />
+                  <span>Full Clinic Address</span>
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  disabled
+                  value={selectedClinic.address || '—'}
+                  className="w-full px-3 py-2 text-xs bg-white/90 border border-blue-200/80 rounded-xl text-slate-800 font-medium cursor-not-allowed shadow-2xs"
+                />
+              </div>
+
+              {/* Clinic Phone */}
+              <div className="min-w-0">
+                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
+                  <Phone className="w-3 h-3 text-blue-500" />
+                  <span>Clinic Contact Phone</span>
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  disabled
+                  value={selectedClinic.phone || '—'}
+                  className="w-full px-3 py-2 text-xs bg-white/90 border border-blue-200/80 rounded-xl text-slate-800 font-mono cursor-not-allowed shadow-2xs"
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Placeholder guidance */
+          <div className="p-4 rounded-2xl bg-slate-50 border border-dashed border-slate-300 text-center text-xs text-slate-500">
+            Please choose a clinic branch above to view its physical location and address details before creating an administrator account.
+          </div>
+        )}
+      </div>
+
+      {/* STEP 2: ADMIN PROFILE & CONTACT */}
       <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-blue-200/80 transition-all duration-300 space-y-4 animate-slide-up stagger-1 group">
         <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-cyan-500 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
@@ -152,7 +361,7 @@ export default function AdminForm({
           </div>
           <div className="flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-mono text-[10px] font-bold flex items-center justify-center">
-              1
+              2
             </span>
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
               Admin Profile &amp; Contact
@@ -253,7 +462,7 @@ export default function AdminForm({
         </div>
       </div>
 
-      {/* SECTION 2: ACCESS & SECURITY CREDENTIALS */}
+      {/* STEP 3: ACCESS & SECURITY CREDENTIALS */}
       <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-indigo-200/80 transition-all duration-300 space-y-4 animate-slide-up stagger-2 group">
         <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
@@ -261,7 +470,7 @@ export default function AdminForm({
           </div>
           <div className="flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-indigo-100 text-indigo-700 font-mono text-[10px] font-bold flex items-center justify-center">
-              2
+              3
             </span>
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
               Security &amp; Credentials
@@ -366,7 +575,7 @@ export default function AdminForm({
         </div>
       </div>
 
-      {/* SECTION 3: ACCOUNT STATUS */}
+      {/* STEP 4: ACCOUNT STATUS */}
       <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-slate-300 transition-all duration-300 space-y-4 animate-slide-up stagger-3 group">
         <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-slate-700 via-slate-800 to-slate-900 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
@@ -374,7 +583,7 @@ export default function AdminForm({
           </div>
           <div className="flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 font-mono text-[10px] font-bold flex items-center justify-center">
-              3
+              4
             </span>
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
               Account Status &amp; Activation

@@ -20,6 +20,7 @@ class InventoryProduct extends Model
      * @var list<string>
      */
     protected $fillable = [
+        'clinic_id',
         'category_id',
         'brand_id',
         'product_image',
@@ -142,6 +143,14 @@ class InventoryProduct extends Model
         }
 
         return null;
+    }
+
+    /**
+     * Clinic branch this product's inventory is allocated to.
+     */
+    public function clinic(): BelongsTo
+    {
+        return $this->belongsTo(Clinic::class, 'clinic_id');
     }
 
     /**

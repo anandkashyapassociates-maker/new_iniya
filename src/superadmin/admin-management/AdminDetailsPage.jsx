@@ -15,11 +15,13 @@ import {
   Clock,
   Pencil,
   Eye,
-  LogIn,
+  Building2,
+  Lock,
 } from 'lucide-react';
 import AdminStatusBadge from './AdminStatusBadge';
 import AdminEditModal from './AdminEditModal';
 import adminManagementService from '../services/adminManagementService';
+import clinicManagementService from '../services/clinicManagementService';
 import { useToast } from '../../context/ToastContext';
 import { useAdminAuth } from '../../features/auth/AdminAuthContext';
 
@@ -37,6 +39,8 @@ export default function AdminDetailsPage() {
   // Filters & search state
   const [searchInput, setSearchInput] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
+  const [clinicFilter, setClinicFilter] = useState('all');
+  const [clinicsList, setClinicsList] = useState([]);
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(10);
@@ -44,6 +48,25 @@ export default function AdminDetailsPage() {
   // Edit modal state
   const [selectedAdminForEdit, setSelectedAdminForEdit] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+
+  // Load clinic options for filtering
+  useEffect(() => {
+    let isMounted = true;
+    clinicManagementService
+      .getClinicOptions()
+      .then((res) => {
+        if (!isMounted) return;
+        const list = res?.clinics || (Array.isArray(res) ? res : []);
+        setClinicsList(list);
+      })
+      .catch((err) => {
+        console.error('Failed to load clinics for filter:', err);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const handleOpenEditModal = (admin) => {
     setSelectedAdminForEdit(admin);
@@ -115,6 +138,7 @@ export default function AdminDetailsPage() {
     try {
       const res = await adminManagementService.getAdmins({
         search: activeSearch,
+        clinic_id: clinicFilter !== 'all' ? clinicFilter : undefined,
         status: statusFilter,
         page,
         per_page: perPage,
@@ -138,7 +162,7 @@ export default function AdminDetailsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [activeSearch, statusFilter, page, perPage, toast]);
+  }, [activeSearch, clinicFilter, statusFilter, page, perPage, toast]);
 
   useEffect(() => {
     fetchAdmins();
@@ -150,6 +174,11 @@ export default function AdminDetailsPage() {
     setActiveSearch(searchInput.trim());
   };
 
+  const handleClinicFilterChange = (e) => {
+    setPage(1);
+    setClinicFilter(e.target.value);
+  };
+
   const handleStatusFilterChange = (newStatus) => {
     setPage(1);
     setStatusFilter(newStatus);
@@ -158,9 +187,12 @@ export default function AdminDetailsPage() {
   const handleResetFilters = () => {
     setSearchInput('');
     setActiveSearch('');
+    setClinicFilter('all');
     setStatusFilter('all');
     setPage(1);
   };
+
+  const selectedClinicObj = clinicsList.find((c) => String(c.id) === String(clinicFilter));
 
   return (
     <div className="space-y-6">
@@ -192,7 +224,7 @@ export default function AdminDetailsPage() {
             )}
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Directory of administrative personnel provisioned from the dedicated <code className="font-mono text-slate-700 bg-slate-100 px-1 py-0.5 rounded text-[11px]">admins</code> table.
+            Directory of administrative personnel provisioned with assigned clinic branch oversight.
           </p>
         </div>
 
@@ -218,101 +250,133 @@ export default function AdminDetailsPage() {
         </div>
       </div>
 
-      {/* Filter and Search Bar Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs">
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-          {/* Search Form */}
-          <form onSubmit={handleSearchSubmit} className="relative w-full sm:w-96">
+      {/* Filter and Search Bar Card - Clean 2-Row Layout */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3.5">
+        {/* ROW 1: Search Form + Clinic Dropdown Filter (Top Row) */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
+          {/* Search Input Form */}
+          <form onSubmit={handleSearchSubmit} className="relative sm:col-span-7 lg:col-span-8 min-w-0">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search by name, email, or mobile..."
-              className="w-full pl-10 pr-20 py-2 text-xs bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
+              className="w-full pl-10 pr-20 py-2.5 text-xs bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all font-medium shadow-2xs"
             />
             <button
               type="submit"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[11px] font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-800 cursor-pointer"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-800 cursor-pointer transition-colors shadow-2xs"
             >
               Search
             </button>
           </form>
 
-          {/* Status Filter Tabs */}
-          <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-full sm:w-auto justify-center overflow-x-auto">
-            <button
-              type="button"
-              onClick={() => handleStatusFilterChange('all')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                statusFilter === 'all'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
+          {/* Clinic Filter Dropdown */}
+          <div className="relative sm:col-span-5 lg:col-span-4 min-w-0">
+            <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <select
+              value={clinicFilter}
+              onChange={handleClinicFilterChange}
+              className="w-full pl-10 pr-8 py-2.5 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer font-medium shadow-2xs"
             >
-              All
-            </button>
-            <button
-              type="button"
-              onClick={() => handleStatusFilterChange('active')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                statusFilter === 'active' || statusFilter === 'true'
-                  ? 'bg-white text-emerald-700 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              Active
-            </button>
-            <button
-              type="button"
-              onClick={() => handleStatusFilterChange('inactive')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                statusFilter === 'inactive' || statusFilter === 'false'
-                  ? 'bg-white text-amber-700 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              Inactive
-            </button>
-            <button
-              type="button"
-              onClick={() => handleStatusFilterChange('blocked')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                statusFilter === 'blocked'
-                  ? 'bg-white text-rose-700 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              Blocked
-            </button>
+              <option value="all">All Clinics (Branches)</option>
+              {clinicsList.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.clinic_code})
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Active Filter Badges */}
-        {(activeSearch || statusFilter !== 'all') && (
-          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <div className="flex items-center gap-2">
-              <span className="font-semibold text-slate-700">Active filters:</span>
+        {/* ROW 2: Status Filter Tabs & Active Filters (Bottom Row) */}
+        <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0">
+              Status:
+            </span>
+            <div className="inline-flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/60 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => handleStatusFilterChange('all')}
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                  statusFilter === 'all'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => handleStatusFilterChange('active')}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                  statusFilter === 'active' || statusFilter === 'true'
+                    ? 'bg-white text-emerald-700 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span>Active</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleStatusFilterChange('inactive')}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                  statusFilter === 'inactive' || statusFilter === 'false'
+                    ? 'bg-white text-amber-700 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                <span>Inactive</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleStatusFilterChange('blocked')}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                  statusFilter === 'blocked'
+                    ? 'bg-white text-rose-700 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                <span>Blocked</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Active Filter Badges & Reset Button */}
+          {(activeSearch || clinicFilter !== 'all' || statusFilter !== 'all') && (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <span className="font-semibold text-slate-600 text-[11px]">Filtered by:</span>
               {activeSearch && (
-                <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[11px]">
-                  Keyword: "{activeSearch}"
+                <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-medium">
+                  "{activeSearch}"
+                </span>
+              )}
+              {clinicFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-medium">
+                  <Building2 className="w-3 h-3" />
+                  {selectedClinicObj ? `${selectedClinicObj.name} (${selectedClinicObj.clinic_code})` : `Clinic #${clinicFilter}`}
                 </span>
               )}
               {statusFilter !== 'all' && (
-                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 text-[11px] capitalize">
-                  Status: {statusFilter}
+                <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200 text-[11px] capitalize font-medium">
+                  {statusFilter}
                 </span>
               )}
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer underline ml-1"
+              >
+                Clear all
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer underline"
-            >
-              Clear all
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Main Table Card */}
@@ -349,12 +413,12 @@ export default function AdminDetailsPage() {
             </div>
             <h3 className="text-sm font-bold text-slate-900">No Administrator Records Found</h3>
             <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
-              {activeSearch || statusFilter !== 'all'
-                ? 'No admin accounts match your current search criteria. Try clearing the filters.'
+              {activeSearch || clinicFilter !== 'all' || statusFilter !== 'all'
+                ? 'No admin accounts match your current filter criteria. Try clearing the filters.'
                 : 'No administrative accounts have been provisioned yet. Create your first admin to get started.'}
             </p>
             <div className="mt-5 flex items-center justify-center gap-2">
-              {activeSearch || statusFilter !== 'all' ? (
+              {activeSearch || clinicFilter !== 'all' || statusFilter !== 'all' ? (
                 <button
                   type="button"
                   onClick={handleResetFilters}
@@ -380,6 +444,7 @@ export default function AdminDetailsPage() {
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                   <th className="py-3.5 px-4 w-16 text-center">Sr. No.</th>
                   <th className="py-3.5 px-4">Full Name</th>
+                  <th className="py-3.5 px-4">Clinic Branch</th>
                   <th className="py-3.5 px-4">Email Address</th>
                   <th className="py-3.5 px-4">Mobile Number</th>
                   <th className="py-3.5 px-4">Account Status</th>
@@ -406,6 +471,37 @@ export default function AdminDetailsPage() {
                         </div>
                         <span className="font-bold text-slate-900">{adm.name}</span>
                       </div>
+                    </td>
+
+                    {/* Clinic Branch */}
+                    <td className="py-3.5 px-4">
+                      {adm.clinic ? (
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-bold text-slate-900 text-xs">
+                            {adm.clinic.name}
+                          </span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200/60">
+                              <Lock className="w-2.5 h-2.5" />
+                              {adm.clinic.clinic_code}
+                            </span>
+                            {adm.clinic.branch_name && (
+                              <span className="text-[11px] text-slate-500 font-medium">
+                                {adm.clinic.branch_name}
+                              </span>
+                            )}
+                            {adm.clinic.location && (
+                              <span className="text-[10px] text-slate-400">
+                                • {adm.clinic.location}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500">
+                          Unassigned
+                        </span>
+                      )}
                     </td>
 
                     {/* Email */}
@@ -543,4 +639,3 @@ export default function AdminDetailsPage() {
     </div>
   );
 }
-

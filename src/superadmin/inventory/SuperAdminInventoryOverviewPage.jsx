@@ -15,6 +15,8 @@ import {
   ShieldCheck,
   UserCheck,
   Sparkles,
+  Building2,
+  Lock,
 } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 import superAdminInventoryService from '../services/superAdminInventoryService';
@@ -394,6 +396,7 @@ export default function SuperAdminInventoryOverviewPage() {
               <tr className="border-b border-slate-100 text-slate-400 font-bold text-[10px] uppercase tracking-wider micro-label">
                 <th className="py-3 px-3 w-16 text-center">Sr. No.</th>
                 <th className="py-3 px-3">Product Name</th>
+                <th className="py-3 px-3">Clinic Branch</th>
                 <th className="py-3 px-3">Category</th>
                 <th className="py-3 px-3">Brand</th>
                 <th className="py-3 px-3">Cataloged By</th>
@@ -404,7 +407,7 @@ export default function SuperAdminInventoryOverviewPage() {
             <tbody className="divide-y divide-slate-100 font-normal text-slate-700">
               {recentProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="py-8 text-center text-slate-400 italic">
+                  <td colSpan={8} className="py-8 text-center text-slate-400 italic">
                     No products added yet.
                   </td>
                 </tr>
@@ -421,6 +424,15 @@ export default function SuperAdminInventoryOverviewPage() {
                         {p.product_name}
                       </span>
                       <span className="text-[10px] text-slate-400 font-medium">Unit: {p.business_unit}</span>
+                    </td>
+                    <td className="py-3.5 px-3">
+                      <span className="font-semibold text-slate-800 block truncate max-w-[140px]">
+                        {p.clinic?.name || 'Iniya Clinic'}
+                      </span>
+                      <span className="inline-flex items-center gap-1 font-mono text-[10px] text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-100/80">
+                        <Lock className="w-2.5 h-2.5 text-indigo-500" />
+                        {p.clinic?.clinic_code || (p.clinic?.id ? `CLN-${String(p.clinic.id).padStart(4, '0')}` : 'CLN-0001')}
+                      </span>
                     </td>
                     <td className="py-3.5 px-3 text-slate-600 font-medium">
                       {p.category?.name || <span className="text-slate-400 italic">Uncategorized</span>}

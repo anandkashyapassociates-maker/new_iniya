@@ -199,6 +199,19 @@ export default function SuperAdminStockDetailsPage() {
 
           <div className="space-y-1.5">
             <div className="flex items-center gap-2 flex-wrap">
+              {product.clinic && (
+                <span className="inline-flex items-center gap-1.5 text-xs font-semibold px-3 py-1 rounded-xl bg-indigo-50 text-indigo-700 border border-indigo-200/70">
+                  <Lock className="w-3 h-3 text-indigo-500" />
+                  <span className="font-mono text-[11px] font-bold">
+                    {product.clinic.clinic_code || (product.clinic.id ? `CLN-${String(product.clinic.id).padStart(4, '0')}` : 'CLN-0001')}
+                  </span>
+                  <span>{product.clinic.name}</span>
+                  {product.clinic.branch_name && (
+                    <span className="text-indigo-400 font-normal">({product.clinic.branch_name})</span>
+                  )}
+                </span>
+              )}
+
               <span className="text-xs font-bold font-mono px-3 py-1 rounded-xl bg-slate-100 text-slate-800 border border-slate-200">
                 {product.product_code || `PRD-${String(product.id).padStart(4, '0')}`}
               </span>
