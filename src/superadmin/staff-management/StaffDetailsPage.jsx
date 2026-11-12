@@ -20,6 +20,7 @@ import {
 import StaffStatusBadge from './StaffStatusBadge';
 import StaffEditModal from './StaffEditModal';
 import staffManagementService from '../services/staffManagementService';
+import clinicManagementService from '../services/clinicManagementService';
 import { useToast } from '../../context/ToastContext';
 
 const formatJoiningDate = (dateString) => {
@@ -83,6 +84,7 @@ export default function StaffDetailsPage() {
 
   const [staffList, setStaffList] = useState([]);
   const [departmentsList, setDepartmentsList] = useState(COMMON_DEPARTMENTS);
+  const [clinicsList, setClinicsList] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -90,6 +92,7 @@ export default function StaffDetailsPage() {
   // Filters & search state
   const [searchInput, setSearchInput] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
+  const [clinicFilter, setClinicFilter] = useState('all');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
@@ -106,6 +109,7 @@ export default function StaffDetailsPage() {
     try {
       const res = await staffManagementService.getStaff({
         search: activeSearch,
+        clinic_id: clinicFilter !== 'all' ? clinicFilter : undefined,
         department: departmentFilter !== 'all' ? departmentFilter : undefined,
         status: statusFilter,
         page,
@@ -130,9 +134,9 @@ export default function StaffDetailsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [activeSearch, departmentFilter, statusFilter, page, perPage, toast]);
+  }, [activeSearch, clinicFilter, departmentFilter, statusFilter, page, perPage, toast]);
 
-  // Load departments once
+  // Load departments and clinics on mount
   useEffect(() => {
     staffManagementService
       .getDepartments()
@@ -140,6 +144,15 @@ export default function StaffDetailsPage() {
         if (Array.isArray(data)) {
           const merged = Array.from(new Set([...COMMON_DEPARTMENTS, ...data])).filter(Boolean);
           setDepartmentsList(merged);
+        }
+      })
+      .catch(() => {});
+
+    clinicManagementService
+      .getClinicOptions()
+      .then((res) => {
+        if (Array.isArray(res.clinics)) {
+          setClinicsList(res.clinics);
         }
       })
       .catch(() => {});
@@ -160,6 +173,11 @@ export default function StaffDetailsPage() {
     setStatusFilter(newStatus);
   };
 
+  const handleClinicFilterChange = (e) => {
+    setPage(1);
+    setClinicFilter(e.target.value);
+  };
+
   const handleDepartmentFilterChange = (e) => {
     setPage(1);
     setDepartmentFilter(e.target.value);
@@ -168,6 +186,7 @@ export default function StaffDetailsPage() {
   const handleResetFilters = () => {
     setSearchInput('');
     setActiveSearch('');
+    setClinicFilter('all');
     setDepartmentFilter('all');
     setStatusFilter('all');
     setPage(1);
@@ -251,50 +270,73 @@ export default function StaffDetailsPage() {
       </div>
 
       {/* Filter and Search Bar Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
-          {/* Search Form */}
-          <form onSubmit={handleSearchSubmit} className="relative w-full lg:w-80">
+      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3.5">
+        {/* ROW 1: Search and Select Dropdowns (Top Row) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
+          {/* Search Input Form */}
+          <form onSubmit={handleSearchSubmit} className="relative lg:col-span-6 min-w-0">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search by code, name, email, mobile..."
-              className="w-full pl-10 pr-20 py-2 text-xs bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
+              placeholder="Search code, name, email, mobile..."
+              className="w-full pl-10 pr-20 py-2.5 text-xs bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all font-medium shadow-2xs"
             />
             <button
               type="submit"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[11px] font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-800 cursor-pointer"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-800 cursor-pointer transition-colors shadow-2xs"
             >
               Search
             </button>
           </form>
 
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full lg:w-auto">
-            {/* Department Filter */}
-            <div className="relative min-w-[160px] w-full sm:w-auto">
-              <Building2 className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <select
-                value={departmentFilter}
-                onChange={handleDepartmentFilterChange}
-                className="w-full pl-8.5 pr-8 py-1.5 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer"
-              >
-                <option value="all">All Departments</option>
-                {departmentsList.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Clinic Filter Dropdown */}
+          <div className="relative lg:col-span-3 min-w-0">
+            <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <select
+              value={clinicFilter}
+              onChange={handleClinicFilterChange}
+              className="w-full pl-10 pr-8 py-2.5 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer font-medium shadow-2xs"
+            >
+              <option value="all">All Clinics (Branches)</option>
+              {clinicsList.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.clinic_code})
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {/* Status Filter Tabs */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-full sm:w-auto justify-center overflow-x-auto">
+          {/* Department Filter Dropdown */}
+          <div className="relative lg:col-span-3 min-w-0">
+            <Briefcase className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <select
+              value={departmentFilter}
+              onChange={handleDepartmentFilterChange}
+              className="w-full pl-10 pr-8 py-2.5 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer font-medium shadow-2xs"
+            >
+              <option value="all">All Departments</option>
+              {departmentsList.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* ROW 2: Status Tabs (Bottom Row) */}
+        <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0">
+              Status:
+            </span>
+            <div className="inline-flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/60 shadow-2xs">
               <button
                 type="button"
                 onClick={() => handleStatusFilterChange('all')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
                   statusFilter === 'all'
                     ? 'bg-white text-slate-900 shadow-xs'
                     : 'text-slate-500 hover:text-slate-900'
@@ -305,70 +347,76 @@ export default function StaffDetailsPage() {
               <button
                 type="button"
                 onClick={() => handleStatusFilterChange('active')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
                   statusFilter === 'active' || statusFilter === 'true'
                     ? 'bg-white text-emerald-700 shadow-xs'
                     : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
-                Active
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span>Active</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleStatusFilterChange('inactive')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
                   statusFilter === 'inactive' || statusFilter === 'false'
                     ? 'bg-white text-amber-700 shadow-xs'
                     : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
-                Inactive
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                <span>Inactive</span>
               </button>
               <button
                 type="button"
                 onClick={() => handleStatusFilterChange('blocked')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
                   statusFilter === 'blocked'
                     ? 'bg-white text-rose-700 shadow-xs'
                     : 'text-slate-500 hover:text-slate-900'
                 }`}
               >
-                Blocked
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                <span>Blocked</span>
               </button>
             </div>
           </div>
-        </div>
 
-        {/* Active Filter Badges */}
-        {(activeSearch || departmentFilter !== 'all' || statusFilter !== 'all') && (
-          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold text-slate-700">Active filters:</span>
+          {/* Active Filter Badges & Reset Button */}
+          {(activeSearch || clinicFilter !== 'all' || departmentFilter !== 'all' || statusFilter !== 'all') && (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <span className="font-semibold text-slate-600 text-[11px]">Filtered by:</span>
               {activeSearch && (
-                <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[11px]">
-                  Keyword: "{activeSearch}"
+                <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-medium">
+                  "{activeSearch}"
+                </span>
+              )}
+              {clinicFilter !== 'all' && (
+                <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-medium">
+                  Clinic: {clinicsList.find((c) => String(c.id) === String(clinicFilter))?.name || `#${clinicFilter}`}
                 </span>
               )}
               {departmentFilter !== 'all' && (
-                <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px]">
-                  Department: {departmentFilter}
+                <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-medium">
+                  {departmentFilter}
                 </span>
               )}
               {statusFilter !== 'all' && (
-                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 text-[11px] capitalize">
-                  Status: {statusFilter}
+                <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200 text-[11px] capitalize font-medium">
+                  {statusFilter}
                 </span>
               )}
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="text-xs text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer ml-1"
+              >
+                Clear all
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer underline shrink-0"
-            >
-              Clear all
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Main Table Card */}
@@ -436,6 +484,7 @@ export default function StaffDetailsPage() {
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                   <th className="py-3.5 px-4 w-14 text-center whitespace-nowrap">Sr. No.</th>
                   <th className="py-3.5 px-4 whitespace-nowrap min-w-[120px]">Staff Code</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap min-w-[180px]">Clinic Branch</th>
                   <th className="py-3.5 px-4 whitespace-nowrap min-w-[160px]">Full Name</th>
                   <th className="py-3.5 px-4 whitespace-nowrap min-w-[180px]">Email</th>
                   <th className="py-3.5 px-4 whitespace-nowrap min-w-[130px]">Mobile</th>
@@ -463,6 +512,27 @@ export default function StaffDetailsPage() {
                         <Hash className="w-3 h-3 text-blue-500 shrink-0" />
                         <span>{member.staff_code}</span>
                       </span>
+                    </td>
+
+                    {/* Clinic Branch */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      {member.clinic ? (
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-900 text-xs truncate max-w-[190px]">
+                            {member.clinic.name}
+                          </span>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0">
+                              {member.clinic.clinic_code}
+                            </span>
+                            <span className="text-[11px] text-slate-500 font-medium truncate max-w-[140px]">
+                              {member.clinic.branch_name || member.clinic.location || member.clinic.city}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 italic text-xs">Unassigned</span>
+                      )}
                     </td>
 
                     {/* Full Name */}

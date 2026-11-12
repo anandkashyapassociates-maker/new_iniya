@@ -17,6 +17,8 @@ import VendorCreationPage from '../superadmin/vendor-management/VendorCreationPa
 import VendorDetailsPage from '../superadmin/vendor-management/VendorDetailsPage';
 import SalesMemberCreationPage from '../superadmin/sales-management/SalesMemberCreationPage';
 import SalesMemberDetailsPage from '../superadmin/sales-management/SalesMemberDetailsPage';
+import ClinicDetailsPage from '../superadmin/clinic-management/ClinicDetailsPage';
+import ClinicCreationPage from '../superadmin/clinic-management/ClinicCreationPage';
 import SuperAdminEditAdminPage from '../pages/superadmin/SuperAdminEditAdminPage';
 import SuperAdminProfilePage from '../pages/superadmin/SuperAdminProfilePage';
 import SuperAdminCategoriesPage from '../superadmin/categories/SuperAdminCategoriesPage';
@@ -103,6 +105,13 @@ export default function AppRoutes() {
         <Route element={<SuperAdminLayout />}>
           <Route path="/superadmin/dashboard" element={<SuperAdminDashboardPage />} />
           
+          {/* Clinic Management Submodule Routes (Multi-Clinic Network) */}
+          <Route path="/superadmin/clinics" element={<ClinicDetailsPage />} />
+          <Route path="/superadmin/clinics/create" element={<ClinicCreationPage />} />
+          <Route path="/superadmin/clinic-management" element={<Navigate to="/superadmin/clinics" replace />} />
+          <Route path="/superadmin/clinic-management/details" element={<Navigate to="/superadmin/clinics" replace />} />
+          <Route path="/superadmin/clinic-management/create" element={<Navigate to="/superadmin/clinics/create" replace />} />
+
           {/* Phase 2: Admin Management Submodule Routes */}
           <Route path="/superadmin/admin-management/create" element={<AdminCreationPage />} />
           <Route path="/superadmin/admin-management/details" element={<AdminDetailsPage />} />

@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\Admin\ServiceManagementController;
 use App\Http\Controllers\Api\Admin\SessionRescheduleController;
 use App\Http\Controllers\Api\Admin\StaffAppointmentController;
 use App\Http\Controllers\Api\SuperAdmin\AdminManagementController;
+use App\Http\Controllers\Api\SuperAdmin\ClinicManagementController;
 use App\Http\Controllers\Api\SuperAdmin\PayoutController;
 use App\Http\Controllers\Api\SuperAdmin\SalesMemberManagementController;
 use App\Http\Controllers\Api\SuperAdmin\StaffManagementController;
@@ -67,6 +68,17 @@ Route::prefix('superadmin')
         Route::post('/change-password', [SuperAdminAuthController::class, 'changePassword']);
 
         Route::get('/dashboard', [SuperAdminDashboardController::class, 'index']);
+
+        // Clinic Branch Management
+        Route::get('/clinics/preview-code', [ClinicManagementController::class, 'previewCode']);
+        Route::get('/clinics/locations', [ClinicManagementController::class, 'locations']);
+        Route::get('/clinics/options', [ClinicManagementController::class, 'options']);
+        Route::get('/clinics', [ClinicManagementController::class, 'index']);
+        Route::post('/clinics', [ClinicManagementController::class, 'store']);
+        Route::get('/clinics/{id}', [ClinicManagementController::class, 'show']);
+        Route::put('/clinics/{id}', [ClinicManagementController::class, 'update']);
+        Route::patch('/clinics/{id}/status', [ClinicManagementController::class, 'updateStatus']);
+        Route::delete('/clinics/{id}', [ClinicManagementController::class, 'destroy']);
 
         // Admin Account Management
         Route::get('/admins', [AdminManagementController::class, 'index']);

@@ -29,6 +29,7 @@ class Staff extends Authenticatable
      */
     protected $fillable = [
         'staff_code',
+        'clinic_id',
         'name',
         'email',
         'password',
@@ -142,6 +143,14 @@ class Staff extends Authenticatable
 
             return $candidate;
         });
+    }
+
+    /**
+     * Clinic branch this staff member is assigned to.
+     */
+    public function clinic(): BelongsTo
+    {
+        return $this->belongsTo(Clinic::class, 'clinic_id');
     }
 
     /**
