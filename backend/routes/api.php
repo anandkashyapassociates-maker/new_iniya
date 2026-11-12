@@ -125,6 +125,7 @@ Route::prefix('superadmin')
 
         // Inventory Management (SuperAdmin Reporting, Products, Categories, Brands)
         Route::prefix('inventory')->group(function () {
+            Route::get('/clinics/options', [ClinicManagementController::class, 'options']);
             Route::get('/overview', [SuperAdminInventoryController::class, 'overview']);
             Route::get('/reports', [SuperAdminInventoryController::class, 'reports']);
             Route::get('/reports/filter-options', [SuperAdminInventoryController::class, 'reportFilterOptions']);

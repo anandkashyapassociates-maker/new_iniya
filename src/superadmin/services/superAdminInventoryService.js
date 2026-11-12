@@ -1,6 +1,12 @@
 import { superAdminApi } from '../../services/apiClient';
 
 export const superAdminInventoryService = {
+  // ================= CLINICS =================
+  async getClinics() {
+    const response = await superAdminApi.get('/superadmin/clinics/options');
+    return response.data;
+  },
+
   // ================= OVERVIEW & ANALYTICS =================
   async getOverview() {
     const response = await superAdminApi.get('/superadmin/inventory/overview');
