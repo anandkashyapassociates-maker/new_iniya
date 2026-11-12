@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\DB;
 
 class Clinic extends Model
@@ -131,6 +132,14 @@ class Clinic extends Model
     public function superAdmin(): BelongsTo
     {
         return $this->belongsTo(SuperAdmin::class, 'created_by_superadmin_id');
+    }
+
+    /**
+     * Staff members assigned to this clinic.
+     */
+    public function staff(): HasMany
+    {
+        return $this->hasMany(Staff::class, 'clinic_id');
     }
 }
 

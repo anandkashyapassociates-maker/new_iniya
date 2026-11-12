@@ -20,6 +20,7 @@ import {
 import StaffStatusBadge from './StaffStatusBadge';
 import StaffEditModal from './StaffEditModal';
 import staffManagementService from '../services/staffManagementService';
+import clinicManagementService from '../services/clinicManagementService';
 import { useToast } from '../../context/ToastContext';
 
 const formatJoiningDate = (dateString) => {
@@ -83,6 +84,7 @@ export default function StaffDetailsPage() {
 
   const [staffList, setStaffList] = useState([]);
   const [departmentsList, setDepartmentsList] = useState(COMMON_DEPARTMENTS);
+  const [clinicsList, setClinicsList] = useState([]);
   const [pagination, setPagination] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -90,6 +92,7 @@ export default function StaffDetailsPage() {
   // Filters & search state
   const [searchInput, setSearchInput] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
+  const [clinicFilter, setClinicFilter] = useState('all');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [page, setPage] = useState(1);
@@ -106,6 +109,7 @@ export default function StaffDetailsPage() {
     try {
       const res = await staffManagementService.getStaff({
         search: activeSearch,
+        clinic_id: clinicFilter !== 'all' ? clinicFilter : undefined,
         department: departmentFilter !== 'all' ? departmentFilter : undefined,
         status: statusFilter,
         page,
@@ -130,9 +134,9 @@ export default function StaffDetailsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [activeSearch, departmentFilter, statusFilter, page, perPage, toast]);
+  }, [activeSearch, clinicFilter, departmentFilter, statusFilter, page, perPage, toast]);
 
-  // Load departments once
+  // Load departments and clinics on mount
   useEffect(() => {
     staffManagementService
       .getDepartments()
@@ -140,6 +144,15 @@ export default function StaffDetailsPage() {
         if (Array.isArray(data)) {
           const merged = Array.from(new Set([...COMMON_DEPARTMENTS, ...data])).filter(Boolean);
           setDepartmentsList(merged);
+        }
+      })
+      .catch(() => {});
+
+    clinicManagementService
+      .getClinicOptions()
+      .then((res) => {
+        if (Array.isArray(res.clinics)) {
+          setClinicsList(res.clinics);
         }
       })
       .catch(() => {});
@@ -160,6 +173,11 @@ export default function StaffDetailsPage() {
     setStatusFilter(newStatus);
   };
 
+  const handleClinicFilterChange = (e) => {
+    setPage(1);
+    setClinicFilter(e.target.value);
+  };
+
   const handleDepartmentFilterChange = (e) => {
     setPage(1);
     setDepartmentFilter(e.target.value);
@@ -168,6 +186,7 @@ export default function StaffDetailsPage() {
   const handleResetFilters = () => {
     setSearchInput('');
     setActiveSearch('');
+    setClinicFilter('all');
     setDepartmentFilter('all');
     setStatusFilter('all');
     setPage(1);
@@ -272,9 +291,26 @@ export default function StaffDetailsPage() {
           </form>
 
           <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full lg:w-auto">
+            {/* Clinic Filter */}
+            <div className="relative min-w-[170px] w-full sm:w-auto">
+              <Building2 className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <select
+                value={clinicFilter}
+                onChange={handleClinicFilterChange}
+                className="w-full pl-8.5 pr-8 py-1.5 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer font-medium"
+              >
+                <option value="all">All Clinics (Branches)</option>
+                {clinicsList.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} ({c.clinic_code})
+                  </option>
+                ))}
+              </select>
+            </div>
+
             {/* Department Filter */}
             <div className="relative min-w-[160px] w-full sm:w-auto">
-              <Building2 className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Briefcase className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <select
                 value={departmentFilter}
                 onChange={handleDepartmentFilterChange}
@@ -340,13 +376,18 @@ export default function StaffDetailsPage() {
         </div>
 
         {/* Active Filter Badges */}
-        {(activeSearch || departmentFilter !== 'all' || statusFilter !== 'all') && (
+        {(activeSearch || clinicFilter !== 'all' || departmentFilter !== 'all' || statusFilter !== 'all') && (
           <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-semibold text-slate-700">Active filters:</span>
               {activeSearch && (
                 <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[11px]">
                   Keyword: "{activeSearch}"
+                </span>
+              )}
+              {clinicFilter !== 'all' && (
+                <span className="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-medium">
+                  Clinic: {clinicsList.find((c) => String(c.id) === String(clinicFilter))?.name || `ID #${clinicFilter}`}
                 </span>
               )}
               {departmentFilter !== 'all' && (
@@ -436,6 +477,7 @@ export default function StaffDetailsPage() {
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                   <th className="py-3.5 px-4 w-14 text-center whitespace-nowrap">Sr. No.</th>
                   <th className="py-3.5 px-4 whitespace-nowrap min-w-[120px]">Staff Code</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap min-w-[180px]">Clinic Branch</th>
                   <th className="py-3.5 px-4 whitespace-nowrap min-w-[160px]">Full Name</th>
                   <th className="py-3.5 px-4 whitespace-nowrap min-w-[180px]">Email</th>
                   <th className="py-3.5 px-4 whitespace-nowrap min-w-[130px]">Mobile</th>
@@ -463,6 +505,27 @@ export default function StaffDetailsPage() {
                         <Hash className="w-3 h-3 text-blue-500 shrink-0" />
                         <span>{member.staff_code}</span>
                       </span>
+                    </td>
+
+                    {/* Clinic Branch */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      {member.clinic ? (
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-900 text-xs truncate max-w-[190px]">
+                            {member.clinic.name}
+                          </span>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0">
+                              {member.clinic.clinic_code}
+                            </span>
+                            <span className="text-[11px] text-slate-500 font-medium truncate max-w-[140px]">
+                              {member.clinic.branch_name || member.clinic.location || member.clinic.city}
+                            </span>
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 italic text-xs">Unassigned</span>
+                      )}
                     </td>
 
                     {/* Full Name */}

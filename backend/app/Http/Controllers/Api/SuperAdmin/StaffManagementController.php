@@ -17,7 +17,10 @@ class StaffManagementController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Staff::with('superAdmin:id,name,email');
+        $query = Staff::with([
+            'superAdmin:id,name,email',
+            'clinic:id,clinic_code,name,branch_name,location,city,address,phone',
+        ]);
 
         // Search by staff_code, name, email, or mobile
         if ($search = $request->input('search')) {
@@ -27,6 +30,13 @@ class StaffManagementController extends Controller
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('mobile', 'like', "%{$search}%");
             });
+        }
+
+        // Filter by clinic
+        if ($clinicId = $request->input('clinic_id')) {
+            if ($clinicId !== '' && $clinicId !== 'all') {
+                $query->where('clinic_id', $clinicId);
+            }
         }
 
         // Filter by department
@@ -104,6 +114,7 @@ class StaffManagementController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
+            'clinic_id' => ['nullable', 'integer', 'exists:clinics,id'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:staff,email'],
             'password' => ['nullable', 'string', 'min:6'],
@@ -126,9 +137,11 @@ class StaffManagementController extends Controller
         // Concurrency-safe backend generated Staff Code
         $staffCode = Staff::generateUniqueCode();
         $plainPassword = ! empty($validated['password']) ? $validated['password'] : '123456';
+        $clinicId = $validated['clinic_id'] ?? \App\Models\Clinic::orderBy('id')->value('id');
 
         $staff = Staff::create([
             'staff_code' => $staffCode,
+            'clinic_id' => $clinicId,
             'created_by_superadmin_id' => $superAdmin->id,
             'name' => $validated['name'],
             'email' => $validated['email'],
@@ -148,13 +161,16 @@ class StaffManagementController extends Controller
             'super_admin',
             $superAdmin->id,
             'staff_created',
-            "Super Admin '{$superAdmin->name}' created Staff '{$staff->name}' ({$staff->staff_code}).",
+            "Super Admin '{$superAdmin->name}' created Staff '{$staff->name}' ({$staff->staff_code}) assigned to Clinic ID {$staff->clinic_id}.",
             $request
         );
 
         return response()->json([
             'message' => 'Staff member created successfully.',
-            'staff' => $staff->load('superAdmin:id,name,email'),
+            'staff' => $staff->load([
+                'superAdmin:id,name,email',
+                'clinic:id,clinic_code,name,branch_name,location,city,address,phone',
+            ]),
         ], 201);
     }
 
@@ -163,7 +179,10 @@ class StaffManagementController extends Controller
      */
     public function show(string $id): JsonResponse
     {
-        $staff = Staff::with('superAdmin:id,name,email')->find($id);
+        $staff = Staff::with([
+            'superAdmin:id,name,email',
+            'clinic:id,clinic_code,name,branch_name,location,city,address,phone',
+        ])->find($id);
 
         if (! $staff) {
             return response()->json([
@@ -190,6 +209,7 @@ class StaffManagementController extends Controller
         }
 
         $validated = $request->validate([
+            'clinic_id' => ['sometimes', 'nullable', 'integer', 'exists:clinics,id'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('staff')->ignore($staff->id)],
             'password' => ['nullable', 'string', 'min:6'],
@@ -208,6 +228,10 @@ class StaffManagementController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
         ];
+
+        if (array_key_exists('clinic_id', $validated) && $validated['clinic_id']) {
+            $dataToUpdate['clinic_id'] = $validated['clinic_id'];
+        }
 
         if (! empty($validated['password'])) {
             $dataToUpdate['password'] = Hash::make($validated['password']);
@@ -240,7 +264,10 @@ class StaffManagementController extends Controller
 
         return response()->json([
             'message' => 'Staff member updated successfully.',
-            'staff' => $staff->fresh()->load('superAdmin:id,name,email'),
+            'staff' => $staff->fresh()->load([
+                'superAdmin:id,name,email',
+                'clinic:id,clinic_code,name,branch_name,location,city,address,phone',
+            ]),
         ]);
     }
 

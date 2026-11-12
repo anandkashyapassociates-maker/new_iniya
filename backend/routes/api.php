@@ -72,6 +72,7 @@ Route::prefix('superadmin')
         // Clinic Branch Management
         Route::get('/clinics/preview-code', [ClinicManagementController::class, 'previewCode']);
         Route::get('/clinics/locations', [ClinicManagementController::class, 'locations']);
+        Route::get('/clinics/options', [ClinicManagementController::class, 'options']);
         Route::get('/clinics', [ClinicManagementController::class, 'index']);
         Route::post('/clinics', [ClinicManagementController::class, 'store']);
         Route::get('/clinics/{id}', [ClinicManagementController::class, 'show']);

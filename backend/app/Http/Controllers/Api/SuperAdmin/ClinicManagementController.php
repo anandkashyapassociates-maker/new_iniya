@@ -108,6 +108,36 @@ class ClinicManagementController extends Controller
     }
 
     /**
+     * Get active clinics options list for dropdowns (creation/edit forms).
+     */
+    public function options(): JsonResponse
+    {
+        $clinics = Clinic::where('status', Clinic::STATUS_ACTIVE)
+            ->orderBy('name', 'asc')
+            ->get([
+                'id',
+                'clinic_code',
+                'name',
+                'branch_name',
+                'location',
+                'address',
+                'city',
+                'state',
+                'postal_code',
+                'country',
+                'phone',
+                'alternate_phone',
+                'email',
+                'contact_person',
+                'status',
+            ]);
+
+        return response()->json([
+            'clinics' => $clinics,
+        ]);
+    }
+
+    /**
      * Store a newly created Clinic.
      */
     public function store(Request $request): JsonResponse

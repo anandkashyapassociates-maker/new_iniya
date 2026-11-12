@@ -12,23 +12,41 @@ import {
   Hash,
   Sparkles,
   Lock,
+  Globe,
+  Compass,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import staffManagementService from '../services/staffManagementService';
+import clinicManagementService from '../services/clinicManagementService';
 
 const COMMON_DEPARTMENTS = [
   'Dental',
   'Cosmetology',
   'Dermatology',
   'Aesthetics & Wellness',
-  'Engineering',
+  'Physiotherapy',
+  'Trichology (Hair Care)',
+  'General Medicine / OPD',
+  'Plastic & Cosmetic Surgery',
+  'Nutrition & Dietetics',
+  'Ayurveda & Wellness',
+  'Orthopedics',
+  'Gynecology & Obstetrics',
+  'Pediatrics',
+  'Cardiology',
+  'ENT (Ear, Nose, Throat)',
+  'Ophthalmology',
+  'Psychiatry & Psychology',
+  'Radiology & Diagnostics',
+  'Pathology & Laboratory',
+  'Nursing & Patient Care',
+  'Pharmacy',
+  'Clinical Administration',
+  'Operations',
   'Human Resources',
   'Finance & Accounts',
-  'Operations',
   'Sales & Marketing',
   'Customer Support',
-  'Legal & Compliance',
-  'Administration',
 ];
 
 const EMPLOYMENT_TYPES = [
@@ -44,6 +62,7 @@ export default function StaffForm({
   cancelPath = '/superadmin/staff-management/details',
 }) {
   const [formData, setFormData] = useState({
+    clinic_id: '',
     name: '',
     email: '',
     password: '',
@@ -56,22 +75,56 @@ export default function StaffForm({
     status: 'active',
   });
 
+  const [clinics, setClinics] = useState([]);
+  const [isLoadingClinics, setIsLoadingClinics] = useState(true);
   const [previewCode, setPreviewCode] = useState('');
   const [errors, setErrors] = useState({});
 
+  // Fetch clinics list and preview code on mount
   useEffect(() => {
+    let isMounted = true;
+
+    // Load active clinics
+    clinicManagementService
+      .getClinicOptions()
+      .then((res) => {
+        if (!isMounted) return;
+        const list = res.clinics || [];
+        setClinics(list);
+        // If there's only 1 clinic available, auto-select it for convenience
+        if (list.length === 1) {
+          setFormData((prev) => ({ ...prev, clinic_id: String(list[0].id) }));
+        }
+      })
+      .catch((err) => {
+        console.error('Failed to load clinic options:', err);
+      })
+      .finally(() => {
+        if (isMounted) setIsLoadingClinics(false);
+      });
+
     // Fetch next staff code preview
     staffManagementService
       .getPreviewCode()
       .then((res) => {
+        if (!isMounted) return;
         if (res.preview_code) {
           setPreviewCode(res.preview_code);
         }
       })
       .catch(() => {
-        setPreviewCode('STF-XXXX');
+        if (isMounted) setPreviewCode('STF-XXXX');
       });
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
+
+  // Selected clinic object for showing location/address
+  const selectedClinic = clinics.find(
+    (c) => String(c.id) === String(formData.clinic_id)
+  ) || null;
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -86,6 +139,10 @@ export default function StaffForm({
 
   const validate = () => {
     const errs = {};
+
+    if (!formData.clinic_id) {
+      errs.clinic_id = 'Please select a clinic branch for this staff member.';
+    }
 
     if (!formData.name.trim()) {
       errs.name = 'Full name is required.';
@@ -124,11 +181,14 @@ export default function StaffForm({
     const clientErrors = validate();
     if (Object.keys(clientErrors).length > 0) {
       setErrors(clientErrors);
+      // Scroll to first error
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
 
     try {
       await onSubmit({
+        clinic_id: parseInt(formData.clinic_id, 10),
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         password: formData.password ? formData.password : undefined,
@@ -141,8 +201,9 @@ export default function StaffForm({
         status: formData.status,
       });
 
-      // Reset form on success
+      // Reset form on success (keep selected clinic if only 1 exists)
       setFormData({
+        clinic_id: clinics.length === 1 ? String(clinics[0].id) : '',
         name: '',
         email: '',
         password: '',
@@ -170,6 +231,7 @@ export default function StaffForm({
             'Failed to create staff member. Please check details and try again.',
         });
       }
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -182,6 +244,169 @@ export default function StaffForm({
           <span className="font-medium">{errors.general}</span>
         </div>
       )}
+
+      {/* STEP 1: PRIMARY REQUIREMENT - SELECT CLINIC BRANCH */}
+      <div className="bg-white p-5 sm:p-6 rounded-3xl border-2 border-blue-500/30 shadow-md hover:border-blue-500/50 transition-all duration-300 space-y-4 animate-slide-up group">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 flex-wrap gap-2">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-purple-600 text-white flex items-center justify-center shrink-0 icon-3d shadow-md group-hover:scale-105 transition-transform duration-300">
+              <Building2 className="w-5 h-5 drop-shadow-sm" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-mono text-[10px] font-bold flex items-center justify-center">
+                  1
+                </span>
+                <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+                  Clinic Branch Assignment
+                </h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200/60 uppercase">
+                  Step 1 (Mandatory)
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
+                First select which clinic branch this staff member is appointed to. Clinic details will load automatically.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Clinic Dropdown Selector */}
+        <div className="space-y-1.5">
+          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+            Select Clinic Branch <span className="text-rose-500">*</span>
+          </label>
+          <div className="relative">
+            <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <select
+              value={formData.clinic_id}
+              onChange={(e) => handleChange('clinic_id', e.target.value)}
+              disabled={isLoading || isLoadingClinics}
+              required
+              className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 shadow-2xs cursor-pointer font-medium ${
+                errors.clinic_id
+                  ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/15'
+                  : 'border-slate-200 focus:border-blue-500 focus:ring-blue-500/15'
+              }`}
+            >
+              <option value="">
+                {isLoadingClinics ? 'Loading available clinics...' : '-- Choose Clinic Branch --'}
+              </option>
+              {clinics.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.clinic_code}) {c.branch_name ? `— ${c.branch_name}` : ''} [Location: {c.location}]
+                </option>
+              ))}
+            </select>
+          </div>
+          {errors.clinic_id && (
+            <p className="text-[11px] text-rose-600 mt-1 font-medium flex items-center gap-1">
+              <AlertCircle className="w-3 h-3 shrink-0" />
+              <span>{Array.isArray(errors.clinic_id) ? errors.clinic_id[0] : errors.clinic_id}</span>
+            </p>
+          )}
+        </div>
+
+        {/* Selected Clinic Details Auto-Preview Card */}
+        {selectedClinic ? (
+          <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-blue-50/70 via-indigo-50/40 to-slate-50 border border-blue-200/80 space-y-3.5 animate-scale-up">
+            <div className="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-blue-200/60">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                <span className="text-xs font-bold text-blue-900">
+                  Assigned Clinic Profile Loaded
+                </span>
+              </div>
+              <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-white text-blue-700 border border-blue-200 shadow-2xs">
+                <Lock className="w-3 h-3" />
+                {selectedClinic.clinic_code}
+              </span>
+            </div>
+
+            {/* Read-only populated info inputs */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
+              {/* Clinic Name & Branch */}
+              <div className="min-w-0">
+                <label className="block text-[11px] font-bold text-slate-600 mb-1">
+                  Clinic / Branch Name
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  disabled
+                  value={`${selectedClinic.name} ${selectedClinic.branch_name ? `(${selectedClinic.branch_name})` : ''}`}
+                  className="w-full px-3 py-2 text-xs bg-white/90 border border-blue-200/80 rounded-xl text-slate-800 font-semibold cursor-not-allowed shadow-2xs"
+                />
+              </div>
+
+              {/* Location / Area */}
+              <div className="min-w-0">
+                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
+                  <Compass className="w-3 h-3 text-blue-500" />
+                  <span>Location / Area</span>
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  disabled
+                  value={selectedClinic.location || '—'}
+                  className="w-full px-3 py-2 text-xs bg-white/90 border border-blue-200/80 rounded-xl text-slate-800 font-medium cursor-not-allowed shadow-2xs"
+                />
+              </div>
+
+              {/* City / State */}
+              <div className="min-w-0">
+                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
+                  <Globe className="w-3 h-3 text-blue-500" />
+                  <span>City / State</span>
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  disabled
+                  value={`${selectedClinic.city || '—'}, ${selectedClinic.state || '—'} ${selectedClinic.postal_code ? `(${selectedClinic.postal_code})` : ''}`}
+                  className="w-full px-3 py-2 text-xs bg-white/90 border border-blue-200/80 rounded-xl text-slate-800 font-medium cursor-not-allowed shadow-2xs"
+                />
+              </div>
+
+              {/* Full Physical Address */}
+              <div className="min-w-0 sm:col-span-2">
+                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
+                  <MapPin className="w-3 h-3 text-blue-500" />
+                  <span>Full Clinic Address</span>
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  disabled
+                  value={selectedClinic.address || '—'}
+                  className="w-full px-3 py-2 text-xs bg-white/90 border border-blue-200/80 rounded-xl text-slate-800 font-medium cursor-not-allowed shadow-2xs"
+                />
+              </div>
+
+              {/* Clinic Phone */}
+              <div className="min-w-0">
+                <label className="block text-[11px] font-bold text-slate-600 mb-1 flex items-center gap-1">
+                  <Phone className="w-3 h-3 text-blue-500" />
+                  <span>Clinic Contact Phone</span>
+                </label>
+                <input
+                  type="text"
+                  readOnly
+                  disabled
+                  value={selectedClinic.phone || '—'}
+                  className="w-full px-3 py-2 text-xs bg-white/90 border border-blue-200/80 rounded-xl text-slate-800 font-mono cursor-not-allowed shadow-2xs"
+                />
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* Placeholder guidance */
+          <div className="p-4 rounded-2xl bg-slate-50 border border-dashed border-slate-300 text-center text-xs text-slate-500">
+            Please choose a clinic branch above to view its physical location and address details before creating staff.
+          </div>
+        )}
+      </div>
 
       {/* Staff Code Preview Banner */}
       <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-r from-emerald-50/90 via-teal-50/60 to-cyan-50/40 border border-emerald-200/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-xs animate-slide-up">
@@ -209,7 +434,7 @@ export default function StaffForm({
         </div>
       </div>
 
-      {/* SECTION 1: PERSONAL & CONTACT IDENTITY */}
+      {/* SECTION 2: PERSONAL & CONTACT IDENTITY */}
       <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-emerald-200/80 transition-all duration-300 space-y-4 animate-slide-up stagger-1 group">
         <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-400 via-emerald-500 to-teal-700 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
@@ -217,10 +442,10 @@ export default function StaffForm({
           </div>
           <div className="flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-emerald-100 text-emerald-700 font-mono text-[10px] font-bold flex items-center justify-center">
-              1
+              2
             </span>
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-              Personal &amp; Contact Details
+              Staff Personal &amp; Contact Details
             </h3>
           </div>
         </div>
@@ -237,7 +462,7 @@ export default function StaffForm({
                 type="text"
                 value={formData.name}
                 onChange={(e) => handleChange('name', e.target.value)}
-                placeholder="e.g., Sarah Jenkins"
+                placeholder="e.g., Dr. Ramesh Kumar"
                 disabled={isLoading}
                 required
                 className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 shadow-2xs ${
@@ -266,7 +491,7 @@ export default function StaffForm({
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
-                placeholder="sarah.jenkins@company.com"
+                placeholder="doctor@iniya.com"
                 disabled={isLoading}
                 required
                 className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 shadow-2xs ${
@@ -342,7 +567,7 @@ export default function StaffForm({
         </div>
       </div>
 
-      {/* SECTION 2: PROFESSIONAL & DEPARTMENTAL ASSIGNMENT */}
+      {/* SECTION 3: PROFESSIONAL & DEPARTMENTAL ASSIGNMENT */}
       <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-teal-200/80 transition-all duration-300 space-y-4 animate-slide-up stagger-2 group">
         <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-teal-500 via-cyan-600 to-blue-600 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
@@ -350,7 +575,7 @@ export default function StaffForm({
           </div>
           <div className="flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-teal-100 text-teal-700 font-mono text-[10px] font-bold flex items-center justify-center">
-              2
+              3
             </span>
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
               Professional &amp; Role Details
@@ -392,7 +617,7 @@ export default function StaffForm({
                 type="text"
                 value={formData.designation}
                 onChange={(e) => handleChange('designation', e.target.value)}
-                placeholder="e.g., Dental Surgeon, Consultant Dermatologist"
+                placeholder="e.g., Senior Therapist, Consultant"
                 disabled={isLoading}
                 className="w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border border-slate-200 rounded-xl focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 transition-all duration-200 shadow-2xs"
               />
@@ -437,7 +662,7 @@ export default function StaffForm({
         </div>
       </div>
 
-      {/* SECTION 3: RESIDENCE & ACCOUNT STATUS */}
+      {/* SECTION 4: RESIDENCE & ACCOUNT STATUS */}
       <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-2xs hover:border-slate-300 transition-all duration-300 space-y-4 animate-slide-up stagger-3 group">
         <div className="flex items-center gap-3 pb-3 border-b border-slate-100">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-slate-700 via-slate-800 to-slate-900 text-white flex items-center justify-center shrink-0 icon-3d shadow-sm group-hover:scale-105 transition-transform duration-300">
@@ -445,10 +670,10 @@ export default function StaffForm({
           </div>
           <div className="flex items-center gap-2">
             <span className="w-5 h-5 rounded-full bg-slate-100 text-slate-700 font-mono text-[10px] font-bold flex items-center justify-center">
-              3
+              4
             </span>
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-              Address &amp; Operational Status
+              Staff Residential Address &amp; Status
             </h3>
           </div>
         </div>
@@ -456,7 +681,7 @@ export default function StaffForm({
         <div className="space-y-4">
           <div>
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Work / Residential Address
+              Staff Residential Address (Personal)
             </label>
             <div className="relative">
               <MapPin className="w-4 h-4 text-slate-400 absolute left-3.5 top-3 pointer-events-none" />

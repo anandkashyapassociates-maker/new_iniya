@@ -67,6 +67,14 @@ export const clinicManagementService = {
     const response = await superAdminApiClient.get('/superadmin/clinics/locations');
     return response.data;
   },
+
+  /**
+   * Fetch active clinics options list for dropdowns.
+   */
+  async getClinicOptions() {
+    const response = await superAdminApiClient.get('/superadmin/clinics/options');
+    return response.data;
+  },
 };
 
 export default clinicManagementService;
