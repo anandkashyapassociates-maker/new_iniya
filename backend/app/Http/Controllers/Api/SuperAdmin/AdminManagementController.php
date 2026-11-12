@@ -20,7 +20,10 @@ class AdminManagementController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = Admin::with('superAdmin:id,name,email');
+        $query = Admin::with([
+            'superAdmin:id,name,email',
+            'clinic:id,clinic_code,name,branch_name,location,city,address,phone',
+        ]);
 
         // Search by name, email, or mobile
         if ($search = $request->input('search')) {
@@ -29,6 +32,11 @@ class AdminManagementController extends Controller
                     ->orWhere('email', 'like', "%{$search}%")
                     ->orWhere('mobile', 'like', "%{$search}%");
             });
+        }
+
+        // Filter by clinic_id
+        if ($request->filled('clinic_id') && $request->input('clinic_id') !== 'all') {
+            $query->where('clinic_id', $request->input('clinic_id'));
         }
 
         // Filter by status (active, inactive, blocked, or legacy boolean)
@@ -61,6 +69,7 @@ class AdminManagementController extends Controller
     public function store(Request $request): JsonResponse
     {
         $rules = [
+            'clinic_id' => ['required', 'integer', 'exists:clinics,id'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:admins,email'],
             'mobile' => ['required', 'string', 'min:7', 'max:20', 'unique:admins,mobile'],
@@ -83,6 +92,7 @@ class AdminManagementController extends Controller
 
         $admin = Admin::create([
             'super_admin_id' => $superAdmin->id,
+            'clinic_id' => $validated['clinic_id'],
             'name' => $validated['name'],
             'email' => $validated['email'],
             'mobile' => $validated['mobile'],
@@ -102,7 +112,10 @@ class AdminManagementController extends Controller
 
         return response()->json([
             'message' => 'Admin account created successfully.',
-            'admin' => $admin->load('superAdmin:id,name,email'),
+            'admin' => $admin->load([
+                'superAdmin:id,name,email',
+                'clinic:id,clinic_code,name,branch_name,location,city,address,phone',
+            ]),
         ], 201);
     }
 
@@ -111,7 +124,10 @@ class AdminManagementController extends Controller
      */
     public function show(string $id): JsonResponse
     {
-        $admin = Admin::with('superAdmin:id,name,email')->find($id);
+        $admin = Admin::with([
+            'superAdmin:id,name,email',
+            'clinic:id,clinic_code,name,branch_name,location,city,address,phone',
+        ])->find($id);
 
         if (! $admin) {
             return response()->json([
@@ -138,6 +154,7 @@ class AdminManagementController extends Controller
         }
 
         $validated = $request->validate([
+            'clinic_id' => ['sometimes', 'required', 'integer', 'exists:clinics,id'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('admins')->ignore($admin->id)],
             'mobile' => ['nullable', 'string', 'min:7', 'max:20', Rule::unique('admins')->ignore($admin->id)],
@@ -150,6 +167,10 @@ class AdminManagementController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
         ];
+
+        if (array_key_exists('clinic_id', $validated)) {
+            $dataToUpdate['clinic_id'] = $validated['clinic_id'];
+        }
 
         if (array_key_exists('mobile', $validated)) {
             $dataToUpdate['mobile'] = $validated['mobile'];
@@ -187,7 +208,10 @@ class AdminManagementController extends Controller
 
         return response()->json([
             'message' => 'Admin account updated successfully.',
-            'admin' => $admin->fresh()->load('superAdmin:id,name,email'),
+            'admin' => $admin->fresh()->load([
+                'superAdmin:id,name,email',
+                'clinic:id,clinic_code,name,branch_name,location,city,address,phone',
+            ]),
         ]);
     }
 

@@ -28,6 +28,7 @@ class Admin extends Authenticatable
      */
     protected $fillable = [
         'super_admin_id',
+        'clinic_id',
         'name',
         'email',
         'mobile',
@@ -109,6 +110,14 @@ class Admin extends Authenticatable
     public function superAdmin(): BelongsTo
     {
         return $this->belongsTo(SuperAdmin::class, 'super_admin_id');
+    }
+
+    /**
+     * Get the clinic branch assigned to this admin.
+     */
+    public function clinic(): BelongsTo
+    {
+        return $this->belongsTo(Clinic::class, 'clinic_id');
     }
 
     /**

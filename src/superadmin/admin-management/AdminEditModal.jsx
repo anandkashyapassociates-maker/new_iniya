@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   User,
@@ -12,14 +13,20 @@ import {
   Ban,
   Shield,
   Save,
+  Building2,
+  Compass,
+  Globe,
+  MapPin,
 } from 'lucide-react';
 import adminManagementService from '../services/adminManagementService';
+import clinicManagementService from '../services/clinicManagementService';
 import { useToast } from '../../context/ToastContext';
 
 export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
   const toast = useToast();
 
   const [formData, setFormData] = useState({
+    clinic_id: '',
     name: '',
     email: '',
     mobile: '',
@@ -29,15 +36,41 @@ export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
     password_confirmation: '',
   });
 
+  const [clinics, setClinics] = useState([]);
+  const [isLoadingClinics, setIsLoadingClinics] = useState(false);
+
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Load clinic options
+  useEffect(() => {
+    let isMounted = true;
+    const loadClinics = async () => {
+      setIsLoadingClinics(true);
+      try {
+        const res = await clinicManagementService.getClinicOptions();
+        const list = res?.clinics || (Array.isArray(res) ? res : []);
+        if (isMounted) {
+          setClinics(list);
+        }
+      } catch (err) {
+        console.error('Failed to load clinic options in edit modal:', err);
+      } finally {
+        if (isMounted) setIsLoadingClinics(false);
+      }
+    };
+
+    loadClinics();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   // Initialize form when admin changes
   useEffect(() => {
     if (admin) {
-      // Determine initial status
       let initialStatus = 'active';
       if (admin.status) {
         initialStatus = admin.status;
@@ -45,7 +78,14 @@ export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
         initialStatus = 'inactive';
       }
 
+      const initialClinicId = admin.clinic_id
+        ? String(admin.clinic_id)
+        : admin.clinic?.id
+        ? String(admin.clinic.id)
+        : '';
+
       setFormData({
+        clinic_id: initialClinicId,
         name: admin.name || '',
         email: admin.email || '',
         mobile: admin.mobile || '',
@@ -73,8 +113,17 @@ export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
 
   if (!isOpen || !admin) return null;
 
+  // Selected clinic object for showing location/address
+  const selectedClinic = clinics.find(
+    (c) => String(c.id) === String(formData.clinic_id)
+  ) || admin.clinic || null;
+
   const validate = () => {
     const errs = {};
+
+    if (!formData.clinic_id) {
+      errs.clinic_id = 'Please select a clinic branch for this administrator.';
+    }
 
     if (!formData.name.trim()) {
       errs.name = 'Full name is required.';
@@ -128,6 +177,7 @@ export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
 
     try {
       const payload = {
+        clinic_id: parseInt(formData.clinic_id, 10),
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         mobile: formData.mobile.trim(),
@@ -164,7 +214,7 @@ export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
     }
   };
 
-  return (
+  const modalContent = (
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
@@ -191,7 +241,7 @@ export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 truncate">
-                  Update account details, change login status, or reset credentials.
+                  Update assigned clinic branch, account details, login status, or credentials.
                 </p>
               </div>
             </div>
@@ -216,6 +266,71 @@ export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
                   <span className="font-medium">{errors.general}</span>
                 </div>
               )}
+
+              {/* 1. CLINIC BRANCH ASSIGNMENT */}
+              <div className="p-4 rounded-2xl bg-blue-50/60 border border-blue-200/70 space-y-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-4 h-4 text-blue-600" />
+                    <span className="text-xs font-bold text-blue-900 uppercase tracking-wider">
+                      Assigned Clinic Branch
+                    </span>
+                  </div>
+                  {selectedClinic?.clinic_code && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-white text-blue-700 border border-blue-200 shadow-2xs">
+                      <Lock className="w-2.5 h-2.5" />
+                      {selectedClinic.clinic_code}
+                    </span>
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <label className="block text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                    Select Clinic Branch <span className="text-rose-500">*</span>
+                  </label>
+                  <div className="relative">
+                    <Building2 className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <select
+                      value={formData.clinic_id}
+                      onChange={(e) => setFormData({ ...formData, clinic_id: e.target.value })}
+                      disabled={isSubmitting || isLoadingClinics}
+                      className={`w-full pl-9 pr-4 py-2 text-xs bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 cursor-pointer font-medium ${
+                        errors.clinic_id
+                          ? 'border-rose-400 focus:ring-rose-500/15'
+                          : 'border-blue-200 focus:ring-blue-500/15 focus:border-blue-500'
+                      }`}
+                    >
+                      <option value="">
+                        {isLoadingClinics ? 'Loading clinics...' : '-- Choose Clinic Branch --'}
+                      </option>
+                      {clinics.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} ({c.clinic_code}) {c.branch_name ? `— ${c.branch_name}` : ''} [Location: {c.location}]
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  {errors.clinic_id && (
+                    <p className="text-[11px] text-rose-600 mt-0.5 font-medium">{errors.clinic_id}</p>
+                  )}
+                </div>
+
+                {/* Selected Clinic Readonly Info Badges */}
+                {selectedClinic && (
+                  <div className="pt-2 border-t border-blue-200/50 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                    <div className="bg-white/80 p-2 rounded-lg border border-blue-100 flex items-center gap-1.5 min-w-0">
+                      <Compass className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                      <span className="text-slate-500 shrink-0">Location:</span>
+                      <span className="font-semibold text-slate-800 truncate">{selectedClinic.location || '—'}</span>
+                    </div>
+                    <div className="bg-white/80 p-2 rounded-lg border border-blue-100 flex items-center gap-1.5 min-w-0">
+                      <Phone className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                      <span className="text-slate-500 shrink-0">Phone:</span>
+                      <span className="font-mono text-slate-800 truncate">{selectedClinic.phone || '—'}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Full Name */}
               <div className="min-w-0">
@@ -283,15 +398,15 @@ export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
                 {errors.mobile && <p className="text-[11px] text-rose-600 mt-1 font-medium">{errors.mobile}</p>}
               </div>
 
-              {/* Account Status Radio Cards */}
-              <div>
+              {/* Account Status Radio Group */}
+              <div className="min-w-0">
                 <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
-                  Account Status <span className="text-rose-500">*</span>
+                  Account Status &amp; Access Control
                 </label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                   {/* Active */}
                   <label
-                    className={`relative flex flex-col p-3 rounded-2xl border cursor-pointer transition-all ${
+                    className={`p-3 rounded-2xl border cursor-pointer transition-all ${
                       formData.status === 'active'
                         ? 'border-emerald-500 bg-emerald-50/60 ring-2 ring-emerald-500/20 shadow-xs'
                         : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50'
@@ -312,13 +427,13 @@ export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
                       />
                     </div>
                     <p className="text-[11px] text-slate-500 leading-tight">
-                      Authorized for Panel 2 access.
+                      Full access to administrative dashboard.
                     </p>
                   </label>
 
                   {/* Inactive */}
                   <label
-                    className={`relative flex flex-col p-3 rounded-2xl border cursor-pointer transition-all ${
+                    className={`p-3 rounded-2xl border cursor-pointer transition-all ${
                       formData.status === 'inactive'
                         ? 'border-amber-500 bg-amber-50/60 ring-2 ring-amber-500/20 shadow-xs'
                         : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50'
@@ -339,13 +454,13 @@ export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
                       />
                     </div>
                     <p className="text-[11px] text-slate-500 leading-tight">
-                      Temporarily suspended.
+                      Temporarily disabled from logging in.
                     </p>
                   </label>
 
                   {/* Blocked */}
                   <label
-                    className={`relative flex flex-col p-3 rounded-2xl border cursor-pointer transition-all ${
+                    className={`p-3 rounded-2xl border cursor-pointer transition-all ${
                       formData.status === 'blocked'
                         ? 'border-rose-500 bg-rose-50/60 ring-2 ring-rose-500/20 shadow-xs'
                         : 'border-slate-200 bg-slate-50/50 hover:bg-slate-50'
@@ -503,4 +618,6 @@ export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
