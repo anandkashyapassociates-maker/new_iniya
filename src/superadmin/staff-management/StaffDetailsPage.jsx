@@ -271,33 +271,34 @@ export default function StaffDetailsPage() {
 
       {/* Filter and Search Bar Card */}
       <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
-          {/* Search Form */}
-          <form onSubmit={handleSearchSubmit} className="relative w-full lg:w-80">
-            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-            <input
-              type="text"
-              value={searchInput}
-              onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Search by code, name, email, mobile..."
-              className="w-full pl-10 pr-20 py-2 text-xs bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
-            />
-            <button
-              type="submit"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[11px] font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-800 cursor-pointer"
-            >
-              Search
-            </button>
-          </form>
+        <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3">
+          {/* Left Controls: Search + Clinic Filter + Department Filter */}
+          <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-0">
+            {/* Search Form */}
+            <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-[200px] max-w-sm">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              <input
+                type="text"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                placeholder="Search code, name, email, mobile..."
+                className="w-full pl-10 pr-20 py-2 text-xs bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all font-medium"
+              />
+              <button
+                type="submit"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[11px] font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-800 cursor-pointer transition-colors"
+              >
+                Search
+              </button>
+            </form>
 
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full lg:w-auto">
             {/* Clinic Filter */}
-            <div className="relative min-w-[170px] w-full sm:w-auto">
+            <div className="relative min-w-[170px] flex-1 sm:flex-initial">
               <Building2 className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <select
                 value={clinicFilter}
                 onChange={handleClinicFilterChange}
-                className="w-full pl-8.5 pr-8 py-1.5 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer font-medium"
+                className="w-full pl-8.5 pr-8 py-2 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer font-medium"
               >
                 <option value="all">All Clinics (Branches)</option>
                 {clinicsList.map((c) => (
@@ -309,12 +310,12 @@ export default function StaffDetailsPage() {
             </div>
 
             {/* Department Filter */}
-            <div className="relative min-w-[160px] w-full sm:w-auto">
+            <div className="relative min-w-[155px] flex-1 sm:flex-initial">
               <Briefcase className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
               <select
                 value={departmentFilter}
                 onChange={handleDepartmentFilterChange}
-                className="w-full pl-8.5 pr-8 py-1.5 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer"
+                className="w-full pl-8.5 pr-8 py-2 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer font-medium"
               >
                 <option value="all">All Departments</option>
                 {departmentsList.map((d) => (
@@ -324,54 +325,57 @@ export default function StaffDetailsPage() {
                 ))}
               </select>
             </div>
+          </div>
 
-            {/* Status Filter Tabs */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-full sm:w-auto justify-center overflow-x-auto">
-              <button
-                type="button"
-                onClick={() => handleStatusFilterChange('all')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                  statusFilter === 'all'
-                    ? 'bg-white text-slate-900 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-              >
-                All
-              </button>
-              <button
-                type="button"
-                onClick={() => handleStatusFilterChange('active')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                  statusFilter === 'active' || statusFilter === 'true'
-                    ? 'bg-white text-emerald-700 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-              >
-                Active
-              </button>
-              <button
-                type="button"
-                onClick={() => handleStatusFilterChange('inactive')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                  statusFilter === 'inactive' || statusFilter === 'false'
-                    ? 'bg-white text-amber-700 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-              >
-                Inactive
-              </button>
-              <button
-                type="button"
-                onClick={() => handleStatusFilterChange('blocked')}
-                className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                  statusFilter === 'blocked'
-                    ? 'bg-white text-rose-700 shadow-xs'
-                    : 'text-slate-500 hover:text-slate-900'
-                }`}
-              >
-                Blocked
-              </button>
-            </div>
+          {/* Right Status Tabs: fixed width, no overflow scrollbar */}
+          <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl shrink-0 self-start xl:self-auto border border-slate-200/60 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => handleStatusFilterChange('all')}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                statusFilter === 'all'
+                  ? 'bg-white text-slate-900 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              All
+            </button>
+            <button
+              type="button"
+              onClick={() => handleStatusFilterChange('active')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                statusFilter === 'active' || statusFilter === 'true'
+                  ? 'bg-white text-emerald-700 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+              <span>Active</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleStatusFilterChange('inactive')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                statusFilter === 'inactive' || statusFilter === 'false'
+                  ? 'bg-white text-amber-700 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+              <span>Inactive</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => handleStatusFilterChange('blocked')}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                statusFilter === 'blocked'
+                  ? 'bg-white text-rose-700 shadow-xs'
+                  : 'text-slate-500 hover:text-slate-900'
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+              <span>Blocked</span>
+            </button>
           </div>
         </div>
 
