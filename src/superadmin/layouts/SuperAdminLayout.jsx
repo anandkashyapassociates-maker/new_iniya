@@ -3,6 +3,7 @@ import { Outlet, NavLink, Link, useNavigate, useLocation } from 'react-router-do
 import {
   Shield,
   LayoutDashboard,
+  Building2,
   LogOut,
   Menu,
   X,
@@ -53,6 +54,10 @@ export default function SuperAdminLayout() {
   }, []);
 
   // Active section identification
+  const isInClinicManagement =
+    location.pathname.startsWith('/superadmin/clinic-management') ||
+    location.pathname.startsWith('/superadmin/clinics');
+
   const isInAdminManagement =
     location.pathname.startsWith('/superadmin/admin-management') ||
     location.pathname.startsWith('/superadmin/admins');
@@ -78,6 +83,7 @@ export default function SuperAdminLayout() {
   const isInPayouts = location.pathname.startsWith('/superadmin/payouts');
 
   // Initialize only the currently active section as open on page load / reload
+  const [clinicMenuOpen, setClinicMenuOpen] = useState(isInClinicManagement);
   const [adminMenuOpen, setAdminMenuOpen] = useState(isInAdminManagement);
   const [staffMenuOpen, setStaffMenuOpen] = useState(isInStaffManagement);
   const [vendorMenuOpen, setVendorMenuOpen] = useState(isInVendorManagement);
@@ -98,6 +104,7 @@ export default function SuperAdminLayout() {
       setPayoutMenuOpen(false);
     } else if (isInStaffManagement) {
       setStaffMenuOpen(true);
+      setClinicMenuOpen(false);
       setAdminMenuOpen(false);
       setVendorMenuOpen(false);
       setSalesMenuOpen(false);
@@ -106,6 +113,7 @@ export default function SuperAdminLayout() {
       setPayoutMenuOpen(false);
     } else if (isInVendorManagement) {
       setVendorMenuOpen(true);
+      setClinicMenuOpen(false);
       setAdminMenuOpen(false);
       setStaffMenuOpen(false);
       setSalesMenuOpen(false);
@@ -114,6 +122,7 @@ export default function SuperAdminLayout() {
       setPayoutMenuOpen(false);
     } else if (isInSalesManagement) {
       setSalesMenuOpen(true);
+      setClinicMenuOpen(false);
       setAdminMenuOpen(false);
       setStaffMenuOpen(false);
       setVendorMenuOpen(false);
@@ -122,6 +131,7 @@ export default function SuperAdminLayout() {
       setPayoutMenuOpen(false);
     } else if (isInReports) {
       setReportsMenuOpen(true);
+      setClinicMenuOpen(false);
       setAdminMenuOpen(false);
       setStaffMenuOpen(false);
       setVendorMenuOpen(false);
@@ -130,6 +140,7 @@ export default function SuperAdminLayout() {
       setPayoutMenuOpen(false);
     } else if (isInInventory) {
       setInventoryMenuOpen(true);
+      setClinicMenuOpen(false);
       setReportsMenuOpen(false);
       setAdminMenuOpen(false);
       setStaffMenuOpen(false);
@@ -138,6 +149,7 @@ export default function SuperAdminLayout() {
       setPayoutMenuOpen(false);
     } else if (isInPayouts) {
       setPayoutMenuOpen(true);
+      setClinicMenuOpen(false);
       setAdminMenuOpen(false);
       setStaffMenuOpen(false);
       setVendorMenuOpen(false);
@@ -145,7 +157,7 @@ export default function SuperAdminLayout() {
       setInventoryMenuOpen(false);
       setReportsMenuOpen(false);
     }
-  }, [location.pathname, isInAdminManagement, isInStaffManagement, isInVendorManagement, isInSalesManagement, isInInventory, isInReports, isInPayouts]);
+  }, [location.pathname, isInClinicManagement, isInAdminManagement, isInStaffManagement, isInVendorManagement, isInSalesManagement, isInInventory, isInReports, isInPayouts]);
 
   const handleLogout = async () => {
     try {
@@ -247,6 +259,79 @@ export default function SuperAdminLayout() {
             </NavLink>
 
             {/* ======================================================== */}
+            {/* CLINIC MANAGEMENT ACCORDION SECTION (Multi-Clinic Network) */}
+            {/* ======================================================== */}
+            <div className="pt-2">
+              <button
+                type="button"
+                onClick={() => setClinicMenuOpen(!clinicMenuOpen)}
+                className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-semibold tracking-normal transition-all cursor-pointer group text-left ${
+                  isInClinicManagement
+                    ? 'text-blue-400 bg-slate-900/90'
+                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+                }`}
+              >
+                <div className="flex items-center gap-2.5 flex-1 min-w-0">
+                  <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 via-teal-600 to-cyan-600 text-white flex items-center justify-center shrink-0 icon-3d shadow-md group-hover:scale-110 group-hover:-translate-y-0.5 transition-all duration-300">
+                    <Building2 className="w-4 h-4 drop-shadow-sm" />
+                  </div>
+                  <span className="text-left truncate group-hover:translate-x-0.5 transition-transform">
+                    Clinic Management
+                  </span>
+                </div>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 shrink-0 transition-transform duration-200 ml-1 ${
+                    clinicMenuOpen ? 'rotate-0' : '-rotate-90'
+                  }`}
+                />
+              </button>
+
+              {/* Collapsible Submenu */}
+              {clinicMenuOpen && (
+                <div className="pl-6 pr-1 pt-1.5 pb-1 space-y-1">
+                  {/* 1. Clinic Creation */}
+                  <NavLink
+                    to="/superadmin/clinics/create"
+                    end
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        isActive ||
+                        isSubItemActive('/superadmin/clinics/create') ||
+                        isSubItemActive('/superadmin/clinic-management/create')
+                          ? 'bg-blue-600/20 text-blue-300 font-medium border border-blue-500/30'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
+                      }`
+                    }
+                  >
+                    <UserPlus className="w-3.5 h-3.5 shrink-0" />
+                    <span>Clinic Creation</span>
+                  </NavLink>
+
+                  {/* 2. Clinic Details */}
+                  <NavLink
+                    to="/superadmin/clinics"
+                    end
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={({ isActive }) =>
+                      `flex items-center gap-2.5 px-3 py-2 rounded-lg text-xs font-semibold transition-all ${
+                        isActive ||
+                        isSubItemActive('/superadmin/clinics') ||
+                        isSubItemActive('/superadmin/clinic-management') ||
+                        isSubItemActive('/superadmin/clinic-management/details')
+                          ? 'bg-blue-600/20 text-blue-300 font-medium border border-blue-500/30'
+                          : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/50'
+                      }`
+                    }
+                  >
+                    <ListFilter className="w-3.5 h-3.5 shrink-0" />
+                    <span>Clinic Details</span>
+                  </NavLink>
+                </div>
+              )}
+            </div>
+
+                        {/* ======================================================== */}
             {/* ADMIN MANAGEMENT ACCORDION SECTION (Phase 2 Requirement) */}
             {/* ======================================================== */}
             <div className="pt-2">
