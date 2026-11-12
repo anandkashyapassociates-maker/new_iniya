@@ -157,5 +157,13 @@ class Clinic extends Model
     {
         return $this->hasMany(InventoryProduct::class, 'clinic_id');
     }
+
+    /**
+     * Sales members assigned to this clinic.
+     */
+    public function salesMembers(): HasMany
+    {
+        return $this->hasMany(SalesMember::class, 'clinic_id');
+    }
 }
 

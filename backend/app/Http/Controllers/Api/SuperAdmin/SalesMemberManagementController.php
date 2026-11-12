@@ -17,7 +17,10 @@ class SalesMemberManagementController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $query = SalesMember::with('superAdmin:id,name,email');
+        $query = SalesMember::with([
+            'superAdmin:id,name,email',
+            'clinic:id,clinic_code,name,branch_name,location,city',
+        ]);
 
         // Parameterized search across sales_code, name, email, mobile, designation, department, territory, city
         if ($search = $request->input('search')) {
@@ -31,6 +34,13 @@ class SalesMemberManagementController extends Controller
                     ->orWhere('territory', 'like', "%{$search}%")
                     ->orWhere('city', 'like', "%{$search}%");
             });
+        }
+
+        // Clinic filter
+        if ($clinicId = $request->input('clinic_id')) {
+            if ($clinicId !== '' && $clinicId !== 'all') {
+                $query->where('clinic_id', $clinicId);
+            }
         }
 
         // Status filter
@@ -168,6 +178,7 @@ class SalesMemberManagementController extends Controller
             : ['nullable', 'string', 'max:255'];
 
         $validated = $request->validate([
+            'clinic_id' => ['required', 'integer', 'exists:clinics,id'],
             'name' => ['required', 'string', 'max:150'],
             'email' => ['required', 'string', 'email', 'max:150', 'unique:sales_members,email'],
             'mobile' => ['required', 'string', 'max:20'],
@@ -185,6 +196,9 @@ class SalesMemberManagementController extends Controller
             'address' => ['nullable', 'string'],
             'notes' => ['nullable', 'string'],
             'status' => ['sometimes', 'string', Rule::in(['active', 'inactive', 'blocked'])],
+        ], [
+            'clinic_id.required' => 'Please select a clinic branch.',
+            'clinic_id.exists' => 'The selected clinic branch is invalid.',
         ]);
 
         $superAdmin = $request->user();
@@ -202,6 +216,7 @@ class SalesMemberManagementController extends Controller
 
         $member = SalesMember::create([
             'sales_code' => $salesCode,
+            'clinic_id' => $validated['clinic_id'],
             'name' => $validated['name'],
             'email' => $validated['email'],
             'mobile' => $validated['mobile'],
@@ -234,7 +249,10 @@ class SalesMemberManagementController extends Controller
 
         return response()->json([
             'message' => 'Sales member created successfully.',
-            'sales_member' => $member->load('superAdmin:id,name,email'),
+            'sales_member' => $member->load([
+                'superAdmin:id,name,email',
+                'clinic:id,clinic_code,name,branch_name,location,city',
+            ]),
         ], 201);
     }
 
@@ -243,7 +261,10 @@ class SalesMemberManagementController extends Controller
      */
     public function show(string $id): JsonResponse
     {
-        $member = SalesMember::with('superAdmin:id,name,email')->find($id);
+        $member = SalesMember::with([
+            'superAdmin:id,name,email',
+            'clinic:id,clinic_code,name,branch_name,location,city',
+        ])->find($id);
 
         if (! $member) {
             return response()->json([
@@ -281,6 +302,7 @@ class SalesMemberManagementController extends Controller
             : ['nullable', 'string', 'max:255'];
 
         $validated = $request->validate([
+            'clinic_id' => ['sometimes', 'required', 'integer', 'exists:clinics,id'],
             'name' => ['required', 'string', 'max:150'],
             'email' => [
                 'required',
@@ -308,6 +330,7 @@ class SalesMemberManagementController extends Controller
 
         // Explicit allowlist of editable fields: sales_code and created_by_superadmin_id are strictly protected
         $editable = [
+            'clinic_id',
             'name',
             'email',
             'mobile',
@@ -360,7 +383,10 @@ class SalesMemberManagementController extends Controller
 
         return response()->json([
             'message' => 'Sales member updated successfully.',
-            'sales_member' => $member->fresh()->load('superAdmin:id,name,email'),
+            'sales_member' => $member->fresh()->load([
+                'superAdmin:id,name,email',
+                'clinic:id,clinic_code,name,branch_name,location,city',
+            ]),
         ]);
     }
 
@@ -398,7 +424,10 @@ class SalesMemberManagementController extends Controller
 
         return response()->json([
             'message' => "Sales member status updated to '{$member->status}'.",
-            'sales_member' => $member->fresh()->load('superAdmin:id,name,email'),
+            'sales_member' => $member->fresh()->load([
+                'superAdmin:id,name,email',
+                'clinic:id,clinic_code,name,branch_name,location,city',
+            ]),
         ]);
     }
 }

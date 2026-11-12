@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import {
   X,
   User,
@@ -18,6 +19,7 @@ import {
   Compass,
 } from 'lucide-react';
 import salesMemberManagementService from '../services/salesMemberManagementService';
+import clinicManagementService from '../services/clinicManagementService';
 import { useToast } from '../../context/ToastContext';
 import { getImageUrl } from '../../utils/imageUrl';
 
@@ -55,6 +57,7 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
   const toast = useToast();
 
   const [formData, setFormData] = useState({
+    clinic_id: '',
     name: '',
     email: '',
     mobile: '',
@@ -73,14 +76,32 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
     status: 'active',
   });
 
+  const [clinics, setClinics] = useState([]);
+  const [isLoadingClinics, setIsLoadingClinics] = useState(true);
   const [previewPhoto, setPreviewPhoto] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Load clinic options
+  useEffect(() => {
+    clinicManagementService
+      .getClinicOptions()
+      .then((res) => {
+        setClinics(res.clinics || []);
+      })
+      .catch((err) => {
+        console.error('Failed to load clinic options:', err);
+      })
+      .finally(() => {
+        setIsLoadingClinics(false);
+      });
+  }, []);
+
   useEffect(() => {
     if (member) {
       setFormData({
+        clinic_id: member.clinic_id || member.clinic?.id ? String(member.clinic_id || member.clinic?.id) : '',
         name: member.name || '',
         email: member.email || '',
         mobile: member.mobile || '',
@@ -103,6 +124,9 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
       setErrors({});
     }
   }, [member]);
+
+  // Selected clinic object for previewing branch info
+  const selectedClinic = clinics.find((c) => String(c.id) === String(formData.clinic_id)) || member?.clinic || null;
 
   // Handle ESC key
   useEffect(() => {
@@ -150,6 +174,10 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
   const validate = () => {
     const errs = {};
 
+    if (!formData.clinic_id) {
+      errs.clinic_id = 'Please select a clinic branch for this sales member.';
+    }
+
     if (!formData.name.trim()) {
       errs.name = 'Full name is required.';
     } else if (formData.name.trim().length < 2) {
@@ -190,6 +218,7 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
 
     try {
       const payload = {
+        clinic_id: formData.clinic_id ? Number(formData.clinic_id) : null,
         name: formData.name.trim(),
         email: formData.email.trim().toLowerCase(),
         mobile: formData.mobile.trim(),
@@ -247,7 +276,7 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
@@ -298,11 +327,76 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
                 </div>
               )}
 
-              {/* 1. Basic Info */}
+              {/* 1. Clinic Branch Assignment */}
+              <div className="space-y-2.5 p-4 rounded-2xl bg-purple-50/50 border border-purple-200/80">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="w-4 h-4 rounded-full bg-purple-100 text-purple-700 font-mono text-[9px] font-bold flex items-center justify-center">
+                      1
+                    </span>
+                    <h4 className="text-[11px] font-bold text-slate-700 uppercase tracking-wider">
+                      Clinic Branch Assignment <span className="text-rose-500">*</span>
+                    </h4>
+                  </div>
+                  {selectedClinic && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-white text-purple-700 border border-purple-200 shadow-2xs">
+                      <Lock className="w-2.5 h-2.5" />
+                      {selectedClinic.clinic_code}
+                    </span>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <Building2 className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <select
+                    value={formData.clinic_id}
+                    onChange={(e) => handleChange('clinic_id', e.target.value)}
+                    required
+                    disabled={isSubmitting || isLoadingClinics}
+                    className={`w-full pl-9 pr-3 py-2 text-xs bg-white border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 ${
+                      errors.clinic_id
+                        ? 'border-rose-300 focus:border-rose-500 focus:ring-rose-200'
+                        : 'border-slate-300 focus:border-purple-600 focus:ring-purple-100'
+                    }`}
+                  >
+                    <option value="">
+                      {isLoadingClinics ? 'Loading clinic branches...' : '-- Select Clinic Branch --'}
+                    </option>
+                    {clinics.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.clinic_code}) {c.branch_name ? `— ${c.branch_name}` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                {errors.clinic_id && (
+                  <p className="text-[10px] text-rose-600 mt-1">{errors.clinic_id}</p>
+                )}
+
+                {/* Read-only Clinic Details Card */}
+                {selectedClinic && (
+                  <div className="p-3 bg-white/90 rounded-xl border border-purple-200/60 grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px]">
+                    <div>
+                      <span className="text-slate-400 font-medium block">Branch Name:</span>
+                      <span className="font-semibold text-slate-800">{selectedClinic.branch_name || 'Main Flagship Clinic'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-400 font-medium block">Location / City:</span>
+                      <span className="font-semibold text-slate-800">{[selectedClinic.location, selectedClinic.city].filter(Boolean).join(', ') || '—'}</span>
+                    </div>
+                    <div className="sm:col-span-2">
+                      <span className="text-slate-400 font-medium block">Address:</span>
+                      <span className="font-medium text-slate-700">{selectedClinic.address || '—'}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {/* 2. Basic Info */}
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2">
                   <span className="w-4 h-4 rounded-full bg-purple-100 text-purple-700 font-mono text-[9px] font-bold flex items-center justify-center">
-                    1
+                    2
                   </span>
                   <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                     Basic Info &amp; Photo
@@ -432,11 +526,11 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
                 </div>
               </div>
 
-              {/* 2. Employment Details */}
+              {/* 3. Employment Details */}
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2">
                   <span className="w-4 h-4 rounded-full bg-blue-100 text-blue-700 font-mono text-[9px] font-bold flex items-center justify-center">
-                    2
+                    3
                   </span>
                   <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                     Employment &amp; Territory
@@ -525,11 +619,11 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
                 </div>
               </div>
 
-              {/* 3. Location */}
+              {/* 4. Location */}
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2">
                   <span className="w-4 h-4 rounded-full bg-amber-100 text-amber-700 font-mono text-[9px] font-bold flex items-center justify-center">
-                    3
+                    4
                   </span>
                   <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                     Location &amp; Address
@@ -590,11 +684,11 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
                 </div>
               </div>
 
-              {/* 4. Notes & Status */}
+              {/* 5. Notes & Status */}
               <div className="space-y-2.5">
                 <div className="flex items-center gap-2">
                   <span className="w-4 h-4 rounded-full bg-slate-100 text-slate-700 font-mono text-[9px] font-bold flex items-center justify-center">
-                    4
+                    5
                   </span>
                   <h4 className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                     Notes &amp; Status
@@ -718,6 +812,7 @@ export default function SalesMemberEditModal({ member, isOpen, onClose, onSucces
           </form>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

@@ -19,10 +19,13 @@ import {
   Layers,
   Compass,
   User,
+  X,
+  Lock,
 } from 'lucide-react';
 import SalesMemberStatusBadge from './SalesMemberStatusBadge';
 import SalesMemberEditModal from './SalesMemberEditModal';
 import salesMemberManagementService from '../services/salesMemberManagementService';
+import clinicManagementService from '../services/clinicManagementService';
 import { getImageUrl } from '../../utils/imageUrl';
 import { useToast } from '../../context/ToastContext';
 
@@ -30,6 +33,7 @@ export default function SalesMemberDetailsPage() {
   const toast = useToast();
 
   const [salesList, setSalesList] = useState([]);
+  const [clinicsList, setClinicsList] = useState([]);
   const [departmentsList, setDepartmentsList] = useState([]);
   const [territoriesList, setTerritoriesList] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -39,6 +43,7 @@ export default function SalesMemberDetailsPage() {
   // Filters & search state
   const [searchInput, setSearchInput] = useState('');
   const [activeSearch, setActiveSearch] = useState('');
+  const [clinicFilter, setClinicFilter] = useState('all');
   const [departmentFilter, setDepartmentFilter] = useState('all');
   const [territoryFilter, setTerritoryFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -56,6 +61,7 @@ export default function SalesMemberDetailsPage() {
     try {
       const res = await salesMemberManagementService.getSalesMembers({
         search: activeSearch,
+        clinic_id: clinicFilter !== 'all' ? clinicFilter : undefined,
         department: departmentFilter !== 'all' ? departmentFilter : undefined,
         territory: territoryFilter !== 'all' ? territoryFilter : undefined,
         status: statusFilter,
@@ -81,10 +87,17 @@ export default function SalesMemberDetailsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [activeSearch, departmentFilter, territoryFilter, statusFilter, page, perPage, toast]);
+  }, [activeSearch, clinicFilter, departmentFilter, territoryFilter, statusFilter, page, perPage, toast]);
 
-  // Load departments and territories
+  // Load clinics, departments and territories
   useEffect(() => {
+    clinicManagementService
+      .getClinicOptions()
+      .then((res) => {
+        setClinicsList(res.clinics || []);
+      })
+      .catch(() => {});
+
     salesMemberManagementService
       .getDepartments()
       .then((data) => {
@@ -117,6 +130,11 @@ export default function SalesMemberDetailsPage() {
     setStatusFilter(newStatus);
   };
 
+  const handleClinicFilterChange = (e) => {
+    setPage(1);
+    setClinicFilter(e.target.value);
+  };
+
   const handleDepartmentFilterChange = (e) => {
     setPage(1);
     setDepartmentFilter(e.target.value);
@@ -130,6 +148,7 @@ export default function SalesMemberDetailsPage() {
   const handleResetFilters = () => {
     setSearchInput('');
     setActiveSearch('');
+    setClinicFilter('all');
     setDepartmentFilter('all');
     setTerritoryFilter('all');
     setStatusFilter('all');
@@ -213,97 +232,169 @@ export default function SalesMemberDetailsPage() {
         </div>
       </div>
 
-      {/* Filter and Search Bar Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs">
-        <div className="flex flex-col lg:flex-row items-center justify-between gap-3">
+      {/* Filter and Search Bar Card - Clean 2-Row Layout */}
+      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3.5">
+        {/* ROW 1: Search Form + Clinic Dropdown + Department Dropdown */}
+        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-center">
           {/* Search Form */}
-          <form onSubmit={handleSearchSubmit} className="relative w-full lg:w-96">
+          <form onSubmit={handleSearchSubmit} className="relative sm:col-span-12 md:col-span-6 lg:col-span-6 min-w-0">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Search code, name, email, territory, city..."
-              className="w-full pl-10 pr-20 py-2 text-xs bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all"
+              className="w-full pl-10 pr-20 py-2.5 text-xs bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all font-medium shadow-2xs"
             />
             <button
               type="submit"
-              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[11px] font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-800 cursor-pointer"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-800 cursor-pointer transition-colors shadow-2xs"
             >
               Search
             </button>
           </form>
 
-          <div className="flex flex-wrap sm:flex-nowrap items-center gap-2.5 w-full lg:w-auto">
-            {/* Department Filter */}
-            <div className="relative min-w-[140px] w-full sm:w-auto">
-              <Building2 className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <select
-                value={departmentFilter}
-                onChange={handleDepartmentFilterChange}
-                className="w-full pl-8.5 pr-8 py-1.5 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer"
-              >
-                <option value="all">All Departments</option>
-                {departmentsList.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Clinic Filter Dropdown */}
+          <div className="relative sm:col-span-6 md:col-span-3 lg:col-span-3 min-w-0">
+            <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <select
+              value={clinicFilter}
+              onChange={handleClinicFilterChange}
+              className="w-full pl-10 pr-8 py-2.5 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer font-medium shadow-2xs"
+            >
+              <option value="all">All Clinics (Branches)</option>
+              {clinicsList.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.clinic_code})
+                </option>
+              ))}
+            </select>
+          </div>
 
-            {/* Territory Filter */}
-            <div className="relative min-w-[130px] w-full sm:w-auto">
-              <Compass className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <select
-                value={territoryFilter}
-                onChange={handleTerritoryFilterChange}
-                className="w-full pl-8.5 pr-8 py-1.5 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer"
-              >
-                <option value="all">All Territories</option>
-                {territoriesList.map((t) => (
-                  <option key={t} value={t}>
-                    {t}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Department Filter Dropdown */}
+          <div className="relative sm:col-span-6 md:col-span-3 lg:col-span-3 min-w-0">
+            <Briefcase className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <select
+              value={departmentFilter}
+              onChange={handleDepartmentFilterChange}
+              className="w-full pl-10 pr-8 py-2.5 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer font-medium shadow-2xs"
+            >
+              <option value="all">All Departments</option>
+              {departmentsList.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
 
-            {/* Status Filter Tabs */}
-            <div className="flex items-center gap-1 bg-slate-100 p-1 rounded-xl w-full sm:w-auto justify-center overflow-x-auto">
+        {/* ROW 2: Status Filter Tabs & Active Filter Badges */}
+        <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0">
+              Status:
+            </span>
+            <div className="inline-flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/60 shadow-2xs overflow-x-auto">
               {['all', 'active', 'inactive', 'blocked'].map((tab) => (
                 <button
                   key={tab}
                   type="button"
                   onClick={() => handleStatusFilterChange(tab)}
-                  className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer capitalize whitespace-nowrap ${
+                  className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap capitalize ${
                     statusFilter === tab
                       ? tab === 'active'
-                        ? 'bg-emerald-600 text-white shadow-xs'
+                        ? 'bg-white text-emerald-700 shadow-xs'
                         : tab === 'inactive'
-                        ? 'bg-amber-600 text-white shadow-xs'
+                        ? 'bg-white text-amber-700 shadow-xs'
                         : tab === 'blocked'
-                        ? 'bg-rose-600 text-white shadow-xs'
+                        ? 'bg-white text-rose-700 shadow-xs'
                         : 'bg-white text-slate-900 shadow-xs'
                       : 'text-slate-500 hover:text-slate-900'
                   }`}
                 >
-                  {tab === 'all' ? 'All' : tab}
+                  {tab === 'all' ? (
+                    'All'
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5">
+                      <span
+                        className={`w-1.5 h-1.5 rounded-full ${
+                          tab === 'active'
+                            ? 'bg-emerald-500'
+                            : tab === 'inactive'
+                            ? 'bg-amber-500'
+                            : 'bg-rose-500'
+                        }`}
+                      />
+                      {tab}
+                    </span>
+                  )}
                 </button>
               ))}
             </div>
+          </div>
 
-            {/* Reset Filters */}
-            {(activeSearch || departmentFilter !== 'all' || territoryFilter !== 'all' || statusFilter !== 'all') && (
+          {/* Active Filter Indicators & Clear All */}
+          {(activeSearch || clinicFilter !== 'all' || departmentFilter !== 'all' || territoryFilter !== 'all' || statusFilter !== 'all') && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs text-slate-500 font-medium">Filters active:</span>
+              {clinicFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-purple-50 text-purple-700 border border-purple-200">
+                  <Building2 className="w-3 h-3 text-purple-600" />
+                  Clinic: {clinicsList.find((c) => String(c.id) === String(clinicFilter))?.name || clinicFilter}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setClinicFilter('all');
+                      setPage(1);
+                    }}
+                    className="hover:text-purple-900 cursor-pointer ml-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {departmentFilter !== 'all' && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-blue-50 text-blue-700 border border-blue-200">
+                  Dept: {departmentFilter}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDepartmentFilter('all');
+                      setPage(1);
+                    }}
+                    className="hover:text-blue-900 cursor-pointer ml-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
+              {activeSearch && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                  Search: &quot;{activeSearch}&quot;
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveSearch('');
+                      setSearchInput('');
+                      setPage(1);
+                    }}
+                    className="hover:text-slate-900 cursor-pointer ml-0.5"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              )}
               <button
                 type="button"
                 onClick={handleResetFilters}
-                className="text-xs text-rose-600 hover:text-rose-700 font-semibold px-2 py-1 underline cursor-pointer"
+                className="inline-flex items-center gap-1 text-xs text-rose-600 hover:text-rose-700 font-bold px-2 py-1 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
               >
-                Clear
+                <X className="w-3 h-3" />
+                Clear All
               </button>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -329,6 +420,7 @@ export default function SalesMemberDetailsPage() {
               <tr className="bg-slate-50/80 border-b border-slate-200/90 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                 <th className="py-3 px-4 w-14 text-center">Sr. No.</th>
                 <th className="py-3 px-4">Sales Code</th>
+                <th className="py-3 px-4">Clinic Branch</th>
                 <th className="py-3 px-4">Profile</th>
                 <th className="py-3 px-4">Name</th>
                 <th className="py-3 px-4">Email</th>
@@ -346,7 +438,7 @@ export default function SalesMemberDetailsPage() {
             <tbody className="divide-y divide-slate-100 font-normal">
               {isLoading ? (
                 <tr>
-                  <td colSpan="14" className="py-12 text-center text-slate-400">
+                  <td colSpan="15" className="py-12 text-center text-slate-400">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
                       <span className="text-xs font-semibold text-slate-500">
@@ -357,18 +449,18 @@ export default function SalesMemberDetailsPage() {
                 </tr>
               ) : salesList.length === 0 ? (
                 <tr>
-                  <td colSpan="14" className="py-12 text-center text-slate-400">
+                  <td colSpan="15" className="py-12 text-center text-slate-400">
                     <div className="flex flex-col items-center justify-center gap-2 max-w-sm mx-auto">
                       <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-400">
                         <TrendingUp className="w-6 h-6" />
                       </div>
                       <span className="text-sm font-bold text-slate-700">No Sales Members Found</span>
                       <p className="text-xs text-slate-400">
-                        {activeSearch || departmentFilter !== 'all' || territoryFilter !== 'all' || statusFilter !== 'all'
+                        {activeSearch || clinicFilter !== 'all' || departmentFilter !== 'all' || territoryFilter !== 'all' || statusFilter !== 'all'
                           ? 'No sales team members match the selected search or filter criteria.'
                           : 'No sales members have been provisioned in the system yet.'}
                       </p>
-                      {activeSearch || departmentFilter !== 'all' || territoryFilter !== 'all' || statusFilter !== 'all' ? (
+                      {activeSearch || clinicFilter !== 'all' || departmentFilter !== 'all' || territoryFilter !== 'all' || statusFilter !== 'all' ? (
                         <button
                           onClick={handleResetFilters}
                           className="mt-2 text-xs font-bold text-blue-600 hover:text-blue-700 underline cursor-pointer"
@@ -401,13 +493,34 @@ export default function SalesMemberDetailsPage() {
                     </td>
                     {/* 1. Sales Code */}
                     <td className="py-3 px-4 font-medium whitespace-nowrap">
-                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 font-mono text-[11px] font-bold border border-blue-200/70 whitespace-nowrap">
-                        <Hash className="w-3 h-3 text-blue-500" />
+                      <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-purple-50 text-purple-700 font-mono text-[11px] font-bold border border-purple-200/70 whitespace-nowrap">
+                        <Hash className="w-3 h-3 text-purple-500" />
                         {member.sales_code}
                       </span>
                     </td>
 
-                    {/* 2. Profile Photo / Avatar */}
+                    {/* 2. Clinic Branch */}
+                    <td className="py-3 px-4 whitespace-nowrap">
+                      {member.clinic ? (
+                        <div className="flex flex-col">
+                          <span className="font-bold text-slate-800">{member.clinic.name}</span>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200/60">
+                              {member.clinic.clinic_code}
+                            </span>
+                            {member.clinic.branch_name && (
+                              <span className="text-[11px] text-slate-500 font-medium">
+                                {member.clinic.branch_name}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 italic">Not Assigned</span>
+                      )}
+                    </td>
+
+                    {/* 3. Profile Photo / Avatar */}
                     <td className="py-3 px-4">
                       {member.profile_photo ? (
                         <img
@@ -422,9 +535,9 @@ export default function SalesMemberDetailsPage() {
                       )}
                     </td>
 
-                    {/* 3. Name */}
+                    {/* 4. Name */}
                     <td className="py-3 px-4">
-                      <div className="font-bold text-slate-900 group-hover:text-blue-600 transition-colors">
+                      <div className="font-bold text-slate-900 group-hover:text-purple-600 transition-colors">
                         {member.name}
                       </div>
                       {member.gender && (
