@@ -282,3 +282,4 @@ class ClinicManagementController extends Controller
         ]);
     }
 }
+

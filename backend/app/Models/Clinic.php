@@ -133,3 +133,4 @@ class Clinic extends Model
         return $this->belongsTo(SuperAdmin::class, 'created_by_superadmin_id');
     }
 }
+

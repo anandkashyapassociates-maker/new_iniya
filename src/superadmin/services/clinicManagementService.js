@@ -70,3 +70,4 @@ export const clinicManagementService = {
 };
 
 export default clinicManagementService;
+
