@@ -32,9 +32,11 @@ import {
   Layers,
   ZoomIn,
   TrendingUp,
+  Building2,
 } from 'lucide-react';
 import appointmentReportService from '../../../services/appointmentReportService';
 import { useToast } from '../../../context/ToastContext';
+import { useAdminAuth } from '../../../features/auth/AdminAuthContext';
 import { getImageUrl } from '../../../utils/imageUrl';
 
 export default function AppointmentReportsPage({
@@ -44,6 +46,7 @@ export default function AppointmentReportsPage({
   const location = useLocation();
   const navigate = useNavigate();
   const toast = useToast();
+  const { user } = useAdminAuth();
 
   const isSuperAdmin = role === 'superadmin';
   const basePath = isSuperAdmin ? '/superadmin/reports' : '/admin/reports';
@@ -427,6 +430,12 @@ export default function AppointmentReportsPage({
               {isSuperAdmin ? 'Superadmin Executive Intelligence' : 'Clinical Desk Intelligence'}
             </span>
             <span className="text-xs text-slate-400 font-mono">• Clinical &amp; Treatment Auditing</span>
+            {!isSuperAdmin && user?.clinic && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 text-xs font-bold rounded-full bg-teal-50 text-teal-700 border border-teal-200">
+                <Building2 className="w-3.5 h-3.5 text-teal-600" />
+                <span>{user.clinic.name} ({user.clinic.clinic_code})</span>
+              </span>
+            )}
           </div>
 
           <h1 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight flex items-center gap-2.5">

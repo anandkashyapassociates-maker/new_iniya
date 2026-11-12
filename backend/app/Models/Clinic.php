@@ -165,5 +165,13 @@ class Clinic extends Model
     {
         return $this->hasMany(SalesMember::class, 'clinic_id');
     }
+
+    /**
+     * Master appointments booked at this clinic branch.
+     */
+    public function masterAppointments(): HasMany
+    {
+        return $this->hasMany(MasterAppointment::class, 'clinic_id');
+    }
 }
 

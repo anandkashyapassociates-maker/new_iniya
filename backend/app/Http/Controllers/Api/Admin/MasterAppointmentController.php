@@ -27,6 +27,7 @@ class MasterAppointmentController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = MasterAppointment::with([
+            'clinic:id,clinic_code,name,branch_name,location,city',
             'customer:id,name,mobile,email,gender',
             'salesTeam:id,sales_code,name,email,mobile,department',
             'admin:id,name,email',
@@ -40,6 +41,16 @@ class MasterAppointmentController extends Controller
                 ])->orderBy('session_number');
             },
         ]);
+
+        // Enforce clinic scoping strictly for logged-in admin
+        $user = $request->user();
+        if ($user && ! empty($user->clinic_id)) {
+            $query->where('clinic_id', $user->clinic_id);
+        } elseif ($clinicId = $request->input('clinic_id')) {
+            if ($clinicId !== '' && $clinicId !== 'all') {
+                $query->where('clinic_id', $clinicId);
+            }
+        }
 
         // Search by appointment number, customer name/mobile, or sales member name/code
         if ($search = trim((string) $request->input('search'))) {
@@ -134,6 +145,7 @@ class MasterAppointmentController extends Controller
     {
         $admin = $request->user();
         $adminId = $admin?->id;
+        $clinicId = $admin?->clinic_id;
         $isStaffUser = ($admin instanceof Staff)
             || (isset($admin->role) && in_array(strtolower($admin->role), ['staff', 'staff practitioner']))
             || (isset($admin->user_type) && strtolower($admin->user_type) === 'staff')
@@ -141,10 +153,20 @@ class MasterAppointmentController extends Controller
             || ($request->user() && $request->user()->tokenCan('role:staff'));
 
         $todayStr = Carbon::today()->toDateString();
-        $totalMasterAppointments = $isStaffUser ? 0 : MasterAppointment::count();
-        $todayMasterAppointments = $isStaffUser ? 0 : MasterAppointment::whereDate('appointment_date', $todayStr)->count();
+        $masterQuery = MasterAppointment::query();
+        if ($clinicId) {
+            $masterQuery->where('clinic_id', $clinicId);
+        }
 
-        $sessionsQuery = AppointmentSession::whereHas('masterAppointment');
+        $totalMasterAppointments = $isStaffUser ? 0 : (clone $masterQuery)->count();
+        $todayMasterAppointments = $isStaffUser ? 0 : (clone $masterQuery)->whereDate('appointment_date', $todayStr)->count();
+
+        $sessionsQuery = AppointmentSession::whereHas('masterAppointment', function ($mq) use ($clinicId) {
+            if ($clinicId) {
+                $mq->where('clinic_id', $clinicId);
+            }
+        });
+
         if ($isStaffUser && $adminId) {
             $sessionsQuery->where('staff_id', $adminId);
         }
@@ -169,8 +191,8 @@ class MasterAppointmentController extends Controller
                 ->where('status', AppointmentSession::STATUS_COMPLETED)
                 ->sum('staff_commission');
         } else {
-            $todayRevenue = (float) MasterAppointment::whereDate('appointment_date', $todayStr)->sum('appointment_fees');
-            $totalRevenue = (float) MasterAppointment::sum('appointment_fees');
+            $todayRevenue = (float) (clone $masterQuery)->whereDate('appointment_date', $todayStr)->sum('appointment_fees');
+            $totalRevenue = (float) (clone $masterQuery)->sum('appointment_fees');
         }
 
         return response()->json([
@@ -193,27 +215,44 @@ class MasterAppointmentController extends Controller
 
     /**
      * Provide options for searchable dropdowns (Customers, Sales Members, Staff, Inventory Products).
+     * Scoped clinic-wise for Staff, Sales Members, and Inventory Products; Customers remain global.
      */
-    public function options(): JsonResponse
+    public function options(Request $request): JsonResponse
     {
+        $user = $request->user();
+        $clinicId = $user?->clinic_id;
+
+        // Customers remain global across clinics as explicitly requested
         $customers = Customer::where('is_active', true)
             ->select('id', 'name', 'mobile', 'email', 'gender')
             ->orderBy('name')
             ->get();
 
-        $salesMembers = SalesMember::where('status', SalesMember::STATUS_ACTIVE)
-            ->select('id', 'sales_code', 'name', 'email', 'mobile', 'department', 'designation')
+        $salesQuery = SalesMember::where('status', SalesMember::STATUS_ACTIVE);
+        if ($clinicId) {
+            $salesQuery->where('clinic_id', $clinicId);
+        }
+        $salesMembers = $salesQuery
+            ->select('id', 'clinic_id', 'sales_code', 'name', 'email', 'mobile', 'department', 'designation')
             ->orderBy('name')
             ->get();
 
-        $staff = Staff::where('is_active', true)
-            ->where('status', Staff::STATUS_ACTIVE)
-            ->select('id', 'staff_code', 'name', 'email', 'mobile', 'department', 'designation')
+        $staffQuery = Staff::where('is_active', true)
+            ->where('status', Staff::STATUS_ACTIVE);
+        if ($clinicId) {
+            $staffQuery->where('clinic_id', $clinicId);
+        }
+        $staff = $staffQuery
+            ->select('id', 'clinic_id', 'staff_code', 'name', 'email', 'mobile', 'department', 'designation')
             ->orderBy('name')
             ->get();
 
-        $inventoryProducts = InventoryProduct::where('status', 'active')
-            ->select('id', 'product_name', 'business_unit', 'product_type')
+        $inventoryQuery = InventoryProduct::where('status', 'active');
+        if ($clinicId) {
+            $inventoryQuery->where('clinic_id', $clinicId);
+        }
+        $inventoryProducts = $inventoryQuery
+            ->select('id', 'clinic_id', 'product_name', 'business_unit', 'product_type')
             ->orderBy('product_name')
             ->get();
 
@@ -329,8 +368,10 @@ class MasterAppointmentController extends Controller
 
         $masterAppointment = DB::transaction(function () use ($validated, $request, $imagePath) {
             $appointmentNumber = MasterAppointment::generateUniqueNumber($validated['appointment_date']);
+            $clinicId = $request->user()?->clinic_id ?? 1;
 
             $master = MasterAppointment::create([
+                'clinic_id' => $clinicId,
                 'appointment_number' => $appointmentNumber,
                 'customer_id' => $validated['customer_id'],
                 'appointment_date' => $validated['appointment_date'],
@@ -404,6 +445,7 @@ class MasterAppointmentController extends Controller
     public function show(int $id): JsonResponse
     {
         $master = MasterAppointment::with([
+            'clinic:id,clinic_code,name,branch_name,location,city',
             'customer',
             'salesTeam',
             'admin:id,name,email',
@@ -417,6 +459,13 @@ class MasterAppointmentController extends Controller
                 ])->orderBy('session_number');
             },
         ])->findOrFail($id);
+
+        $user = request()->user();
+        if ($user && ! empty($user->clinic_id) && (int) $master->clinic_id !== (int) $user->clinic_id) {
+            return response()->json([
+                'message' => 'Unauthorized: This master appointment belongs to a different clinic branch.',
+            ], 403);
+        }
 
         if ($master->sessions->isNotEmpty()) {
             $computedFee = $master->sessions->reduce(function ($sum, $s) {
@@ -441,6 +490,13 @@ class MasterAppointmentController extends Controller
     public function update(Request $request, int $id): JsonResponse
     {
         $master = MasterAppointment::findOrFail($id);
+
+        $user = $request->user();
+        if ($user && ! empty($user->clinic_id) && (int) $master->clinic_id !== (int) $user->clinic_id) {
+            return response()->json([
+                'message' => 'Unauthorized: This master appointment belongs to a different clinic branch.',
+            ], 403);
+        }
 
         $validated = $request->validate([
             'customer_id' => ['sometimes', 'required', 'exists:customers,id'],
@@ -500,6 +556,13 @@ class MasterAppointmentController extends Controller
                 'success' => true,
                 'message' => 'Master appointment already removed.',
             ]);
+        }
+
+        $user = request()->user();
+        if ($user && ! empty($user->clinic_id) && (int) $master->clinic_id !== (int) $user->clinic_id) {
+            return response()->json([
+                'message' => 'Unauthorized: This master appointment belongs to a different clinic branch.',
+            ], 403);
         }
 
         DB::transaction(function () use ($master) {

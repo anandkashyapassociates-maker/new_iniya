@@ -81,15 +81,25 @@ class AdminDashboardController extends Controller
 
         $todayStr = Carbon::today()->toDateString();
         $startOfMonth = Carbon::now()->startOfMonth()->toDateString();
+        $clinicId = $admin?->clinic_id;
 
         // 1. Core Counts
         $totalCustomers = $isStaffUser ? 0 : Customer::count();
         $newCustomersThisMonth = $isStaffUser ? 0 : Customer::whereDate('created_at', '>=', $startOfMonth)->count();
 
-        $totalMasterAppointments = $isStaffUser ? 0 : MasterAppointment::count();
-        $todayMasterAppointments = $isStaffUser ? 0 : MasterAppointment::whereDate('appointment_date', $todayStr)->count();
+        $masterQuery = MasterAppointment::query();
+        if ($clinicId) {
+            $masterQuery->where('clinic_id', $clinicId);
+        }
 
-        $sessionsQuery = AppointmentSession::whereHas('masterAppointment');
+        $totalMasterAppointments = $isStaffUser ? 0 : (clone $masterQuery)->count();
+        $todayMasterAppointments = $isStaffUser ? 0 : (clone $masterQuery)->whereDate('appointment_date', $todayStr)->count();
+
+        $sessionsQuery = AppointmentSession::whereHas('masterAppointment', function ($mq) use ($clinicId) {
+            if ($clinicId) {
+                $mq->where('clinic_id', $clinicId);
+            }
+        });
         if ($isStaffUser && $adminId) {
             $sessionsQuery->where('staff_id', $adminId);
         }
@@ -136,22 +146,26 @@ class AdminDashboardController extends Controller
                 ->whereNotNull('payment_amount')
                 ->sum('payment_amount');
         } else {
-            $todayRevenue = (float) MasterAppointment::whereDate('appointment_date', $todayStr)->sum('appointment_fees');
-            $totalRevenue = (float) MasterAppointment::sum('appointment_fees');
+            $todayRevenue = (float) (clone $masterQuery)->whereDate('appointment_date', $todayStr)->sum('appointment_fees');
+            $totalRevenue = (float) (clone $masterQuery)->sum('appointment_fees');
 
-            $totalPatientPaid = (float) AppointmentSession::whereNotNull('payment_amount')->sum('payment_amount');
-            $todayPatientPaid = (float) AppointmentSession::whereDate('payment_date', $todayStr)
+            $totalPatientPaid = (float) (clone $sessionsQuery)->whereNotNull('payment_amount')->sum('payment_amount');
+            $todayPatientPaid = (float) (clone $sessionsQuery)->whereDate('payment_date', $todayStr)
                 ->whereNotNull('payment_amount')
                 ->sum('payment_amount');
 
-            $totalStaffCommission = (float) AppointmentSession::sum('staff_commission');
-            $todayStaffCommission = (float) AppointmentSession::whereDate('session_date', $todayStr)
+            $totalStaffCommission = (float) (clone $sessionsQuery)->sum('staff_commission');
+            $todayStaffCommission = (float) (clone $sessionsQuery)->whereDate('session_date', $todayStr)
                 ->where('status', AppointmentSession::STATUS_COMPLETED)
                 ->sum('staff_commission');
         }
 
-        // Payment Modes Breakdown (Filtered for staff member if logged in as staff)
-        $paymentModesQuery = AppointmentSession::query();
+        // Payment Modes Breakdown (Filtered for staff member if logged in as staff; clinic-wise for admin)
+        $paymentModesQuery = AppointmentSession::whereHas('masterAppointment', function ($mq) use ($clinicId) {
+            if ($clinicId) {
+                $mq->where('clinic_id', $clinicId);
+            }
+        });
         if ($isStaffUser && $adminId) {
             $paymentModesQuery->where('staff_id', $adminId);
         }
@@ -164,7 +178,6 @@ class AdminDashboardController extends Controller
         ];
 
         // 3. Inventory & Medical Supplies Metrics
-        $clinicId = $admin?->clinic_id;
         $lowStockCount = 0;
         $lowStockProducts = collect();
         if (Schema::hasColumn('inventory_products', 'quantity')) {
@@ -236,14 +249,23 @@ class AdminDashboardController extends Controller
                 ->take(4)
                 ->get(['id', 'name', 'price']);
         } else {
-            $topServices = Service::withCount('sessions')
+            $topServices = Service::whereHas('sessions.masterAppointment', function ($mq) use ($clinicId) {
+                if ($clinicId) {
+                    $mq->where('clinic_id', $clinicId);
+                }
+            })
+                ->withCount(['sessions' => function ($sq) use ($clinicId) {
+                    if ($clinicId) {
+                        $sq->whereHas('masterAppointment', fn ($mq) => $mq->where('clinic_id', $clinicId));
+                    }
+                }])
                 ->orderByDesc('sessions_count')
                 ->take(4)
                 ->get(['id', 'name', 'price']);
         }
 
         // 6. Dynamic Real Revenue & Collections Trend Data for Interactive Chart
-        $revenueDataByPeriod = $this->buildRevenueTrends($isStaffUser ? $adminId : null);
+        $revenueDataByPeriod = $this->buildRevenueTrends($isStaffUser ? $adminId : null, $isStaffUser ? null : $clinicId);
 
         // 7. Recent Patient Registrations (Strictly hidden for staff members)
         $recentPatients = collect();
@@ -253,13 +275,18 @@ class AdminDashboardController extends Controller
                 ->get(['id', 'name', 'mobile', 'email', 'gender', 'age', 'created_at']);
         }
 
-        // 8. Upcoming & Today's Clinical Schedule Feed (Filtered for staff member if staff)
+        // 8. Upcoming & Today's Clinical Schedule Feed (Filtered for staff member if staff; clinic-wise for admin)
         $scheduleSessionsQuery = AppointmentSession::with([
             'masterAppointment.customer:id,name,mobile,email,gender,age',
             'staff:id,staff_code,name,department',
             'service:id,name,price',
         ])
-            ->where('status', '!=', AppointmentSession::STATUS_CANCELLED);
+            ->where('status', '!=', AppointmentSession::STATUS_CANCELLED)
+            ->whereHas('masterAppointment', function ($mq) use ($clinicId) {
+                if ($clinicId) {
+                    $mq->where('clinic_id', $clinicId);
+                }
+            });
 
         if ($isStaffUser && $adminId) {
             $scheduleSessionsQuery->where('staff_id', $adminId);
@@ -368,7 +395,7 @@ class AdminDashboardController extends Controller
     /**
      * Compute real dynamic monthly, weekly, and quarterly trends for the interactive chart.
      */
-    protected function buildRevenueTrends(?int $staffId = null): array
+    protected function buildRevenueTrends(?int $staffId = null, ?int $clinicId = null): array
     {
         $now = Carbon::now();
 
@@ -391,8 +418,14 @@ class AdminDashboardController extends Controller
                 $displayVal = $commission > 0 ? $commission : ($collections > 0 ? $collections : 0);
                 $revenue = $commission;
             } else {
-                $revenue = (float) MasterAppointment::whereBetween('appointment_date', [$start, $end])->sum('appointment_fees');
-                $collections = (float) AppointmentSession::whereBetween('session_date', [$start, $end])
+                $masterQ = MasterAppointment::whereBetween('appointment_date', [$start, $end]);
+                $sessionQ = AppointmentSession::whereBetween('session_date', [$start, $end]);
+                if ($clinicId) {
+                    $masterQ->where('clinic_id', $clinicId);
+                    $sessionQ->whereHas('masterAppointment', fn ($mq) => $mq->where('clinic_id', $clinicId));
+                }
+                $revenue = (float) $masterQ->sum('appointment_fees');
+                $collections = (float) $sessionQ
                     ->whereNotNull('payment_amount')
                     ->sum('payment_amount');
                 $displayVal = $revenue > 0 ? $revenue : ($collections > 0 ? $collections : 0);
@@ -424,8 +457,14 @@ class AdminDashboardController extends Controller
                     ->sum('payment_amount');
                 $val = $rev > 0 ? $rev : $col;
             } else {
-                $rev = (float) MasterAppointment::whereBetween('appointment_date', [$wStart, $wEnd])->sum('appointment_fees');
-                $col = (float) AppointmentSession::whereBetween('session_date', [$wStart, $wEnd])
+                $masterQ = MasterAppointment::whereBetween('appointment_date', [$wStart, $wEnd]);
+                $sessionQ = AppointmentSession::whereBetween('session_date', [$wStart, $wEnd]);
+                if ($clinicId) {
+                    $masterQ->where('clinic_id', $clinicId);
+                    $sessionQ->whereHas('masterAppointment', fn ($mq) => $mq->where('clinic_id', $clinicId));
+                }
+                $rev = (float) $masterQ->sum('appointment_fees');
+                $col = (float) $sessionQ
                     ->whereNotNull('payment_amount')
                     ->sum('payment_amount');
                 $val = $rev > 0 ? $rev : $col;
@@ -465,8 +504,14 @@ class AdminDashboardController extends Controller
                     ->sum('payment_amount');
                 $qVal = $qRev > 0 ? $qRev : $qCol;
             } else {
-                $qRev = (float) MasterAppointment::whereBetween('appointment_date', [$qStart, $qEnd])->sum('appointment_fees');
-                $qCol = (float) AppointmentSession::whereBetween('session_date', [$qStart, $qEnd])
+                $masterQ = MasterAppointment::whereBetween('appointment_date', [$qStart, $qEnd]);
+                $sessionQ = AppointmentSession::whereBetween('session_date', [$qStart, $qEnd]);
+                if ($clinicId) {
+                    $masterQ->where('clinic_id', $clinicId);
+                    $sessionQ->whereHas('masterAppointment', fn ($mq) => $mq->where('clinic_id', $clinicId));
+                }
+                $qRev = (float) $masterQ->sum('appointment_fees');
+                $qCol = (float) $sessionQ
                     ->whereNotNull('payment_amount')
                     ->sum('payment_amount');
                 $qVal = $qRev > 0 ? $qRev : $qCol;

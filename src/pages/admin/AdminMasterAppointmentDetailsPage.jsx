@@ -25,6 +25,7 @@ import {
   Upload,
   X,
   Check,
+  Building2,
 } from 'lucide-react';
 import adminMasterAppointmentService from '../../services/adminMasterAppointmentService';
 import SessionRescheduleModal from '../../components/admin/SessionRescheduleModal';
@@ -365,6 +366,12 @@ export default function AdminMasterAppointmentDetailsPage() {
             <span className="px-3 py-1 text-xs font-bold rounded-full bg-blue-50 text-blue-700 border border-blue-200">
               {sessions.length} {sessions.length === 1 ? 'Session' : 'Sessions'} Total
             </span>
+            {appointment.clinic && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-bold rounded-full bg-teal-50 text-teal-700 border border-teal-200">
+                <Building2 className="w-3.5 h-3.5 text-teal-600" />
+                <span>{appointment.clinic.name} ({appointment.clinic.clinic_code})</span>
+              </span>
+            )}
           </div>
           <p className="text-xs text-slate-500 mt-1">
             Booked on {appointment.appointment_date ? new Date(appointment.appointment_date).toLocaleDateString() : 'N/A'} &bull; Managed by {appointment.admin?.name || 'Admin'}

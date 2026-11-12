@@ -24,6 +24,7 @@ import {
   Upload,
   Image as ImageIcon,
   X,
+  Building2,
 } from 'lucide-react';
 import adminMasterAppointmentService from '../../services/adminMasterAppointmentService';
 import ProductMultiSelectDropdown from '../../components/admin/ProductMultiSelectDropdown';
@@ -528,9 +529,17 @@ export default function AdminMasterAppointmentCreatePage() {
             <Calendar className="w-5 h-5 sm:w-7 sm:h-7 drop-shadow-md" />
           </div>
           <div className="min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight font-display">
-              Book Appointment
-            </h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight font-display">
+                Book Appointment
+              </h1>
+              {user?.clinic && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-teal-50 text-teal-700 border border-teal-200">
+                  <Building2 className="w-3 h-3 text-teal-600" />
+                  <span>{user.clinic.name} ({user.clinic.clinic_code})</span>
+                </span>
+              )}
+            </div>
             <p className="text-xs sm:text-sm text-slate-500 mt-0.5 truncate sm:whitespace-normal">
               Schedule clinical consultation and treatment sessions
             </p>

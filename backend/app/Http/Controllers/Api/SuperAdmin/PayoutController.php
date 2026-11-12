@@ -55,12 +55,17 @@ class PayoutController extends Controller
     /**
      * Active Staff list for selection dropdown.
      */
-    public function staffOptions(): JsonResponse
+    public function staffOptions(?Request $request = null): JsonResponse
     {
-        $staff = Staff::select(['id', 'staff_code', 'name', 'department', 'designation', 'mobile', 'email', 'status', 'is_active'])
-            ->where('status', '!=', Staff::STATUS_BLOCKED)
-            ->orderBy('name', 'asc')
-            ->get();
+        $staffQuery = Staff::select(['id', 'clinic_id', 'staff_code', 'name', 'department', 'designation', 'mobile', 'email', 'status', 'is_active'])
+            ->where('status', '!=', Staff::STATUS_BLOCKED);
+
+        $user = $request?->user();
+        if ($user && ! empty($user->clinic_id)) {
+            $staffQuery->where('clinic_id', $user->clinic_id);
+        }
+
+        $staff = $staffQuery->orderBy('name', 'asc')->get();
 
         // Calculate commissions & payouts for each staff member
         $commissions = AppointmentSession::select('staff_id', DB::raw('SUM(staff_commission) as total_commission'))
@@ -712,10 +717,22 @@ class PayoutController extends Controller
     public function ledger(Request $request): JsonResponse
     {
         $query = Payout::with([
-            'staff:id,staff_code,name,department,designation',
+            'staff:id,clinic_id,staff_code,name,department,designation',
             'vendor:id,vendor_code,vendor_name,company_name',
             'superAdmin:id,name,email',
         ]);
+
+        // Scoping: If request is made by an Admin tied to a clinic, scope staff payouts to that clinic (vendors remain global)
+        $user = $request->user();
+        if ($user && ! empty($user->clinic_id)) {
+            $clinicId = $user->clinic_id;
+            $query->where(function ($q) use ($clinicId) {
+                $q->where('payout_type', Payout::TYPE_VENDOR)
+                    ->orWhereHas('staff', function ($sq) use ($clinicId) {
+                        $sq->where('clinic_id', $clinicId);
+                    });
+            });
+        }
 
         // 1. Filter by Beneficiary Type (All, Staff, Vendor)
         if ($type = $request->input('payout_type')) {

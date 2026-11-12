@@ -18,6 +18,7 @@ import {
   Loader2,
   Users,
   ReceiptIndianRupee,
+  Building2,
 } from 'lucide-react';
 import adminMasterAppointmentService from '../../services/adminMasterAppointmentService';
 import DataTable from '../../components/DataTable';
@@ -195,11 +196,17 @@ export default function AdminMasterAppointmentsPage() {
       render: (row) => (
         <button
           onClick={() => navigate(`/admin/appointments/${row.id}`)}
-          className="text-left group"
+          className="text-left group cursor-pointer"
         >
           <span className="inline-block px-2.5 py-1 text-xs font-bold text-blue-700 bg-blue-50 border border-blue-200/80 rounded-lg group-hover:bg-blue-100 group-hover:border-blue-300 transition-colors">
             {row.appointment_number}
           </span>
+          {row.clinic && (
+            <span className="flex items-center gap-1 mt-1 text-[11px] font-medium text-teal-700">
+              <Building2 className="w-2.5 h-2.5 text-teal-600 shrink-0" />
+              <span className="truncate max-w-[130px]">{row.clinic.name}</span>
+            </span>
+          )}
         </button>
       ),
     },
@@ -341,9 +348,17 @@ export default function AdminMasterAppointmentsPage() {
       {/* Header Card */}
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
         <div>
-          <div className="inline-flex items-center space-x-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded-full mb-2">
-            <Calendar className="w-3.5 h-3.5" />
-            <span>Schedule & Multiple Sessions Management</span>
+          <div className="flex flex-wrap items-center gap-2 mb-2">
+            <div className="inline-flex items-center space-x-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-100 px-2.5 py-0.5 rounded-full">
+              <Calendar className="w-3.5 h-3.5" />
+              <span>Schedule & Multiple Sessions Management</span>
+            </div>
+            {user?.clinic && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-0.5 text-xs font-bold rounded-full bg-teal-50 text-teal-700 border border-teal-200">
+                <Building2 className="w-3 h-3 text-teal-600" />
+                <span>{user.clinic.name} ({user.clinic.clinic_code})</span>
+              </span>
+            )}
           </div>
           <h1 className="text-2xl font-bold text-slate-900">Appointments Directory</h1>
           <p className="text-sm text-slate-500 mt-0.5">

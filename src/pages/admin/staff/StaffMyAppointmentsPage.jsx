@@ -19,6 +19,7 @@ import {
   Image as ImageIcon,
   IndianRupee,
   Activity,
+  Building2,
 } from 'lucide-react';
 import { useAdminAuth } from '../../../features/auth/AdminAuthContext';
 import staffAppointmentService from '../../../services/staffAppointmentService';
@@ -157,13 +158,19 @@ export default function StaffMyAppointmentsPage() {
             <CalendarCheck className="w-6 h-6" />
           </div>
           <div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <h1 className="text-lg sm:text-xl font-bold text-slate-900 tracking-tight">
                 My Appointments
               </h1>
               <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
                 Staff Portal
               </span>
+              {user?.clinic && (
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 text-xs font-semibold rounded-full bg-teal-50 text-teal-700 border border-teal-200">
+                  <Building2 className="w-3 h-3 text-teal-600" />
+                  <span>{user.clinic.name} ({user.clinic.clinic_code})</span>
+                </span>
+              )}
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
               Personal session-wise clinical appointments &amp; schedules assigned to you.
@@ -468,6 +475,12 @@ export default function StaffMyAppointmentsPage() {
                         <span className="font-mono font-semibold text-slate-800 bg-slate-100 group-hover:bg-emerald-50 group-hover:text-emerald-800 transition-colors px-2 py-0.5 rounded-md border border-slate-200">
                           {master.appointment_number || '-'}
                         </span>
+                        {master.clinic && (
+                          <div className="flex items-center gap-1 mt-1 text-[10px] text-teal-700 font-medium">
+                            <Building2 className="w-2.5 h-2.5 text-teal-600 shrink-0" />
+                            <span className="truncate max-w-[120px]">{master.clinic.name}</span>
+                          </div>
+                        )}
                       </td>
 
                       {/* Patient Details */}
