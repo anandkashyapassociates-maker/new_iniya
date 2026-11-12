@@ -18,6 +18,7 @@ class ProductController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = InventoryProduct::with([
+            'clinic:id,clinic_code,name,branch_name,location,city',
             'category:id,name,slug',
             'brand:id,name,slug',
             'creator:id,name,email',
@@ -26,6 +27,13 @@ class ProductController extends Controller
         // Search by product name
         if ($search = $request->input('search')) {
             $query->where('product_name', 'like', "%{$search}%");
+        }
+
+        // Filter by clinic
+        if ($clinicId = $request->input('clinic_id')) {
+            if ($clinicId !== '' && $clinicId !== 'all') {
+                $query->where('clinic_id', $clinicId);
+            }
         }
 
         // Filter by category
@@ -63,6 +71,7 @@ class ProductController extends Controller
     public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
+            'clinic_id' => ['nullable', 'integer', 'exists:clinics,id'],
             'category_id' => ['required', 'exists:inventory_categories,id'],
             'brand_id' => ['nullable', 'exists:inventory_brands,id'],
             'product_name' => ['required', 'string', 'max:255'],
@@ -74,6 +83,7 @@ class ProductController extends Controller
             'status' => ['nullable', 'in:active,inactive'],
             'product_image' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
         ], [
+            'clinic_id.exists' => 'Selected clinic branch is invalid.',
             'category_id.required' => 'Please select a product category.',
             'category_id.exists' => 'Selected category is invalid.',
             'brand_id.exists' => 'Selected brand is invalid.',
@@ -90,7 +100,10 @@ class ProductController extends Controller
                 $imagePath = $request->file('product_image')->store('inventory/products', 'public');
             }
 
+            $clinicId = $validated['clinic_id'] ?? \App\Models\Clinic::orderBy('id')->value('id');
+
             return InventoryProduct::create([
+                'clinic_id' => $clinicId,
                 'category_id' => $validated['category_id'],
                 'brand_id' => $validated['brand_id'] ?? null,
                 'product_image' => $imagePath,
@@ -109,13 +122,13 @@ class ProductController extends Controller
             'admin',
             $admin->id,
             'inventory_product_created',
-            "Admin '{$admin->name}' created product '{$product->product_name}' (ID: {$product->id}).",
+            "Admin '{$admin->name}' created product '{$product->product_name}' (ID: {$product->id}) assigned to Clinic ID {$product->clinic_id}.",
             $request
         );
 
         return response()->json([
             'message' => "Product '{$product->product_name}' created successfully.",
-            'product' => $product->load(['category', 'brand', 'creator']),
+            'product' => $product->load(['category', 'brand', 'creator', 'clinic']),
         ], 201);
     }
 
@@ -124,7 +137,7 @@ class ProductController extends Controller
      */
     public function show(int $id): JsonResponse
     {
-        $product = InventoryProduct::with(['category', 'brand', 'creator'])->findOrFail($id);
+        $product = InventoryProduct::with(['category', 'brand', 'creator', 'clinic'])->findOrFail($id);
 
         return response()->json($product);
     }
@@ -143,6 +156,7 @@ class ProductController extends Controller
         }
 
         $validated = $request->validate([
+            'clinic_id' => ['sometimes', 'nullable', 'integer', 'exists:clinics,id'],
             'category_id' => ['required', 'exists:inventory_categories,id'],
             'brand_id' => ['nullable', 'exists:inventory_brands,id'],
             'product_name' => ['required', 'string', 'max:255'],
@@ -173,8 +187,7 @@ class ProductController extends Controller
                 $imagePath = null;
             }
 
-            // Note: created_by_admin_id remains preserved!
-            $product->update([
+            $dataToUpdate = [
                 'category_id' => $validated['category_id'],
                 'brand_id' => $validated['brand_id'] ?? null,
                 'product_image' => $imagePath,
@@ -185,7 +198,14 @@ class ProductController extends Controller
                 'product_type' => $validated['product_type'],
                 'custom_product_type' => $validated['product_type'] === 'Other' ? ($validated['custom_product_type'] ?? null) : null,
                 'status' => $validated['status'] ?? $product->status,
-            ]);
+            ];
+
+            if (array_key_exists('clinic_id', $validated) && $validated['clinic_id']) {
+                $dataToUpdate['clinic_id'] = $validated['clinic_id'];
+            }
+
+            // Note: created_by_admin_id remains preserved!
+            $product->update($dataToUpdate);
         });
 
         AdminActivityLog::record(
@@ -198,7 +218,7 @@ class ProductController extends Controller
 
         return response()->json([
             'message' => "Product '{$product->product_name}' updated successfully.",
-            'product' => $product->fresh()->load(['category', 'brand', 'creator']),
+            'product' => $product->fresh()->load(['category', 'brand', 'creator', 'clinic']),
         ]);
     }
 

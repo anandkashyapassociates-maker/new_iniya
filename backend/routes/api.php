@@ -224,6 +224,9 @@ Route::prefix('admin')
         Route::get('/calendar/sessions', [AppointmentSessionController::class, 'calendar']);
 
         Route::middleware('auth.admin_only')->group(function () {
+            // Clinic Options for Admin modules
+            Route::get('/clinics/options', [ClinicManagementController::class, 'options']);
+
             // Customer Management
             Route::get('/customers/stats', [CustomerController::class, 'stats']);
             Route::get('/customers', [CustomerController::class, 'index']);
@@ -279,6 +282,7 @@ Route::prefix('admin')
                 Route::delete('/products/{id}', [ProductController::class, 'destroy']);
 
                 // Categories
+                Route::get('/clinics/dropdown', [ClinicManagementController::class, 'options']);
                 Route::get('/categories/dropdown', [InventoryCategoryController::class, 'dropdown']);
                 Route::get('/categories', [InventoryCategoryController::class, 'index']);
                 Route::post('/categories', [InventoryCategoryController::class, 'store']);

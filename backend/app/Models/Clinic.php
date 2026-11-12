@@ -141,5 +141,13 @@ class Clinic extends Model
     {
         return $this->hasMany(Staff::class, 'clinic_id');
     }
+
+    /**
+     * Inventory products registered for this clinic.
+     */
+    public function products(): HasMany
+    {
+        return $this->hasMany(InventoryProduct::class, 'clinic_id');
+    }
 }
 
