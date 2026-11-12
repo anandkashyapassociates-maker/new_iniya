@@ -270,150 +270,153 @@ export default function StaffDetailsPage() {
       </div>
 
       {/* Filter and Search Bar Card */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs">
-        <div className="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3">
-          {/* Left Controls: Search + Clinic Filter + Department Filter */}
-          <div className="flex flex-wrap items-center gap-2.5 flex-1 min-w-0">
-            {/* Search Form */}
-            <form onSubmit={handleSearchSubmit} className="relative flex-1 min-w-[200px] max-w-sm">
-              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-              <input
-                type="text"
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                placeholder="Search code, name, email, mobile..."
-                className="w-full pl-10 pr-20 py-2 text-xs bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all font-medium"
-              />
-              <button
-                type="submit"
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[11px] font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-800 cursor-pointer transition-colors"
-              >
-                Search
-              </button>
-            </form>
+      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 shadow-xs space-y-3.5">
+        {/* ROW 1: Search and Select Dropdowns (Top Row) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 items-center">
+          {/* Search Input Form */}
+          <form onSubmit={handleSearchSubmit} className="relative lg:col-span-6 min-w-0">
+            <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Search code, name, email, mobile..."
+              className="w-full pl-10 pr-20 py-2.5 text-xs bg-slate-50 text-slate-900 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all font-medium shadow-2xs"
+            />
+            <button
+              type="submit"
+              className="absolute right-1.5 top-1/2 -translate-y-1/2 px-3 py-1.5 text-xs font-bold bg-slate-900 text-white rounded-lg hover:bg-slate-800 cursor-pointer transition-colors shadow-2xs"
+            >
+              Search
+            </button>
+          </form>
 
-            {/* Clinic Filter */}
-            <div className="relative min-w-[170px] flex-1 sm:flex-initial">
-              <Building2 className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <select
-                value={clinicFilter}
-                onChange={handleClinicFilterChange}
-                className="w-full pl-8.5 pr-8 py-2 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer font-medium"
-              >
-                <option value="all">All Clinics (Branches)</option>
-                {clinicsList.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({c.clinic_code})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Department Filter */}
-            <div className="relative min-w-[155px] flex-1 sm:flex-initial">
-              <Briefcase className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <select
-                value={departmentFilter}
-                onChange={handleDepartmentFilterChange}
-                className="w-full pl-8.5 pr-8 py-2 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer font-medium"
-              >
-                <option value="all">All Departments</option>
-                {departmentsList.map((d) => (
-                  <option key={d} value={d}>
-                    {d}
-                  </option>
-                ))}
-              </select>
-            </div>
+          {/* Clinic Filter Dropdown */}
+          <div className="relative lg:col-span-3 min-w-0">
+            <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <select
+              value={clinicFilter}
+              onChange={handleClinicFilterChange}
+              className="w-full pl-10 pr-8 py-2.5 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer font-medium shadow-2xs"
+            >
+              <option value="all">All Clinics (Branches)</option>
+              {clinicsList.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.clinic_code})
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Right Status Tabs: fixed width, no overflow scrollbar */}
-          <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-xl shrink-0 self-start xl:self-auto border border-slate-200/60 shadow-2xs">
-            <button
-              type="button"
-              onClick={() => handleStatusFilterChange('all')}
-              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                statusFilter === 'all'
-                  ? 'bg-white text-slate-900 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
+          {/* Department Filter Dropdown */}
+          <div className="relative lg:col-span-3 min-w-0">
+            <Briefcase className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <select
+              value={departmentFilter}
+              onChange={handleDepartmentFilterChange}
+              className="w-full pl-10 pr-8 py-2.5 text-xs bg-slate-50 text-slate-800 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:border-blue-600 transition-all cursor-pointer font-medium shadow-2xs"
             >
-              All
-            </button>
-            <button
-              type="button"
-              onClick={() => handleStatusFilterChange('active')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                statusFilter === 'active' || statusFilter === 'true'
-                  ? 'bg-white text-emerald-700 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-              <span>Active</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleStatusFilterChange('inactive')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                statusFilter === 'inactive' || statusFilter === 'false'
-                  ? 'bg-white text-amber-700 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-              <span>Inactive</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => handleStatusFilterChange('blocked')}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
-                statusFilter === 'blocked'
-                  ? 'bg-white text-rose-700 shadow-xs'
-                  : 'text-slate-500 hover:text-slate-900'
-              }`}
-            >
-              <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
-              <span>Blocked</span>
-            </button>
+              <option value="all">All Departments</option>
+              {departmentsList.map((d) => (
+                <option key={d} value={d}>
+                  {d}
+                </option>
+              ))}
+            </select>
           </div>
         </div>
 
-        {/* Active Filter Badges */}
-        {(activeSearch || clinicFilter !== 'all' || departmentFilter !== 'all' || statusFilter !== 'all') && (
-          <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="font-semibold text-slate-700">Active filters:</span>
+        {/* ROW 2: Status Tabs (Bottom Row) */}
+        <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center gap-2.5">
+            <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0">
+              Status:
+            </span>
+            <div className="inline-flex items-center gap-1 bg-slate-100 p-1 rounded-xl border border-slate-200/60 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => handleStatusFilterChange('all')}
+                className={`px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                  statusFilter === 'all'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                All
+              </button>
+              <button
+                type="button"
+                onClick={() => handleStatusFilterChange('active')}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                  statusFilter === 'active' || statusFilter === 'true'
+                    ? 'bg-white text-emerald-700 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                <span>Active</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleStatusFilterChange('inactive')}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                  statusFilter === 'inactive' || statusFilter === 'false'
+                    ? 'bg-white text-amber-700 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                <span>Inactive</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleStatusFilterChange('blocked')}
+                className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all cursor-pointer whitespace-nowrap ${
+                  statusFilter === 'blocked'
+                    ? 'bg-white text-rose-700 shadow-xs'
+                    : 'text-slate-500 hover:text-slate-900'
+                }`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-rose-500" />
+                <span>Blocked</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Active Filter Badges & Reset Button */}
+          {(activeSearch || clinicFilter !== 'all' || departmentFilter !== 'all' || statusFilter !== 'all') && (
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <span className="font-semibold text-slate-600 text-[11px]">Filtered by:</span>
               {activeSearch && (
-                <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200 text-[11px]">
-                  Keyword: "{activeSearch}"
+                <span className="px-2 py-0.5 rounded-md bg-blue-50 text-blue-700 border border-blue-200 text-[11px] font-medium">
+                  "{activeSearch}"
                 </span>
               )}
               {clinicFilter !== 'all' && (
-                <span className="px-2 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-medium">
-                  Clinic: {clinicsList.find((c) => String(c.id) === String(clinicFilter))?.name || `ID #${clinicFilter}`}
+                <span className="px-2 py-0.5 rounded-md bg-purple-50 text-purple-700 border border-purple-200 text-[11px] font-medium">
+                  Clinic: {clinicsList.find((c) => String(c.id) === String(clinicFilter))?.name || `#${clinicFilter}`}
                 </span>
               )}
               {departmentFilter !== 'all' && (
-                <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px]">
-                  Department: {departmentFilter}
+                <span className="px-2 py-0.5 rounded-md bg-indigo-50 text-indigo-700 border border-indigo-200 text-[11px] font-medium">
+                  {departmentFilter}
                 </span>
               )}
               {statusFilter !== 'all' && (
-                <span className="px-2 py-0.5 rounded bg-slate-100 text-slate-700 border border-slate-200 text-[11px] capitalize">
-                  Status: {statusFilter}
+                <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-700 border border-slate-200 text-[11px] capitalize font-medium">
+                  {statusFilter}
                 </span>
               )}
+              <button
+                type="button"
+                onClick={handleResetFilters}
+                className="text-xs text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer ml-1"
+              >
+                Clear all
+              </button>
             </div>
-            <button
-              type="button"
-              onClick={handleResetFilters}
-              className="text-xs text-blue-600 hover:text-blue-800 font-semibold cursor-pointer underline shrink-0"
-            >
-              Clear all
-            </button>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Main Table Card */}
