@@ -77,15 +77,20 @@ export default function LiveClock({ className = '' }) {
         <button
           type="button"
           onClick={() => setIsCalendarOpen(true)}
-          className="hidden md:inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white hover:bg-blue-50/90 border border-blue-200/80 hover:border-blue-300 text-slate-700 hover:text-blue-700 text-xs font-bold font-display shadow-2xs hover:shadow-xs active:scale-95 transition-all cursor-pointer group/btn"
+          className="hidden md:inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-xl bg-white hover:bg-blue-50/90 border border-blue-200/80 hover:border-blue-300 text-slate-700 hover:text-blue-700 text-xs font-bold font-display shadow-2xs hover:shadow-xs active:scale-95 transition-all cursor-pointer group/btn shrink-0"
           title="Click to view Clinic & Holiday Calendar"
         >
           <Calendar className="w-3.5 h-3.5 text-blue-600 group-hover/btn:scale-110 transition-transform shrink-0" />
           <span className="whitespace-nowrap tracking-tight">{time.dateFormatted}</span>
         </button>
 
-        {/* 2. Smooth Obsidian Digital Display Capsule with AM/PM */}
-        <div className="flex items-center gap-1 sm:gap-1.5 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-lg sm:rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 text-white border border-slate-800 shadow-inner font-display">
+        {/* 2. Smooth Obsidian Digital Display Capsule with AM/PM (Tap to view calendar on mobile) */}
+        <button
+          type="button"
+          onClick={() => setIsCalendarOpen(true)}
+          className="flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 lg:px-4 py-1 sm:py-1.5 rounded-lg sm:rounded-2xl bg-gradient-to-b from-slate-900 to-slate-950 text-white border border-slate-800 shadow-inner font-display cursor-pointer hover:border-cyan-500/60 active:scale-95 transition-all shrink-0 select-none text-left"
+          title="Click to view Clinic & Holiday Calendar"
+        >
           {/* Hours */}
           <span className="tabular-nums text-xs sm:text-base font-bold text-white min-w-[14px] sm:min-w-[20px] text-center drop-shadow-sm tracking-wide">
             {time.hour}
@@ -121,7 +126,7 @@ export default function LiveClock({ className = '' }) {
           <span className="ml-0.5 sm:ml-1 text-[9px] sm:text-[10px] font-black uppercase text-cyan-300 bg-cyan-950/80 border border-cyan-800/80 px-1 sm:px-1.5 py-0.5 rounded tracking-wider">
             {time.dayPeriod}
           </span>
-        </div>
+        </button>
       </div>
 
       {/* Clinic & Holiday Calendar Interactive Modal */}

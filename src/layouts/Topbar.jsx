@@ -26,93 +26,99 @@ export default function Topbar({
   }, []);
 
   return (
-    <header className="h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 flex items-center justify-between px-3 sm:px-6 relative transform-gpu">
-      {/* Left side: Mobile Toggle & Clinic Context Pill */}
-      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 z-10">
-        <button
-          onClick={onOpenMobileSidebar}
-          className="lg:hidden p-1.5 sm:p-2 -ml-1 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
-        >
-          <Menu className="w-5 h-5" />
-        </button>
+    <header className="h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 px-2.5 sm:px-5 lg:px-6">
+      <div className="flex items-center justify-between gap-1.5 sm:gap-3 md:gap-4 h-full w-full">
+        {/* Left zone: Mobile Sidebar Toggle, Status Pill, Clinic Branch Pill */}
+        <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 shrink">
+          <button
+            type="button"
+            onClick={onOpenMobileSidebar}
+            aria-label="Open Navigation Menu"
+            className="lg:hidden p-1.5 sm:p-2 -ml-1 rounded-xl text-slate-600 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer shrink-0"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
 
-        <div className="flex items-center gap-2">
+          {/* Operational Status Pill */}
           <span
-            className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[10px] font-semibold micro-label whitespace-nowrap ${
+            className={`inline-flex items-center gap-1.5 px-2 sm:px-2.5 md:px-3 py-1 rounded-full text-[10px] font-semibold micro-label whitespace-nowrap shrink-0 shadow-2xs ${
               isSuperAdmin
                 ? 'bg-purple-50 text-purple-700 border border-purple-200/80'
                 : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
             }`}
           >
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="sm:hidden">{isSuperAdmin ? 'HQ' : 'OPD Live'}</span>
-            <span className="hidden sm:inline">{isSuperAdmin ? 'Clinic Governance HQ' : 'OPD Live • Doctors On Duty'}</span>
+            <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+            <span className="hidden sm:inline xl:hidden">{isSuperAdmin ? 'HQ' : 'OPD Live'}</span>
+            <span className="hidden xl:inline">{isSuperAdmin ? 'Clinic Governance HQ' : 'OPD Live • Doctors On Duty'}</span>
+            <span className="sm:hidden">{isSuperAdmin ? 'HQ' : 'OPD'}</span>
           </span>
 
           {/* Assigned Clinic Branch Pill (Admin / Staff) */}
           {user?.clinic && (
-            <div className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200/80 shadow-2xs">
-              <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-              <span className="font-bold truncate max-w-[150px]">{user.clinic.name}</span>
+            <div className="inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-[11px] font-semibold bg-blue-50 text-blue-900 border border-blue-200/80 shadow-2xs min-w-0">
+              <Building2 className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-blue-600 shrink-0" />
+              <span className="font-bold truncate max-w-[80px] xs:max-w-[110px] sm:max-w-[140px] lg:max-w-[180px] xl:max-w-[220px]">
+                {user.clinic.name}
+              </span>
               {user.clinic.branch_name && (
-                <span className="text-blue-600 font-medium truncate max-w-[110px]">
+                <span className="hidden 2xl:inline text-blue-600 font-medium truncate max-w-[110px]">
                   ({user.clinic.branch_name})
                 </span>
               )}
-              <span className="inline-flex items-center gap-0.5 font-mono text-[10px] bg-white px-1.5 py-0.5 rounded border border-blue-200 text-blue-700 font-bold ml-0.5 shadow-2xs">
-                <Lock className="w-2.5 h-2.5" />
+              <span className="hidden sm:inline-flex items-center gap-0.5 font-mono text-[9px] sm:text-[10px] bg-white px-1 sm:px-1.5 py-0.5 rounded border border-blue-200 text-blue-700 font-bold ml-0.5 shrink-0 shadow-2xs">
+                <Lock className="w-2 sm:w-2.5 h-2 sm:h-2.5" />
                 {user.clinic.clinic_code}
               </span>
             </div>
           )}
         </div>
-      </div>
 
-      {/* Center: Live Clock & Clean Calendar */}
-      <div className="absolute left-1/2 -translate-x-1/2 z-10 pointer-events-auto">
-        <LiveClock />
-      </div>
+        {/* Center zone: Live Clock & Clean Calendar */}
+        <div className="flex items-center justify-center shrink-0">
+          <LiveClock />
+        </div>
 
-      {/* Right side: Profile dropdown */}
-      <div className="flex items-center gap-2.5 sm:gap-4 shrink-0 z-10">
-        {/* Profile Dropdown */}
-        <div className="relative" ref={dropdownRef}>
-          <button
-            onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2.5 p-1.5 rounded-2xl hover:bg-slate-100 transition-colors focus:outline-none cursor-pointer"
-          >
-            <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white shadow-xs font-display overflow-hidden ${
-                isSuperAdmin
-                  ? 'bg-gradient-to-tr from-purple-600 to-indigo-600'
-                  : user?.role === 'staff'
-                  ? 'bg-gradient-to-tr from-teal-500 to-emerald-600'
-                  : 'bg-gradient-to-tr from-blue-600 to-cyan-500'
-              }`}
+        {/* Right zone: Profile dropdown */}
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          {/* Profile Dropdown */}
+          <div className="relative" ref={dropdownRef}>
+            <button
+              type="button"
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-1.5 sm:gap-2.5 p-1 sm:p-1.5 rounded-2xl hover:bg-slate-100 transition-colors focus:outline-none cursor-pointer"
             >
-              {user?.image_url || user?.image ? (
-                <img src={getImageUrl(user.image_url || user.image)} alt={user.name || 'User'} className="w-full h-full object-cover" />
-              ) : (
-                user?.name ? user.name.charAt(0).toUpperCase() : 'U'
-              )}
-            </div>
-            <div className="hidden sm:block text-left">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold text-slate-800 block leading-tight font-display tracking-tight">
-                  {user?.name || (isSuperAdmin ? 'Super Administrator' : 'Administrator')}
-                </span>
-                {user?.role === 'staff' && (
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
-                    Staff
-                  </span>
+              <div
+                className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white shadow-xs font-display overflow-hidden shrink-0 ${
+                  isSuperAdmin
+                    ? 'bg-gradient-to-tr from-purple-600 to-indigo-600'
+                    : user?.role === 'staff'
+                    ? 'bg-gradient-to-tr from-teal-500 to-emerald-600'
+                    : 'bg-gradient-to-tr from-blue-600 to-cyan-500'
+                }`}
+              >
+                {user?.image_url || user?.image ? (
+                  <img src={getImageUrl(user.image_url || user.image)} alt={user.name || 'User'} className="w-full h-full object-cover" />
+                ) : (
+                  user?.name ? user.name.charAt(0).toUpperCase() : 'U'
                 )}
               </div>
-              <span className="text-[10px] text-slate-500 block font-mono">
-                {user?.email || (isSuperAdmin ? 'superadmin@example.com' : 'admin@example.com')}
-              </span>
-            </div>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
-          </button>
+              <div className="hidden md:block text-left">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-xs font-semibold text-slate-800 block leading-tight font-display tracking-tight max-w-[120px] truncate">
+                    {user?.name || (isSuperAdmin ? 'Super Administrator' : 'Administrator')}
+                  </span>
+                  {user?.role === 'staff' && (
+                    <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-teal-50 text-teal-700 border border-teal-200 shrink-0">
+                      Staff
+                    </span>
+                  )}
+                </div>
+                <span className="text-[10px] text-slate-500 block font-mono max-w-[120px] truncate">
+                  {user?.email || (isSuperAdmin ? 'superadmin@example.com' : 'admin@example.com')}
+                </span>
+              </div>
+              <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            </button>
 
           {dropdownOpen && (
             <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-slate-100 py-1.5 z-50 animate-in fade-in duration-150">
@@ -184,6 +190,7 @@ export default function Topbar({
           )}
         </div>
       </div>
-    </header>
+    </div>
+  </header>
   );
 }
