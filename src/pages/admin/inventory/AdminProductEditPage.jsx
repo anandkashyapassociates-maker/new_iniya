@@ -60,6 +60,7 @@ export default function AdminProductEditPage() {
   const [imagePreview, setImagePreview] = useState(null);
   const [removeImage, setRemoveImage] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isCloudAnimating, setIsCloudAnimating] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -165,6 +166,16 @@ export default function AdminProductEditPage() {
     if (errors.product_image) {
       setErrors((prev) => ({ ...prev, product_image: null }));
     }
+  };
+
+  const handleCloudClick = () => {
+    setIsCloudAnimating(true);
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+    setTimeout(() => {
+      setIsCloudAnimating(false);
+    }, 700);
   };
 
   const handleDragOver = (e) => {
@@ -587,22 +598,41 @@ export default function AdminProductEditPage() {
                     </label>
                   </div>
                 ) : (
-                  <div className="space-y-2.5">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-blue-50 to-indigo-50 border border-blue-200/70 text-blue-600 flex items-center justify-center mx-auto shadow-2xs icon-3d">
-                      <UploadCloud className="w-7 h-7 drop-shadow-sm" />
-                    </div>
+                  <div className="space-y-3">
+                    <button
+                      type="button"
+                      onClick={handleCloudClick}
+                      title="Click to upload product specimen photo"
+                      className={`w-16 h-16 rounded-2xl bg-gradient-to-tr from-blue-50 via-indigo-50 to-cyan-50 border-2 border-blue-200/90 text-blue-600 flex items-center justify-center mx-auto shadow-sm hover:shadow-md hover:border-blue-400 hover:bg-blue-100/60 active:scale-95 transition-all duration-300 cursor-pointer group/cloud focus:outline-none focus:ring-4 focus:ring-blue-500/20 ${
+                        isCloudAnimating
+                          ? 'scale-90 -translate-y-1.5 ring-4 ring-blue-500/40 bg-blue-100 shadow-lg shadow-blue-500/30'
+                          : 'hover:scale-105 hover:-translate-y-0.5'
+                      }`}
+                    >
+                      <UploadCloud
+                        className={`w-8 h-8 drop-shadow-sm transition-all duration-300 ${
+                          isCloudAnimating
+                            ? 'animate-bounce text-blue-700 scale-110'
+                            : 'group-hover/cloud:scale-110 group-hover/cloud:-translate-y-0.5 group-hover/cloud:text-blue-700'
+                        }`}
+                      />
+                    </button>
                     <div className="text-xs font-semibold text-slate-700">
                       Drag &amp; drop product photo here, or{' '}
-                      <label className="text-blue-600 hover:underline cursor-pointer font-bold">
+                      <button
+                        type="button"
+                        onClick={handleCloudClick}
+                        className="text-blue-600 hover:text-blue-700 hover:underline cursor-pointer font-bold focus:outline-none"
+                      >
                         browse files
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept="image/jpeg,image/png,image/jpg,image/webp"
-                          onChange={(e) => handleImageFile(e.target.files?.[0])}
-                          className="hidden"
-                        />
-                      </label>
+                      </button>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/jpg,image/webp"
+                        onChange={(e) => handleImageFile(e.target.files?.[0])}
+                        className="hidden"
+                      />
                     </div>
                     <p className="text-[11px] text-slate-400 font-normal">
                       Supports JPG, JPEG, PNG, WEBP. Maximum file size: 5MB.
