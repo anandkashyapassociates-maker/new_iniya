@@ -25,9 +25,11 @@ import {
 } from 'lucide-react';
 import { adminPayoutsReportService } from '../../../services/adminPayoutsReportService';
 import { useToast } from '../../../context/ToastContext';
+import { useAdminAuth } from '../../../features/auth/AdminAuthContext';
 
 export default function AdminPayoutsReportsPage() {
   const toast = useToast();
+  const { user } = useAdminAuth();
 
   // Data states
   const [ledger, setLedger] = useState([]);
@@ -257,7 +259,15 @@ export default function AdminPayoutsReportsPage() {
             <Wallet className="w-5 h-5 drop-shadow-sm" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Payouts Reports</h1>
+            <div className="flex flex-wrap items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Payouts Reports</h1>
+              {user?.clinic && (
+                <span className="inline-flex items-center gap-1.5 px-3 py-0.5 text-xs font-semibold rounded-full bg-teal-50 text-teal-700 border border-teal-200">
+                  <Building2 className="w-3.5 h-3.5 text-teal-600" />
+                  <span>{user.clinic.name} ({user.clinic.clinic_code})</span>
+                </span>
+              )}
+            </div>
             <p className="text-xs sm:text-sm text-slate-500">
               Audit statement tracking Total Payouts, Paid Disbursements, and Remaining Balances across staff and vendors.
             </p>

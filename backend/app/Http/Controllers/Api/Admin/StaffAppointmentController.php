@@ -33,6 +33,7 @@ class StaffAppointmentController extends Controller
         $query = AppointmentSession::where('staff_id', $staffId)->with([
             'masterAppointment' => function ($q) {
                 $q->with([
+                    'clinic:id,clinic_code,name,branch_name,location,city',
                     'customer:id,name,email,mobile,gender,age,address,image',
                     'salesTeam:id,sales_code,name',
                     'admin:id,name,email',
@@ -141,6 +142,7 @@ class StaffAppointmentController extends Controller
             ->with([
                 'masterAppointment' => function ($q) {
                     $q->with([
+                        'clinic:id,clinic_code,name,branch_name,location,city',
                         'customer:id,name,email,mobile,gender,age,address,image',
                         'salesTeam:id,sales_code,name,department,mobile',
                         'admin:id,name,email',

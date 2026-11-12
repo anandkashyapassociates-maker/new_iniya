@@ -517,12 +517,19 @@ class AppointmentController extends Controller
     /**
      * Provide active staff members for dropdown select in appointment forms.
      */
-    public function staffOptions(): JsonResponse
+    public function staffOptions(?Request $request = null): JsonResponse
     {
-        $staff = Staff::where('status', 'active')
-            ->where('is_active', true)
+        $staffQuery = Staff::where('status', 'active')
+            ->where('is_active', true);
+
+        $user = $request?->user();
+        if ($user && ! empty($user->clinic_id)) {
+            $staffQuery->where('clinic_id', $user->clinic_id);
+        }
+
+        $staff = $staffQuery
             ->orderBy('name')
-            ->get(['id', 'staff_code', 'name', 'department', 'designation', 'mobile']);
+            ->get(['id', 'clinic_id', 'staff_code', 'name', 'department', 'designation', 'mobile']);
 
         return response()->json($staff);
     }

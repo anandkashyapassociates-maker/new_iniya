@@ -25,6 +25,8 @@ import {
   FileText,
   Wallet,
   Clock,
+  Building2,
+  Lock,
 } from 'lucide-react';
 
 import { getImageUrl } from '../utils/imageUrl';
@@ -478,6 +480,27 @@ export default function Sidebar({
 
         {/* Bottom Section: User Info & Sign Out */}
         <div className="p-4 border-t border-slate-800/80 bg-slate-950/40 space-y-3 shrink-0">
+          {/* Assigned Clinic Badge (Admin & Staff) */}
+          {user?.clinic && (
+            <div className="p-2.5 rounded-xl bg-slate-900/90 border border-slate-700/70 text-slate-300 shadow-2xs">
+              <div className="flex items-center justify-between gap-1">
+                <div className="flex items-center gap-1.5 text-[11px] font-bold text-white min-w-0">
+                  <Building2 className="w-3.5 h-3.5 text-blue-400 shrink-0" />
+                  <span className="truncate">{user.clinic.name}</span>
+                </div>
+                <span className="inline-flex items-center gap-0.5 font-mono text-[9px] bg-blue-500/20 text-cyan-300 px-1.5 py-0.5 rounded border border-blue-400/30 shrink-0 font-bold">
+                  <Lock className="w-2 h-2" />
+                  {user.clinic.clinic_code}
+                </span>
+              </div>
+              {(user.clinic.branch_name || user.clinic.location) && (
+                <p className="text-[10px] text-slate-400 mt-0.5 truncate pl-5">
+                  {user.clinic.branch_name || user.clinic.location}
+                </p>
+              )}
+            </div>
+          )}
+
           <div className="flex items-center gap-3 px-1 pt-1">
             <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-600 to-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-xs shrink-0 font-display overflow-hidden">
               {user?.image_url || user?.image ? (

@@ -25,6 +25,7 @@ import {
   CreditCard,
   Receipt,
   Wallet,
+  Building2,
 } from 'lucide-react';
 import { useAdminAuth } from '../../../features/auth/AdminAuthContext';
 import staffAppointmentService from '../../../services/staffAppointmentService';
@@ -369,6 +370,15 @@ export default function StaffAppointmentDetailsPage() {
           </div>
 
           <div className="space-y-2 text-xs">
+            {master.clinic && (
+              <p className="flex items-center justify-between pb-1.5 border-b border-slate-100">
+                <span className="text-slate-500">Clinic Branch:</span>
+                <span className="text-teal-800 font-semibold flex items-center gap-1">
+                  <Building2 className="w-3.5 h-3.5 text-teal-600" />
+                  {master.clinic.name} ({master.clinic.clinic_code})
+                </span>
+              </p>
+            )}
             <p className="flex items-center justify-between">
               <span className="text-slate-500 flex items-center gap-1.5">
                 <Calendar className="w-3.5 h-3.5 text-slate-400" /> Date:
@@ -429,6 +439,15 @@ export default function StaffAppointmentDetailsPage() {
           </div>
 
           <div className="space-y-2 text-xs">
+            {master.clinic && (
+              <p className="flex items-center justify-between pb-1.5 border-b border-slate-100">
+                <span className="text-slate-500">Clinic Branch:</span>
+                <span className="text-teal-800 font-semibold flex items-center gap-1">
+                  <Building2 className="w-3.5 h-3.5 text-teal-600" />
+                  {master.clinic.name} ({master.clinic.clinic_code})
+                </span>
+              </p>
+            )}
             <p className="flex items-center justify-between">
               <span className="text-slate-500">Booking Date:</span>
               <strong className="text-slate-900 font-mono">{master.appointment_date || '-'}</strong>

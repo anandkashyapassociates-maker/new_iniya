@@ -364,6 +364,8 @@ class AdminManagementController extends Controller
             $request
         );
 
+        $admin->loadMissing('clinic');
+
         return response()->json([
             'message' => "Successfully authenticated as Admin '{$admin->name}'.",
             'token' => $token,
@@ -372,10 +374,27 @@ class AdminManagementController extends Controller
                 'name' => $admin->name,
                 'email' => $admin->email,
                 'mobile' => $admin->mobile,
+                'clinic_id' => $admin->clinic_id,
+                'clinic' => $admin->clinic ? [
+                    'id' => $admin->clinic->id,
+                    'clinic_code' => $admin->clinic->clinic_code,
+                    'name' => $admin->clinic->name,
+                    'branch_name' => $admin->clinic->branch_name,
+                    'location' => $admin->clinic->location,
+                    'address' => $admin->clinic->address,
+                    'city' => $admin->clinic->city,
+                    'state' => $admin->clinic->state,
+                    'postal_code' => $admin->clinic->postal_code,
+                    'phone' => $admin->clinic->phone,
+                    'email' => $admin->clinic->email,
+                    'status' => $admin->clinic->status,
+                ] : null,
                 'status' => $admin->status,
                 'is_active' => $admin->is_active,
                 'last_login_at' => $admin->last_login_at,
                 'created_at' => $admin->created_at,
+                'role' => 'admin',
+                'user_type' => 'admin',
             ],
             'impersonated_by' => [
                 'superadmin_id' => $superAdmin->id,

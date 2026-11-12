@@ -27,6 +27,7 @@ class SalesMember extends Model
      */
     protected $fillable = [
         'sales_code',
+        'clinic_id',
         'name',
         'email',
         'mobile',
@@ -162,6 +163,14 @@ class SalesMember extends Model
     public function superAdmin(): BelongsTo
     {
         return $this->belongsTo(SuperAdmin::class, 'created_by_superadmin_id');
+    }
+
+    /**
+     * Clinic branch assigned to this sales team member.
+     */
+    public function clinic(): BelongsTo
+    {
+        return $this->belongsTo(Clinic::class, 'clinic_id');
     }
 
     /**

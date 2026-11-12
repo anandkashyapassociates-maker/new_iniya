@@ -401,24 +401,35 @@ export default function AdminProductsPage() {
 
             {/* Clinic Branch Filter */}
             <div className="lg:col-span-3">
-              <div className="relative">
-                <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <select
-                  value={selectedClinic}
-                  onChange={(e) => {
-                    setSelectedClinic(e.target.value);
-                    setPage(1);
-                  }}
-                  className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-slate-50/80 hover:bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 text-slate-700 font-medium transition-all"
-                >
-                  <option value="">All Clinics (Branches)</option>
-                  {clinics.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} {c.branch_name ? `(${c.branch_name})` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {user?.clinic_id ? (
+                <div className="flex items-center gap-2 px-3.5 py-2.5 bg-indigo-50/70 border border-indigo-200/90 rounded-2xl text-xs font-semibold text-indigo-900 shadow-xs">
+                  <Building2 className="w-4 h-4 text-indigo-600 shrink-0" />
+                  <span className="truncate">{user.clinic?.name || 'Assigned Clinic'}</span>
+                  <span className="ml-auto inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 border border-indigo-200 shrink-0">
+                    <Lock className="w-2.5 h-2.5" />
+                    {user.clinic?.clinic_code || `CLN-${String(user.clinic_id).padStart(4, '0')}`}
+                  </span>
+                </div>
+              ) : (
+                <div className="relative">
+                  <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                  <select
+                    value={selectedClinic}
+                    onChange={(e) => {
+                      setSelectedClinic(e.target.value);
+                      setPage(1);
+                    }}
+                    className="w-full pl-10 pr-3.5 py-2.5 text-xs bg-slate-50/80 hover:bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:border-indigo-600 focus:ring-2 focus:ring-indigo-500/20 text-slate-700 font-medium transition-all"
+                  >
+                    <option value="">All Clinics (Branches)</option>
+                    {clinics.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} {c.branch_name ? `(${c.branch_name})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
             </div>
 
             {/* Category Filter */}

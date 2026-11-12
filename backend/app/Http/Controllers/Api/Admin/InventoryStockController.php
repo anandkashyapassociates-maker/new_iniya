@@ -53,7 +53,10 @@ class InventoryStockController extends Controller
             $query->where('vendor_id', $vendorId);
         }
 
-        if ($clinicId = $request->input('clinic_id')) {
+        $user = $request->user();
+        if ($user && ! empty($user->clinic_id)) {
+            $query->where('clinic_id', $user->clinic_id);
+        } elseif ($clinicId = $request->input('clinic_id')) {
             if ($clinicId !== '' && $clinicId !== 'all') {
                 $query->where('clinic_id', $clinicId);
             }
@@ -80,13 +83,22 @@ class InventoryStockController extends Controller
         $perPage = min((int) $request->input('per_page', 10), 100);
         $products = $query->orderBy('quantity', 'asc')->orderBy('id', 'desc')->paginate($perPage);
 
-        // Overall stock metrics for fast dashboard oversight
-        $totalProducts = InventoryProduct::count();
-        $outOfStockCount = InventoryProduct::where('quantity', '<=', 0)->count();
-        $lowStockCount = InventoryProduct::whereColumn('quantity', '<=', 'low_stock_threshold')
+        // Overall stock metrics for fast dashboard oversight (scoped by clinic)
+        $metricsQuery = InventoryProduct::query();
+        if ($user && ! empty($user->clinic_id)) {
+            $metricsQuery->where('clinic_id', $user->clinic_id);
+        } elseif ($clinicId = $request->input('clinic_id')) {
+            if ($clinicId !== '' && $clinicId !== 'all') {
+                $metricsQuery->where('clinic_id', $clinicId);
+            }
+        }
+
+        $totalProducts = (clone $metricsQuery)->count();
+        $outOfStockCount = (clone $metricsQuery)->where('quantity', '<=', 0)->count();
+        $lowStockCount = (clone $metricsQuery)->whereColumn('quantity', '<=', 'low_stock_threshold')
             ->where('quantity', '>', 0)
             ->count();
-        $inStockCount = InventoryProduct::whereColumn('quantity', '>', 'low_stock_threshold')->count();
+        $inStockCount = (clone $metricsQuery)->whereColumn('quantity', '>', 'low_stock_threshold')->count();
         $totalAlerts = $outOfStockCount + $lowStockCount;
 
         return response()->json([
@@ -181,6 +193,12 @@ class InventoryStockController extends Controller
         ]);
 
         $admin = $request->user();
+        if ($admin && ! empty($admin->clinic_id) && ! empty($product->clinic_id) && (int) $product->clinic_id !== (int) $admin->clinic_id) {
+            return response()->json([
+                'message' => 'Unauthorized. This product does not belong to your assigned clinic.',
+            ], 403);
+        }
+
         $quantityAdded = (int) $validated['quantity'];
         $buyPrice = (float) $validated['buy_price'];
         $mrp = (float) $validated['mrp'];
@@ -283,6 +301,12 @@ class InventoryStockController extends Controller
         }
 
         $admin = $request->user();
+        if ($admin && ! empty($admin->clinic_id) && ! empty($product->clinic_id) && (int) $product->clinic_id !== (int) $admin->clinic_id) {
+            return response()->json([
+                'message' => 'Unauthorized. This product does not belong to your assigned clinic.',
+            ], 403);
+        }
+
         $newQty = $currentQty - $quantityToIssue;
 
         $issueDate = ! empty($validated['inventory_date'])
@@ -340,8 +364,15 @@ class InventoryStockController extends Controller
     {
         $product = InventoryProduct::findOrFail($id);
 
+        $admin = $request->user();
+        if ($admin && ! empty($admin->clinic_id) && ! empty($product->clinic_id) && (int) $product->clinic_id !== (int) $admin->clinic_id) {
+            return response()->json([
+                'message' => 'Unauthorized. This product does not belong to your assigned clinic.',
+            ], 403);
+        }
+
         // Ownership enforcement
-        if ($product->inventory_updated_by && (int) $product->inventory_updated_by !== (int) $request->user()->id) {
+        if ($product->inventory_updated_by && (int) $product->inventory_updated_by !== (int) $admin->id) {
             return response()->json([
                 'message' => 'Unauthorized. Only the admin who added this inventory can edit it.',
             ], 403);
@@ -438,7 +469,7 @@ class InventoryStockController extends Controller
     /**
      * Get stock audit logs for a product.
      */
-    public function logs(int $id): JsonResponse
+    public function logs(Request $request, int $id): JsonResponse
     {
         $product = InventoryProduct::with([
             'clinic:id,clinic_code,name,branch_name,location,city',
@@ -449,6 +480,13 @@ class InventoryStockController extends Controller
             'inventoryUpdater:id,name,email',
             'issueIssuer:id,name,email',
         ])->findOrFail($id);
+
+        $admin = $request->user();
+        if ($admin && ! empty($admin->clinic_id) && ! empty($product->clinic_id) && (int) $product->clinic_id !== (int) $admin->clinic_id) {
+            return response()->json([
+                'message' => 'Unauthorized. This product does not belong to your assigned clinic.',
+            ], 403);
+        }
 
         $logs = InventoryStockLog::with([
             'vendor:id,vendor_name,company_name',
@@ -469,13 +507,23 @@ class InventoryStockController extends Controller
      */
     public function stats(Request $request): JsonResponse
     {
-        $outOfStockCount = InventoryProduct::where('quantity', '<=', 0)->count();
-        $lowStockCount = InventoryProduct::whereColumn('quantity', '<=', 'low_stock_threshold')
+        $query = InventoryProduct::query();
+        $user = $request->user();
+        if ($user && ! empty($user->clinic_id)) {
+            $query->where('clinic_id', $user->clinic_id);
+        } elseif ($clinicId = $request->input('clinic_id')) {
+            if ($clinicId !== '' && $clinicId !== 'all') {
+                $query->where('clinic_id', $clinicId);
+            }
+        }
+
+        $outOfStockCount = (clone $query)->where('quantity', '<=', 0)->count();
+        $lowStockCount = (clone $query)->whereColumn('quantity', '<=', 'low_stock_threshold')
             ->where('quantity', '>', 0)
             ->count();
 
         return response()->json([
-            'total_products' => InventoryProduct::count(),
+            'total_products' => (clone $query)->count(),
             'out_of_stock_count' => $outOfStockCount,
             'low_stock_count' => $lowStockCount,
             'total_low_stock_alerts' => $outOfStockCount + $lowStockCount,
@@ -502,7 +550,10 @@ class InventoryStockController extends Controller
                 'issueIssuer:id,name,email',
             ]);
 
-            if ($clinicId = $request->input('clinic_id')) {
+            $user = $request->user();
+            if ($user && ! empty($user->clinic_id)) {
+                $query->where('clinic_id', $user->clinic_id);
+            } elseif ($clinicId = $request->input('clinic_id')) {
                 if ($clinicId !== '' && $clinicId !== 'all') {
                     $query->where('clinic_id', $clinicId);
                 }
@@ -607,9 +658,12 @@ class InventoryStockController extends Controller
             $query->where('vendor_id', $vendorId);
         }
 
-        if ($clinicId = $request->input('clinic_id')) {
+        $user = $request->user();
+        if ($user && ! empty($user->clinic_id)) {
+            $query->whereHas('product', fn ($pq) => $pq->where('clinic_id', $user->clinic_id));
+        } elseif ($clinicId = $request->input('clinic_id')) {
             if ($clinicId !== '' && $clinicId !== 'all') {
-                $query->where('clinic_id', $clinicId);
+                $query->whereHas('product', fn ($pq) => $pq->where('clinic_id', $clinicId));
             }
         }
 

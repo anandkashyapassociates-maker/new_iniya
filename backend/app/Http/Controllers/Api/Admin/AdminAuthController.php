@@ -75,6 +75,23 @@ class AdminAuthController extends Controller
                 ], 403);
             }
 
+            // Auto-link default clinic if clinic_id is missing for any legacy record
+            if (empty($admin->clinic_id)) {
+                $defaultClinicId = \App\Models\Clinic::orderBy('id', 'asc')->value('id');
+                if ($defaultClinicId) {
+                    $admin->update(['clinic_id' => $defaultClinicId]);
+                }
+            }
+
+            $admin->loadMissing('clinic');
+
+            // Verify clinic operational status
+            if ($admin->clinic && $admin->clinic->status === 'inactive') {
+                return response()->json([
+                    'message' => "Your assigned clinic branch '{$admin->clinic->name}' is currently inactive. Please contact the Super Administrator.",
+                ], 403);
+            }
+
             $admin->update([
                 'last_login_at' => Carbon::now(),
             ]);
@@ -85,27 +102,14 @@ class AdminAuthController extends Controller
                 'admin',
                 $admin->id,
                 'admin_login',
-                "Admin '{$admin->name}' logged in successfully.",
+                "Admin '{$admin->name}' logged into clinic '{$admin->clinic?->name}' ({$admin->clinic?->clinic_code}) successfully.",
                 $request
             );
 
             return response()->json([
                 'message' => 'Login successful',
                 'token' => $token,
-                'user' => [
-                    'id' => $admin->id,
-                    'name' => $admin->name,
-                    'email' => $admin->email,
-                    'mobile' => $admin->mobile,
-                    'image' => $admin->image,
-                    'image_url' => $admin->image_url,
-                    'status' => $admin->status,
-                    'is_active' => $admin->is_active,
-                    'last_login_at' => $admin->last_login_at,
-                    'created_at' => $admin->created_at,
-                    'role' => 'admin',
-                    'user_type' => 'admin',
-                ],
+                'user' => $this->formatAdminResponse($admin),
             ]);
         }
 
@@ -134,6 +138,23 @@ class AdminAuthController extends Controller
                 ], 403);
             }
 
+            // Auto-link default clinic if clinic_id is missing
+            if (empty($staff->clinic_id)) {
+                $defaultClinicId = \App\Models\Clinic::orderBy('id', 'asc')->value('id');
+                if ($defaultClinicId) {
+                    $staff->update(['clinic_id' => $defaultClinicId]);
+                }
+            }
+
+            $staff->loadMissing('clinic');
+
+            // Verify clinic operational status
+            if ($staff->clinic && $staff->clinic->status === 'inactive') {
+                return response()->json([
+                    'message' => "Your assigned clinic branch '{$staff->clinic->name}' is currently inactive. Please contact the Super Administrator.",
+                ], 403);
+            }
+
             $staff->update([
                 'last_login_at' => Carbon::now(),
             ]);
@@ -144,31 +165,14 @@ class AdminAuthController extends Controller
                 'staff',
                 $staff->id,
                 'staff_login',
-                "Staff '{$staff->name}' ({$staff->staff_code}) logged in successfully.",
+                "Staff '{$staff->name}' ({$staff->staff_code}) logged into clinic '{$staff->clinic?->name}' successfully.",
                 $request
             );
 
             return response()->json([
                 'message' => 'Login successful',
                 'token' => $token,
-                'user' => [
-                    'id' => $staff->id,
-                    'staff_code' => $staff->staff_code,
-                    'name' => $staff->name,
-                    'email' => $staff->email,
-                    'mobile' => $staff->mobile,
-                    'department' => $staff->department,
-                    'designation' => $staff->designation,
-                    'employment_type' => $staff->employment_type,
-                    'image' => $staff->profile_photo,
-                    'image_url' => $staff->image_url,
-                    'status' => $staff->status,
-                    'is_active' => $staff->is_active,
-                    'last_login_at' => $staff->last_login_at,
-                    'created_at' => $staff->created_at,
-                    'role' => 'staff',
-                    'user_type' => 'staff',
-                ],
+                'user' => $this->formatStaffResponse($staff),
             ]);
         }
 
@@ -188,6 +192,21 @@ class AdminAuthController extends Controller
                 ], 403);
             }
 
+            if (empty($admin->clinic_id)) {
+                $defaultClinicId = \App\Models\Clinic::orderBy('id', 'asc')->value('id');
+                if ($defaultClinicId) {
+                    $admin->update(['clinic_id' => $defaultClinicId]);
+                }
+            }
+
+            $admin->loadMissing('clinic');
+
+            if ($admin->clinic && $admin->clinic->status === 'inactive') {
+                return response()->json([
+                    'message' => "Your assigned clinic branch '{$admin->clinic->name}' is currently inactive. Please contact the Super Administrator.",
+                ], 403);
+            }
+
             $admin->update([
                 'last_login_at' => Carbon::now(),
             ]);
@@ -198,27 +217,14 @@ class AdminAuthController extends Controller
                 'admin',
                 $admin->id,
                 'admin_login',
-                "Admin '{$admin->name}' logged in successfully.",
+                "Admin '{$admin->name}' logged into clinic '{$admin->clinic?->name}' ({$admin->clinic?->clinic_code}) successfully.",
                 $request
             );
 
             return response()->json([
                 'message' => 'Login successful',
                 'token' => $token,
-                'user' => [
-                    'id' => $admin->id,
-                    'name' => $admin->name,
-                    'email' => $admin->email,
-                    'mobile' => $admin->mobile,
-                    'image' => $admin->image,
-                    'image_url' => $admin->image_url,
-                    'status' => $admin->status,
-                    'is_active' => $admin->is_active,
-                    'last_login_at' => $admin->last_login_at,
-                    'created_at' => $admin->created_at,
-                    'role' => 'admin',
-                    'user_type' => 'admin',
-                ],
+                'user' => $this->formatAdminResponse($admin),
             ]);
         }
 
@@ -237,6 +243,21 @@ class AdminAuthController extends Controller
                 ], 403);
             }
 
+            if (empty($staff->clinic_id)) {
+                $defaultClinicId = \App\Models\Clinic::orderBy('id', 'asc')->value('id');
+                if ($defaultClinicId) {
+                    $staff->update(['clinic_id' => $defaultClinicId]);
+                }
+            }
+
+            $staff->loadMissing('clinic');
+
+            if ($staff->clinic && $staff->clinic->status === 'inactive') {
+                return response()->json([
+                    'message' => "Your assigned clinic branch '{$staff->clinic->name}' is currently inactive. Please contact the Super Administrator.",
+                ], 403);
+            }
+
             $staff->update([
                 'last_login_at' => Carbon::now(),
             ]);
@@ -247,31 +268,14 @@ class AdminAuthController extends Controller
                 'staff',
                 $staff->id,
                 'staff_login',
-                "Staff '{$staff->name}' ({$staff->staff_code}) logged in successfully.",
+                "Staff '{$staff->name}' ({$staff->staff_code}) logged into clinic '{$staff->clinic?->name}' successfully.",
                 $request
             );
 
             return response()->json([
                 'message' => 'Login successful',
                 'token' => $token,
-                'user' => [
-                    'id' => $staff->id,
-                    'staff_code' => $staff->staff_code,
-                    'name' => $staff->name,
-                    'email' => $staff->email,
-                    'mobile' => $staff->mobile,
-                    'department' => $staff->department,
-                    'designation' => $staff->designation,
-                    'employment_type' => $staff->employment_type,
-                    'image' => $staff->profile_photo,
-                    'image_url' => $staff->image_url,
-                    'status' => $staff->status,
-                    'is_active' => $staff->is_active,
-                    'last_login_at' => $staff->last_login_at,
-                    'created_at' => $staff->created_at,
-                    'role' => 'staff',
-                    'user_type' => 'staff',
-                ],
+                'user' => $this->formatStaffResponse($staff),
             ]);
         }
 
@@ -292,43 +296,15 @@ class AdminAuthController extends Controller
 
         if ($user instanceof Staff) {
             return response()->json([
-                'user' => [
-                    'id' => $user->id,
-                    'staff_code' => $user->staff_code,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'mobile' => $user->mobile,
-                    'department' => $user->department,
-                    'designation' => $user->designation,
-                    'employment_type' => $user->employment_type,
-                    'image' => $user->profile_photo,
-                    'image_url' => $user->image_url,
-                    'status' => $user->status,
-                    'is_active' => $user->is_active,
-                    'last_login_at' => $user->last_login_at,
-                    'created_at' => $user->created_at,
-                    'role' => 'staff',
-                    'user_type' => 'staff',
-                ],
+                'user' => $this->formatStaffResponse($user),
             ]);
         }
 
+        /** @var Admin $admin */
         $admin = $user;
 
         return response()->json([
-            'user' => [
-                'id' => $admin->id,
-                'name' => $admin->name,
-                'email' => $admin->email,
-                'mobile' => $admin->mobile,
-                'image' => $admin->image,
-                'image_url' => $admin->image_url,
-                'status' => $admin->status,
-                'is_active' => $admin->is_active,
-                'last_login_at' => $admin->last_login_at,
-                'created_at' => $admin->created_at,
-                'role' => 'Administrator',
-            ],
+            'user' => $this->formatAdminResponse($admin),
         ]);
     }
 
@@ -503,5 +479,85 @@ class AdminAuthController extends Controller
         return response()->json([
             'message' => 'Account not found.',
         ], 404);
+    }
+
+    /**
+     * Format Admin user data with complete assigned clinic branch context.
+     */
+    protected function formatAdminResponse(Admin $admin): array
+    {
+        $admin->loadMissing('clinic');
+
+        return [
+            'id' => $admin->id,
+            'name' => $admin->name,
+            'email' => $admin->email,
+            'mobile' => $admin->mobile,
+            'clinic_id' => $admin->clinic_id,
+            'clinic' => $admin->clinic ? [
+                'id' => $admin->clinic->id,
+                'clinic_code' => $admin->clinic->clinic_code,
+                'name' => $admin->clinic->name,
+                'branch_name' => $admin->clinic->branch_name,
+                'location' => $admin->clinic->location,
+                'address' => $admin->clinic->address,
+                'city' => $admin->clinic->city,
+                'state' => $admin->clinic->state,
+                'postal_code' => $admin->clinic->postal_code,
+                'phone' => $admin->clinic->phone,
+                'email' => $admin->clinic->email,
+                'status' => $admin->clinic->status,
+            ] : null,
+            'image' => $admin->image,
+            'image_url' => $admin->image_url,
+            'status' => $admin->status,
+            'is_active' => $admin->is_active,
+            'last_login_at' => $admin->last_login_at,
+            'created_at' => $admin->created_at,
+            'role' => 'admin',
+            'user_type' => 'admin',
+        ];
+    }
+
+    /**
+     * Format Staff user data with assigned clinic branch context.
+     */
+    protected function formatStaffResponse(Staff $staff): array
+    {
+        $staff->loadMissing('clinic');
+
+        return [
+            'id' => $staff->id,
+            'staff_code' => $staff->staff_code,
+            'name' => $staff->name,
+            'email' => $staff->email,
+            'mobile' => $staff->mobile,
+            'clinic_id' => $staff->clinic_id,
+            'clinic' => $staff->clinic ? [
+                'id' => $staff->clinic->id,
+                'clinic_code' => $staff->clinic->clinic_code,
+                'name' => $staff->clinic->name,
+                'branch_name' => $staff->clinic->branch_name,
+                'location' => $staff->clinic->location,
+                'address' => $staff->clinic->address,
+                'city' => $staff->clinic->city,
+                'state' => $staff->clinic->state,
+                'postal_code' => $staff->clinic->postal_code,
+                'phone' => $staff->clinic->phone,
+                'email' => $staff->clinic->email,
+                'status' => $staff->clinic->status,
+            ] : null,
+            'department' => $staff->department,
+            'designation' => $staff->designation,
+            'employment_type' => $staff->employment_type,
+            'image' => $staff->profile_photo,
+            'image_url' => $staff->image_url,
+            'status' => $staff->status,
+            'is_active' => $staff->is_active,
+            'last_login_at' => $staff->last_login_at,
+            'created_at' => $staff->created_at,
+            'role' => 'staff',
+            'user_type' => 'staff',
+        ];
     }
 }

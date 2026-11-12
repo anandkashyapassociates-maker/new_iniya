@@ -23,6 +23,13 @@ class AppointmentSessionController extends Controller
     {
         $master = MasterAppointment::findOrFail($masterAppointmentId);
 
+        $user = $request->user();
+        if ($user && ! empty($user->clinic_id) && (int) $master->clinic_id !== (int) $user->clinic_id) {
+            return response()->json([
+                'message' => 'Unauthorized: This master appointment belongs to a different clinic branch.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'service_id' => ['required', 'exists:services,id'],
             'treatment_details' => ['nullable', 'string', 'max:5000'],
@@ -89,7 +96,14 @@ class AppointmentSessionController extends Controller
      */
     public function update(Request $request, int $id): JsonResponse
     {
-        $session = AppointmentSession::findOrFail($id);
+        $session = AppointmentSession::with('masterAppointment')->findOrFail($id);
+
+        $user = $request->user();
+        if ($user && ! empty($user->clinic_id) && (int) $session->masterAppointment?->clinic_id !== (int) $user->clinic_id) {
+            return response()->json([
+                'message' => 'Unauthorized: This appointment session belongs to a different clinic branch.',
+            ], 403);
+        }
 
         $validated = $request->validate([
             'service_id' => ['sometimes', 'nullable', 'exists:services,id'],
@@ -172,6 +186,13 @@ class AppointmentSessionController extends Controller
         $session = AppointmentSession::findOrFail($id);
         $master = $session->masterAppointment;
 
+        $user = request()->user();
+        if ($user && ! empty($user->clinic_id) && $master && (int) $master->clinic_id !== (int) $user->clinic_id) {
+            return response()->json([
+                'message' => 'Unauthorized: This appointment session belongs to a different clinic branch.',
+            ], 403);
+        }
+
         if ($session->image && Storage::disk('public')->exists($session->image)) {
             Storage::disk('public')->delete($session->image);
         }
@@ -242,8 +263,18 @@ class AppointmentSessionController extends Controller
             if ($staffId) {
                 $query->where('staff_id', $staffId);
             }
-        } elseif ($staffId = $request->input('staff_id')) {
-            $query->where('staff_id', $staffId);
+        } else {
+            // Operational Admin: Strictly scope calendar sessions to appointments of their clinic
+            $clinicId = $user?->clinic_id;
+            if ($clinicId) {
+                $query->whereHas('masterAppointment', function ($mq) use ($clinicId) {
+                    $mq->where('clinic_id', $clinicId);
+                });
+            }
+
+            if ($staffId = $request->input('staff_id')) {
+                $query->where('staff_id', $staffId);
+            }
         }
 
         // Filter by Status

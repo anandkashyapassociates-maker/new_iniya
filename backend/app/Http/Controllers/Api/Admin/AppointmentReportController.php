@@ -30,6 +30,7 @@ class AppointmentReportController extends Controller
         }
 
         $query = MasterAppointment::with([
+            'clinic:id,clinic_code,name,branch_name,location,city',
             'customer:id,name,mobile,email,gender,age,address,image',
             'salesTeam:id,sales_code,name,email,mobile,department',
             'admin:id,name,email',
@@ -41,6 +42,11 @@ class AppointmentReportController extends Controller
                 ])->orderBy('session_number');
             },
         ]);
+
+        // Enforce clinic scoping strictly for logged-in admin
+        if ($user && ! empty($user->clinic_id)) {
+            $query->where('clinic_id', $user->clinic_id);
+        }
 
         // 1. Text Search Filter
         if ($search = trim((string) $request->input('search'))) {
@@ -211,7 +217,7 @@ class AppointmentReportController extends Controller
         }
 
         $query = AppointmentSession::with([
-            'masterAppointment:id,appointment_number,customer_id,sales_team_id,appointment_date,appointment_fees,notes,image',
+            'masterAppointment:id,clinic_id,appointment_number,customer_id,sales_team_id,appointment_date,appointment_fees,notes,image',
             'masterAppointment.customer:id,name,mobile,email,gender,age,address,image',
             'masterAppointment.salesTeam:id,sales_code,name,email,mobile,department',
             'staff:id,staff_code,name,department,designation,mobile',
@@ -219,6 +225,13 @@ class AppointmentReportController extends Controller
             'service.category:id,name',
             'inventoryProduct:id,product_name,business_unit',
         ]);
+
+        // Enforce clinic scoping strictly for logged-in admin
+        if ($user && ! empty($user->clinic_id)) {
+            $query->whereHas('masterAppointment', function ($mq) use ($user) {
+                $mq->where('clinic_id', $user->clinic_id);
+            });
+        }
 
         // 1. Text Search Filter
         if ($search = trim((string) $request->input('search'))) {
@@ -335,16 +348,28 @@ class AppointmentReportController extends Controller
 
     /**
      * Dropdown filter options for reports (Staff, Sales Members, Services, Customers, Statuses).
+     * Scoped clinic-wise for Staff and Sales Members; Customers remain global.
      */
-    public function filterOptions(): JsonResponse
+    public function filterOptions(Request $request): JsonResponse
     {
-        $staff = Staff::where('status', 'active')
-            ->select('id', 'name', 'staff_code', 'department', 'designation')
+        $user = $request->user();
+        $clinicId = $user?->clinic_id;
+
+        $staffQuery = Staff::where('status', 'active');
+        if ($clinicId) {
+            $staffQuery->where('clinic_id', $clinicId);
+        }
+        $staff = $staffQuery
+            ->select('id', 'clinic_id', 'name', 'staff_code', 'department', 'designation')
             ->orderBy('name')
             ->get();
 
-        $salesTeam = SalesMember::where('status', 'active')
-            ->select('id', 'name', 'sales_code', 'department')
+        $salesQuery = SalesMember::where('status', 'active');
+        if ($clinicId) {
+            $salesQuery->where('clinic_id', $clinicId);
+        }
+        $salesTeam = $salesQuery
+            ->select('id', 'clinic_id', 'name', 'sales_code', 'department')
             ->orderBy('name')
             ->get();
 
@@ -352,6 +377,7 @@ class AppointmentReportController extends Controller
             ->orderBy('name')
             ->get();
 
+        // Customers remain global across clinics as explicitly requested
         $customers = Customer::select('id', 'name', 'mobile')
             ->orderBy('name')
             ->limit(100)

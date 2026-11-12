@@ -29,8 +29,11 @@ class ProductController extends Controller
             $query->where('product_name', 'like', "%{$search}%");
         }
 
-        // Filter by clinic
-        if ($clinicId = $request->input('clinic_id')) {
+        // Scope by clinic: If the logged-in admin belongs to a clinic, enforce their clinic strictly
+        $user = $request->user();
+        if ($user && ! empty($user->clinic_id)) {
+            $query->where('clinic_id', $user->clinic_id);
+        } elseif ($clinicId = $request->input('clinic_id')) {
             if ($clinicId !== '' && $clinicId !== 'all') {
                 $query->where('clinic_id', $clinicId);
             }
@@ -100,7 +103,7 @@ class ProductController extends Controller
                 $imagePath = $request->file('product_image')->store('inventory/products', 'public');
             }
 
-            $clinicId = $validated['clinic_id'] ?? \App\Models\Clinic::orderBy('id')->value('id');
+            $clinicId = $admin->clinic_id ?? $validated['clinic_id'] ?? \App\Models\Clinic::orderBy('id')->value('id');
 
             return InventoryProduct::create([
                 'clinic_id' => $clinicId,
@@ -135,9 +138,16 @@ class ProductController extends Controller
     /**
      * Display the specified product.
      */
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
         $product = InventoryProduct::with(['category', 'brand', 'creator', 'clinic'])->findOrFail($id);
+
+        $admin = $request->user();
+        if ($admin && ! empty($admin->clinic_id) && ! empty($product->clinic_id) && (int) $product->clinic_id !== (int) $admin->clinic_id) {
+            return response()->json([
+                'message' => 'Unauthorized. This product does not belong to your assigned clinic.',
+            ], 403);
+        }
 
         return response()->json($product);
     }
@@ -149,7 +159,15 @@ class ProductController extends Controller
     {
         $product = InventoryProduct::findOrFail($id);
 
-        if ((int) $product->created_by_admin_id !== (int) $request->user()->id) {
+        $admin = $request->user();
+
+        if ($admin && ! empty($admin->clinic_id) && ! empty($product->clinic_id) && (int) $product->clinic_id !== (int) $admin->clinic_id) {
+            return response()->json([
+                'message' => 'Unauthorized. This product does not belong to your assigned clinic.',
+            ], 403);
+        }
+
+        if ((int) $product->created_by_admin_id !== (int) $admin->id) {
             return response()->json([
                 'message' => 'Unauthorized. You can only edit products created by you.',
             ], 403);
@@ -229,7 +247,15 @@ class ProductController extends Controller
     {
         $product = InventoryProduct::findOrFail($id);
 
-        if ((int) $product->created_by_admin_id !== (int) $request->user()->id) {
+        $admin = $request->user();
+
+        if ($admin && ! empty($admin->clinic_id) && ! empty($product->clinic_id) && (int) $product->clinic_id !== (int) $admin->clinic_id) {
+            return response()->json([
+                'message' => 'Unauthorized. This product does not belong to your assigned clinic.',
+            ], 403);
+        }
+
+        if ((int) $product->created_by_admin_id !== (int) $admin->id) {
             return response()->json([
                 'message' => 'Unauthorized. You can only delete products created by you.',
             ], 403);

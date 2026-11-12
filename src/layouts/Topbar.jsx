@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, ChevronDown, User, LogOut, CheckCircle2 } from 'lucide-react';
+import { Menu, ChevronDown, User, LogOut, CheckCircle2, Building2, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import LiveClock from '../components/LiveClock';
 import { getImageUrl } from '../utils/imageUrl';
@@ -26,46 +26,49 @@ export default function Topbar({
   }, []);
 
   return (
-    <header className="h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 flex items-center justify-between px-3 sm:px-6 relative transform-gpu">
-      {/* Left side: Mobile Toggle & Clinic Context Pill */}
-      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 z-10">
+    <header className="h-16 bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-30 px-3 sm:px-6 relative flex items-center justify-between">
+      {/* Left zone: Mobile Sidebar Toggle & Operational Status Pill */}
+      <div className="flex items-center gap-2 sm:gap-3 z-10 shrink-0">
         <button
+          type="button"
           onClick={onOpenMobileSidebar}
-          className="lg:hidden p-1.5 sm:p-2 -ml-1 rounded-xl text-slate-600 hover:bg-slate-100 transition-colors cursor-pointer"
+          aria-label="Open Navigation Menu"
+          className="lg:hidden p-1.5 sm:p-2 -ml-1 rounded-xl text-slate-600 hover:bg-slate-100 active:bg-slate-200 transition-colors cursor-pointer shrink-0"
         >
           <Menu className="w-5 h-5" />
         </button>
 
-        <div className="flex items-center gap-2">
-          <span
-            className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[10px] font-semibold micro-label whitespace-nowrap ${
-              isSuperAdmin
-                ? 'bg-purple-50 text-purple-700 border border-purple-200/80'
-                : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
-            }`}
-          >
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="sm:hidden">{isSuperAdmin ? 'HQ' : 'OPD Live'}</span>
-            <span className="hidden sm:inline">{isSuperAdmin ? 'Clinic Governance HQ' : 'OPD Live • Doctors On Duty'}</span>
-          </span>
-        </div>
+        {/* Operational Status Pill */}
+        <span
+          className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1 rounded-full text-[10px] sm:text-[11px] font-semibold micro-label whitespace-nowrap shadow-2xs ${
+            isSuperAdmin
+              ? 'bg-purple-50 text-purple-700 border border-purple-200/80'
+              : 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+          }`}
+        >
+          <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+          <span className="hidden sm:inline">{isSuperAdmin ? 'Clinic Governance HQ' : 'OPD Live • Doctors On Duty'}</span>
+          <span className="hidden xs:inline sm:hidden">{isSuperAdmin ? 'HQ' : 'OPD Live'}</span>
+          <span className="xs:hidden">{isSuperAdmin ? 'HQ' : 'OPD'}</span>
+        </span>
       </div>
 
-      {/* Center: Live Clock & Clean Calendar */}
-      <div className="absolute left-1/2 -translate-x-1/2 z-10 pointer-events-auto">
+      {/* Center zone: Live Clock & Clean Calendar (Centered on Desktop & Mobile) */}
+      <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-10 pointer-events-auto flex items-center justify-center">
         <LiveClock />
       </div>
 
-      {/* Right side: Profile dropdown */}
-      <div className="flex items-center gap-2.5 sm:gap-4 shrink-0 z-10">
+      {/* Right zone: Profile dropdown */}
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0 z-10">
         {/* Profile Dropdown */}
         <div className="relative" ref={dropdownRef}>
           <button
+            type="button"
             onClick={() => setDropdownOpen(!dropdownOpen)}
-            className="flex items-center gap-2.5 p-1.5 rounded-2xl hover:bg-slate-100 transition-colors focus:outline-none cursor-pointer"
+            className="flex items-center gap-1.5 sm:gap-2.5 p-1 sm:p-1.5 rounded-2xl hover:bg-slate-100 transition-colors focus:outline-none cursor-pointer"
           >
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white shadow-xs font-display overflow-hidden ${
+              className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-semibold text-white shadow-xs font-display overflow-hidden shrink-0 ${
                 isSuperAdmin
                   ? 'bg-gradient-to-tr from-purple-600 to-indigo-600'
                   : user?.role === 'staff'
@@ -79,22 +82,22 @@ export default function Topbar({
                 user?.name ? user.name.charAt(0).toUpperCase() : 'U'
               )}
             </div>
-            <div className="hidden sm:block text-left">
+            <div className="hidden md:block text-left">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-semibold text-slate-800 block leading-tight font-display tracking-tight">
+                <span className="text-xs font-semibold text-slate-800 block leading-tight font-display tracking-tight max-w-[120px] truncate">
                   {user?.name || (isSuperAdmin ? 'Super Administrator' : 'Administrator')}
                 </span>
                 {user?.role === 'staff' && (
-                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-teal-50 text-teal-700 border border-teal-200">
+                  <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-teal-50 text-teal-700 border border-teal-200 shrink-0">
                     Staff
                   </span>
                 )}
               </div>
-              <span className="text-[10px] text-slate-500 block font-mono">
+              <span className="text-[10px] text-slate-500 block font-mono max-w-[120px] truncate">
                 {user?.email || (isSuperAdmin ? 'superadmin@example.com' : 'admin@example.com')}
               </span>
             </div>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           </button>
 
           {dropdownOpen && (
@@ -116,10 +119,28 @@ export default function Topbar({
                 {user?.department && (
                   <p className="text-[10px] text-slate-500 mt-0.5">{user.department} {user.staff_code ? `• ${user.staff_code}` : ''}</p>
                 )}
-                <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-emerald-600 font-semibold">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Authenticated Clinic Session</span>
-                </div>
+                {user?.clinic ? (
+                  <div className="mt-2 p-2 rounded-xl bg-blue-50/70 border border-blue-200/70 text-[11px]">
+                    <div className="flex items-center justify-between gap-1 text-blue-900 font-bold">
+                      <span className="truncate">{user.clinic.name}</span>
+                      <span className="font-mono text-[10px] bg-white px-1.5 py-0.5 rounded text-blue-700 font-bold border border-blue-200 shrink-0">
+                        {user.clinic.clinic_code}
+                      </span>
+                    </div>
+                    {(user.clinic.branch_name || user.clinic.location) && (
+                      <p className="text-[10px] text-slate-500 mt-0.5 truncate">
+                        {user.clinic.branch_name ? user.clinic.branch_name : ''}
+                        {user.clinic.branch_name && user.clinic.location ? ' • ' : ''}
+                        {user.clinic.location || ''}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-emerald-600 font-semibold">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Authenticated Clinic Session</span>
+                  </div>
+                )}
               </div>
 
               <div className="py-1">

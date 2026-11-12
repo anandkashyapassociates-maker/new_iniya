@@ -23,6 +23,7 @@ class MasterAppointment extends Model
      */
     protected $fillable = [
         'appointment_number',
+        'clinic_id',
         'customer_id',
         'appointment_date',
         'sales_team_id',
@@ -145,6 +146,14 @@ class MasterAppointment extends Model
 
             return $candidate;
         });
+    }
+
+    /**
+     * Clinic branch for this master appointment.
+     */
+    public function clinic(): BelongsTo
+    {
+        return $this->belongsTo(Clinic::class, 'clinic_id');
     }
 
     /**

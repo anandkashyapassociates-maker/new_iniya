@@ -24,11 +24,13 @@ import {
 } from 'lucide-react';
 import adminInventoryService from '../../../services/adminInventoryService';
 import { useToast } from '../../../context/ToastContext';
+import { useAdminAuth } from '../../../features/auth/AdminAuthContext';
 
 export default function AdminProductCreatePage() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const toast = useToast();
+  const { user } = useAdminAuth();
   const fileInputRef = useRef(null);
 
   const [clinics, setClinics] = useState([]);
@@ -87,8 +89,10 @@ export default function AdminProductCreatePage() {
         setCategories(cats || []);
         setBrands(brs || []);
 
-        // Pre-select clinic if only 1 exists
-        if (clins.length === 1) {
+        // Pre-select clinic for assigned admin or if only 1 clinic exists
+        if (user?.clinic_id) {
+          setFormData((prev) => ({ ...prev, clinic_id: String(user.clinic_id) }));
+        } else if (clins.length === 1) {
           setFormData((prev) => ({ ...prev, clinic_id: String(clins[0].id) }));
         }
 
@@ -339,17 +343,26 @@ export default function AdminProductCreatePage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                Select Clinic Branch <span className="text-rose-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Select Clinic Branch <span className="text-rose-500">*</span>
+                </label>
+                {user?.clinic_id && (
+                  <span className="text-[10px] font-bold text-indigo-700 bg-indigo-50 border border-indigo-200 px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                    <Lock className="w-2.5 h-2.5" /> Locked to Your Clinic
+                  </span>
+                )}
+              </div>
               <div className="relative">
                 <select
                   name="clinic_id"
                   value={formData.clinic_id}
                   onChange={handleChange}
-                  disabled={isSubmitting || isLoadingDropdowns}
+                  disabled={Boolean(user?.clinic_id) || isSubmitting || isLoadingDropdowns}
                   required
                   className={`w-full px-4 py-2.5 text-xs bg-slate-50/80 hover:bg-slate-50 border rounded-2xl focus:outline-none focus:ring-2 transition-all font-normal text-slate-900 ${
+                    user?.clinic_id ? 'cursor-not-allowed bg-slate-100/80 text-slate-700 font-semibold' : ''
+                  } ${
                     errors.clinic_id
                       ? 'border-rose-400 focus:ring-rose-500/20'
                       : 'border-slate-200 focus:border-indigo-600 focus:ring-indigo-500/20'
