@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Menu, ChevronDown, User, LogOut, CheckCircle2 } from 'lucide-react';
+import { Menu, ChevronDown, User, LogOut, CheckCircle2, Building2, Lock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import LiveClock from '../components/LiveClock';
 import { getImageUrl } from '../utils/imageUrl';
@@ -48,6 +48,23 @@ export default function Topbar({
             <span className="sm:hidden">{isSuperAdmin ? 'HQ' : 'OPD Live'}</span>
             <span className="hidden sm:inline">{isSuperAdmin ? 'Clinic Governance HQ' : 'OPD Live • Doctors On Duty'}</span>
           </span>
+
+          {/* Assigned Clinic Branch Pill (Admin / Staff) */}
+          {user?.clinic && (
+            <div className="hidden md:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-blue-50 text-blue-800 border border-blue-200/80 shadow-2xs">
+              <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+              <span className="font-bold truncate max-w-[150px]">{user.clinic.name}</span>
+              {user.clinic.branch_name && (
+                <span className="text-blue-600 font-medium truncate max-w-[110px]">
+                  ({user.clinic.branch_name})
+                </span>
+              )}
+              <span className="inline-flex items-center gap-0.5 font-mono text-[10px] bg-white px-1.5 py-0.5 rounded border border-blue-200 text-blue-700 font-bold ml-0.5 shadow-2xs">
+                <Lock className="w-2.5 h-2.5" />
+                {user.clinic.clinic_code}
+              </span>
+            </div>
+          )}
         </div>
       </div>
 
@@ -116,10 +133,28 @@ export default function Topbar({
                 {user?.department && (
                   <p className="text-[10px] text-slate-500 mt-0.5">{user.department} {user.staff_code ? `• ${user.staff_code}` : ''}</p>
                 )}
-                <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-emerald-600 font-semibold">
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>Authenticated Clinic Session</span>
-                </div>
+                {user?.clinic ? (
+                  <div className="mt-2 p-2 rounded-xl bg-blue-50/70 border border-blue-200/70 text-[11px]">
+                    <div className="flex items-center justify-between gap-1 text-blue-900 font-bold">
+                      <span className="truncate">{user.clinic.name}</span>
+                      <span className="font-mono text-[10px] bg-white px-1.5 py-0.5 rounded text-blue-700 font-bold border border-blue-200 shrink-0">
+                        {user.clinic.clinic_code}
+                      </span>
+                    </div>
+                    {(user.clinic.branch_name || user.clinic.location) && (
+                      <p className="text-[10px] text-slate-500 mt-0.5 truncate">
+                        {user.clinic.branch_name ? user.clinic.branch_name : ''}
+                        {user.clinic.branch_name && user.clinic.location ? ' • ' : ''}
+                        {user.clinic.location || ''}
+                      </p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-emerald-600 font-semibold">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Authenticated Clinic Session</span>
+                  </div>
+                )}
               </div>
 
               <div className="py-1">

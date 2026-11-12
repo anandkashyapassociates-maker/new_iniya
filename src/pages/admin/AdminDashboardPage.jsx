@@ -28,6 +28,10 @@ import {
   Package,
   ArrowUpRight,
   ChevronDown,
+  Building2,
+  Lock,
+  MapPin,
+  Phone,
 } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 import DashboardSkeleton from '../../components/DashboardSkeleton';
@@ -232,6 +236,33 @@ export default function AdminDashboardPage() {
               <span>{greeting}, {adminDisplayName}!</span>
               <span className="text-2xl sm:text-3xl animate-bounce">👋</span>
             </h1>
+
+            {/* Active Clinic Profile Context Card */}
+            {(user?.clinic || dashboardData?.clinic) && (
+              <div className="my-2.5 inline-flex flex-wrap items-center gap-2 p-2 px-3 rounded-2xl bg-blue-50/80 border border-blue-200/80 shadow-2xs">
+                <div className="flex items-center gap-1.5 text-blue-900 font-bold text-xs">
+                  <Building2 className="w-4 h-4 text-blue-600" />
+                  <span>{(user?.clinic || dashboardData?.clinic).name}</span>
+                  {((user?.clinic || dashboardData?.clinic).branch_name) && (
+                    <span className="text-blue-600 font-semibold">({(user?.clinic || dashboardData?.clinic).branch_name})</span>
+                  )}
+                </div>
+                <span className="inline-flex items-center gap-1 font-mono text-[10px] bg-white px-2 py-0.5 rounded-full border border-blue-200 text-blue-700 font-bold">
+                  <Lock className="w-2.5 h-2.5" />
+                  {(user?.clinic || dashboardData?.clinic).clinic_code}
+                </span>
+                {((user?.clinic || dashboardData?.clinic).location) && (
+                  <span className="text-[11px] text-slate-500 font-medium hidden sm:inline">
+                    • {(user?.clinic || dashboardData?.clinic).location}
+                  </span>
+                )}
+                {((user?.clinic || dashboardData?.clinic).phone) && (
+                  <span className="text-[11px] text-slate-500 font-mono hidden md:inline">
+                    • {(user?.clinic || dashboardData?.clinic).phone}
+                  </span>
+                )}
+              </div>
+            )}
 
             <p className="text-xs sm:text-sm text-slate-600 font-medium mt-1 leading-relaxed max-w-lg">
               {isStaff

@@ -164,38 +164,63 @@ class AdminDashboardController extends Controller
         ];
 
         // 3. Inventory & Medical Supplies Metrics
+        $clinicId = $admin?->clinic_id;
         $lowStockCount = 0;
         $lowStockProducts = collect();
         if (Schema::hasColumn('inventory_products', 'quantity')) {
-            $lowStockProducts = InventoryProduct::where(function ($q) {
+            $lowStockQuery = InventoryProduct::where(function ($q) {
                 $q->whereColumn('quantity', '<=', 'low_stock_threshold')
                     ->orWhere('quantity', '<=', 0);
-            })
+            });
+            if ($clinicId) {
+                $lowStockQuery->where('clinic_id', $clinicId);
+            }
+
+            $lowStockProducts = $lowStockQuery
                 ->orderBy('quantity', 'asc')
                 ->take(5)
-                ->get(['id', 'product_name', 'quantity', 'low_stock_threshold', 'business_unit']);
+                ->get(['id', 'product_name', 'quantity', 'low_stock_threshold', 'business_unit', 'clinic_id']);
 
-            $lowStockCount = InventoryProduct::where(function ($q) {
+            $lowStockCountQuery = InventoryProduct::where(function ($q) {
                 $q->whereColumn('quantity', '<=', 'low_stock_threshold')
                     ->orWhere('quantity', '<=', 0);
-            })->count();
+            });
+            if ($clinicId) {
+                $lowStockCountQuery->where('clinic_id', $clinicId);
+            }
+            $lowStockCount = $lowStockCountQuery->count();
         }
-        $totalInventoryProducts = InventoryProduct::count();
 
-        // 4. Clinical Staff & Doctors on Duty Today (Hidden for staff members so other doctors' data is never leaked)
+        $invProductsQuery = InventoryProduct::query();
+        if ($clinicId) {
+            $invProductsQuery->where('clinic_id', $clinicId);
+        }
+        $totalInventoryProducts = $invProductsQuery->count();
+
+        // 4. Clinical Staff & Doctors on Duty Today (Hidden for staff members; strictly scoped to this admin's clinic)
         if ($isStaffUser) {
             $activeStaffCount = 1;
             $doctorsOnDuty = collect();
         } else {
-            $activeStaffCount = Staff::where('status', 'active')->count();
-            $doctorsOnDuty = Staff::where('status', 'active')
+            $staffQuery = Staff::where('status', 'active');
+            if ($clinicId) {
+                $staffQuery->where('clinic_id', $clinicId);
+            }
+            $activeStaffCount = $staffQuery->count();
+
+            $dutyQuery = Staff::where('status', 'active');
+            if ($clinicId) {
+                $dutyQuery->where('clinic_id', $clinicId);
+            }
+
+            $doctorsOnDuty = $dutyQuery
                 ->withCount(['appointmentSessions as today_sessions_count' => function ($q) use ($todayStr) {
                     $q->whereDate('session_date', $todayStr)
                         ->where('status', '!=', AppointmentSession::STATUS_CANCELLED);
                 }])
                 ->orderByDesc('today_sessions_count')
                 ->take(6)
-                ->get(['id', 'staff_code', 'name', 'department', 'designation', 'mobile']);
+                ->get(['id', 'staff_code', 'name', 'department', 'designation', 'mobile', 'clinic_id']);
         }
 
         // 5. Active Clinical Services Catalog & Top Services (Scoped to this staff's sessions if staff)
@@ -315,6 +340,20 @@ class AdminDashboardController extends Controller
                 'is_staff' => $isStaffUser,
             ],
             'account' => $accountDetails,
+            'clinic' => $admin?->clinic ? [
+                'id' => $admin->clinic->id,
+                'clinic_code' => $admin->clinic->clinic_code,
+                'name' => $admin->clinic->name,
+                'branch_name' => $admin->clinic->branch_name,
+                'location' => $admin->clinic->location,
+                'address' => $admin->clinic->address,
+                'city' => $admin->clinic->city,
+                'state' => $admin->clinic->state,
+                'postal_code' => $admin->clinic->postal_code,
+                'phone' => $admin->clinic->phone,
+                'email' => $admin->clinic->email,
+                'status' => $admin->clinic->status,
+            ] : null,
             'payment_modes' => $paymentModes,
             'revenue_chart' => $revenueDataByPeriod,
             'doctors_on_duty' => $doctorsOnDuty,
