@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import {
   Wallet,
   PlusCircle,
@@ -69,31 +70,28 @@ export default function StaffPayoutsPage() {
   const [page, setPage] = useState(1);
   const [perPage, setPerPage] = useState(15);
 
-  // Modal states
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  // View Voucher Modal state
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedPayout, setSelectedPayout] = useState(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingPayout, setEditingPayout] = useState(null);
 
-  // Standard Form State with Clinic selection as Step 1
-  const [formData, setFormData] = useState({
-    clinic_id: '',
-    staff_id: '',
-    amount: '',
-    payout_date: new Date().toISOString().split('T')[0],
-    account_type: 'Bank',
-    reference_number: '',
-    note: '',
-  });
-  const [formErrors, setFormErrors] = useState({});
-
-  // Load clinics list on mount
+  // Robustly load clinics list on mount using getClinicOptions + fallback
   const loadClinics = useCallback(async () => {
     setIsLoadingClinics(true);
     try {
-      const res = await clinicManagementService.getClinics({ status: 'active', per_page: 100 });
-      setClinics(res.clinics || []);
+      let list = [];
+      try {
+        const res = await clinicManagementService.getClinicOptions();
+        list = res?.clinics || res?.data || (Array.isArray(res) ? res : []);
+      } catch (optErr) {
+        console.warn('getClinicOptions failed, trying fallback to getClinics:', optErr);
+      }
+
+      if (!list || list.length === 0) {
+        const fallbackRes = await clinicManagementService.getClinics({ per_page: 100 });
+        list = fallbackRes?.data || fallbackRes?.clinics || (Array.isArray(fallbackRes) ? fallbackRes : []);
+      }
+
+      setClinics(Array.isArray(list) ? list : []);
     } catch (err) {
       console.error('Failed to load clinic options:', err);
     } finally {
@@ -160,147 +158,7 @@ export default function StaffPayoutsPage() {
     fetchPayouts();
   }, [fetchPayouts]);
 
-  // Selected clinic object for showing location/address preview
-  const selectedClinic = useMemo(() => {
-    if (formData.clinic_id) {
-      return clinics.find((c) => String(c.id) === String(formData.clinic_id)) || null;
-    }
-    if (editingPayout?.staff?.clinic) {
-      return editingPayout.staff.clinic;
-    }
-    return null;
-  }, [clinics, formData.clinic_id, editingPayout]);
 
-  // Filter staff options to those appointed to the selected clinic
-  const filteredStaffOptions = useMemo(() => {
-    if (!formData.clinic_id) return [];
-    return staffOptions.filter(
-      (s) => String(s.clinic_id) === String(formData.clinic_id) || !s.clinic_id
-    );
-  }, [staffOptions, formData.clinic_id]);
-
-  // Open creation modal
-  const handleOpenModal = () => {
-    setEditingPayout(null);
-    const initialClinicId = clinics.length === 1 ? String(clinics[0].id) : '';
-    setFormData({
-      clinic_id: initialClinicId,
-      staff_id: '',
-      amount: '',
-      payout_date: new Date().toISOString().split('T')[0],
-      account_type: 'Bank',
-      reference_number: '',
-      note: '',
-    });
-    setFormErrors({});
-    setIsModalOpen(true);
-  };
-
-  // Open edit modal
-  const handleOpenEditModal = (item) => {
-    setEditingPayout(item);
-    const staffClinicId = item.staff?.clinic_id || item.staff?.clinic?.id || '';
-    setFormData({
-      clinic_id: staffClinicId ? String(staffClinicId) : '',
-      staff_id: item.staff_id || '',
-      amount: String(item.paid_amount || item.amount || ''),
-      payout_date: item.payout_date ? item.payout_date.split('T')[0] : new Date().toISOString().split('T')[0],
-      account_type: item.account_type || 'Bank',
-      reference_number: item.reference_number || '',
-      note: item.note || '',
-    });
-    setFormErrors({});
-    setIsModalOpen(true);
-  };
-
-  const handleClinicSelect = (clinicId) => {
-    setFormData((prev) => {
-      const currentStaff = staffOptions.find((s) => String(s.id) === String(prev.staff_id));
-      const staffMatchesClinic = currentStaff && String(currentStaff.clinic_id) === String(clinicId);
-      return {
-        ...prev,
-        clinic_id: clinicId,
-        staff_id: staffMatchesClinic ? prev.staff_id : '',
-        amount: staffMatchesClinic ? prev.amount : '',
-      };
-    });
-    if (formErrors.clinic_id) {
-      setFormErrors((prev) => ({ ...prev, clinic_id: null }));
-    }
-  };
-
-  const handleStaffSelect = (staffId) => {
-    const found = staffOptions.find((s) => String(s.id) === String(staffId));
-    setFormData((prev) => ({
-      ...prev,
-      staff_id: staffId,
-      amount: found && found.pending_balance > 0 ? String(found.pending_balance) : prev.amount,
-    }));
-    if (formErrors.staff_id) {
-      setFormErrors((prev) => ({ ...prev, staff_id: null }));
-    }
-  };
-
-  // Submit standard payout (Create or Edit)
-  const handleSubmitPayout = async (e) => {
-    e.preventDefault();
-    setFormErrors({});
-
-    const errors = {};
-    if (!formData.clinic_id && !editingPayout) {
-      errors.clinic_id = 'Please select a clinic branch first.';
-    }
-    if (!formData.staff_id) {
-      errors.staff_id = 'Please select a staff member.';
-    }
-    if (!formData.amount || Number(formData.amount) <= 0) {
-      errors.amount = 'Please enter a valid payout amount greater than 0.';
-    }
-    if (!formData.payout_date) {
-      errors.payout_date = 'Please select a payout date.';
-    }
-    if (!formData.account_type) {
-      errors.account_type = 'Please select a payment mode.';
-    }
-
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
-    if (!formData.amount || Number(formData.amount) <= 0) {
-      errors.amount = 'Valid amount is required';
-    }
-    if (!formData.payout_date) errors.payout_date = 'Payout date is required';
-    if (!formData.account_type) errors.account_type = 'Please select Cash or Bank';
-
-    if (Object.keys(errors).length > 0) {
-      setFormErrors(errors);
-      return;
-    }
-
-    setIsSubmitting(true);
-    try {
-      if (editingPayout) {
-        await payoutService.updateStaffPayout(editingPayout.id, formData);
-        toast.success(`Staff payout voucher '${editingPayout.payout_number}' updated successfully!`);
-      } else {
-        await payoutService.recordStaffPayout(formData);
-        toast.success('Staff payout recorded successfully!');
-      }
-      setIsModalOpen(false);
-      setEditingPayout(null);
-      fetchPayouts();
-      loadStaffOptions();
-    } catch (err) {
-      if (err.response?.data?.errors) {
-        setFormErrors(err.response.data.errors);
-      } else {
-        toast.error(err.response?.data?.message || (editingPayout ? 'Failed to update staff payout.' : 'Failed to record staff payout.'));
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const handleResetFilters = () => {
     setSearch('');
@@ -348,13 +206,13 @@ export default function StaffPayoutsPage() {
             <span className="hidden sm:inline">Refresh</span>
           </button>
 
-          <button
-            onClick={handleOpenModal}
+          <Link
+            to="/superadmin/payouts/staff/create"
             className="inline-flex items-center gap-2 px-4 py-2 text-xs sm:text-sm font-semibold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-sm hover:shadow-md transition-all cursor-pointer"
           >
             <PlusCircle className="w-4 h-4" />
             <span>Disburse Staff Payout</span>
-          </button>
+          </Link>
         </div>
       </div>
 
@@ -759,13 +617,14 @@ export default function StaffPayoutsPage() {
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
-                          <button
-                            onClick={() => handleOpenEditModal(item)}
+                          <Link
+                            to={`/superadmin/payouts/staff/edit/${item.id}`}
+                            state={{ payout: item }}
                             className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors cursor-pointer"
                             title="Edit Voucher"
                           >
                             <Edit className="w-3.5 h-3.5" />
-                          </button>
+                          </Link>
                         </div>
                       </td>
                     </tr>
@@ -805,364 +664,7 @@ export default function StaffPayoutsPage() {
         )}
       </div>
 
-      {/* ======================================================== */}
-      {/* RECORD STAFF PAYOUT MODAL (Clean Standard Form)          */}
-      {/* ======================================================== */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
-            {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60 shrink-0">
-              <div className="flex items-center gap-2.5">
-                <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
-                  <UserCheck className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold text-slate-900">
-                    {editingPayout ? `Edit Staff Payout (${editingPayout.payout_number})` : 'Record Staff Payout'}
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    {editingPayout
-                      ? 'Modify disbursement details, payment mode, or remarks'
-                      : 'Disburse payout, allowance, advance or expense reimbursement'}
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
 
-            {/* Modal Form */}
-            <form onSubmit={handleSubmitPayout} className="p-6 space-y-4 overflow-y-auto">
-              {/* Step 1: Select Clinic Branch */}
-              <div className="space-y-1.5">
-                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-blue-600" />
-                  <span>Select Clinic Branch</span> <span className="text-rose-500">*</span>
-                </label>
-                {editingPayout ? (
-                  <div className="w-full px-3 py-2.5 text-xs bg-slate-100 border border-slate-300 rounded-xl text-slate-800 font-medium flex items-center justify-between cursor-not-allowed select-none">
-                    <span className="font-semibold text-slate-900 flex items-center gap-1.5">
-                      <Building2 className="w-3.5 h-3.5 text-slate-500" />
-                      {selectedClinic?.name || 'Clinic Branch'}
-                      {selectedClinic?.clinic_code ? (
-                        <span className="text-slate-500 font-mono text-[11px]">({selectedClinic.clinic_code})</span>
-                      ) : null}
-                    </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-200 text-slate-600 border border-slate-300">
-                      Assigned
-                    </span>
-                  </div>
-                ) : (
-                  <div className="relative">
-                    <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                    <select
-                      value={formData.clinic_id}
-                      onChange={(e) => handleClinicSelect(e.target.value)}
-                      disabled={isLoadingClinics}
-                      className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer font-medium ${
-                        formErrors.clinic_id ? 'border-rose-400 focus:border-rose-500' : 'border-slate-300'
-                      }`}
-                    >
-                      <option value="">
-                        {isLoadingClinics ? 'Loading available clinics...' : '-- Choose Clinic Branch --'}
-                      </option>
-                      {clinics.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.name} ({c.clinic_code}) {c.branch_name ? `— ${c.branch_name}` : ''} [Location: {c.location || c.city || 'N/A'}]
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                )}
-                {formErrors.clinic_id && (
-                  <p className="text-[11px] text-rose-500 font-medium flex items-center gap-1 mt-1">
-                    <AlertCircle className="w-3 h-3 shrink-0" />
-                    <span>{formErrors.clinic_id}</span>
-                  </p>
-                )}
-              </div>
-
-              {/* Selected Clinic Details Auto-Preview Card */}
-              {selectedClinic ? (
-                <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-blue-50/80 via-indigo-50/40 to-slate-50 border border-blue-200/90 space-y-2.5 animate-in fade-in duration-200">
-                  <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-blue-200/60">
-                    <div className="flex items-center gap-2">
-                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                      <span className="text-xs font-bold text-blue-900">
-                        Assigned Clinic Profile Loaded
-                      </span>
-                    </div>
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-white text-blue-700 border border-blue-200 shadow-2xs">
-                      <Lock className="w-3 h-3" />
-                      {selectedClinic.clinic_code || 'CLINIC'}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
-                    <div>
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5">
-                        Clinic / Branch
-                      </span>
-                      <p className="px-2.5 py-1.5 bg-white/95 rounded-lg border border-blue-100 text-slate-900 font-semibold truncate text-[11px]">
-                        {selectedClinic.name} {selectedClinic.branch_name ? `(${selectedClinic.branch_name})` : ''}
-                      </p>
-                    </div>
-
-                    <div>
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 flex items-center gap-1">
-                        <Compass className="w-3 h-3 text-blue-500" />
-                        <span>Location / Area</span>
-                      </span>
-                      <p className="px-2.5 py-1.5 bg-white/95 rounded-lg border border-blue-100 text-slate-800 font-medium truncate text-[11px]">
-                        {selectedClinic.location || selectedClinic.city || '—'}
-                      </p>
-                    </div>
-
-                    <div>
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 flex items-center gap-1">
-                        <Globe className="w-3 h-3 text-blue-500" />
-                        <span>City / State</span>
-                      </span>
-                      <p className="px-2.5 py-1.5 bg-white/95 rounded-lg border border-blue-100 text-slate-800 font-medium truncate text-[11px]">
-                        {[selectedClinic.city, selectedClinic.state].filter(Boolean).join(', ') || '—'}
-                      </p>
-                    </div>
-
-                    <div className="sm:col-span-2">
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 flex items-center gap-1">
-                        <MapPin className="w-3 h-3 text-blue-500" />
-                        <span>Clinic Address</span>
-                      </span>
-                      <p className="px-2.5 py-1.5 bg-white/95 rounded-lg border border-blue-100 text-slate-800 font-medium truncate text-[11px]">
-                        {selectedClinic.address || selectedClinic.location || '—'}
-                      </p>
-                    </div>
-
-                    <div>
-                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 flex items-center gap-1">
-                        <Phone className="w-3 h-3 text-blue-500" />
-                        <span>Clinic Contact</span>
-                      </span>
-                      <p className="px-2.5 py-1.5 bg-white/95 rounded-lg border border-blue-100 text-slate-800 font-mono text-[11px] truncate">
-                        {selectedClinic.phone || selectedClinic.phone_number || selectedClinic.email || '—'}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-3 rounded-xl bg-slate-50 border border-dashed border-slate-300 text-center text-slate-500 text-xs flex items-center justify-center gap-2">
-                  <Building2 className="w-4 h-4 text-slate-400" />
-                  <span>Please choose a Clinic Branch above to load clinic details and available staff.</span>
-                </div>
-              )}
-
-              {/* Step 2: Staff Member Selection */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  {editingPayout ? 'Staff Member (Read Only)' : 'Select Staff Member'} <span className="text-rose-500">*</span>
-                </label>
-                {editingPayout ? (
-                  <div className="w-full px-3 py-2.5 text-xs bg-slate-100 border border-slate-300 rounded-xl text-slate-800 font-medium flex items-center justify-between cursor-not-allowed select-none">
-                    <span className="font-semibold text-slate-900">
-                      {editingPayout.staff?.name || staffOptions.find((s) => String(s.id) === String(formData.staff_id))?.name || 'Staff Member'}
-                      <span className="text-slate-500 font-mono text-[11px] ml-1.5">
-                        ({editingPayout.staff?.staff_code || staffOptions.find((s) => String(s.id) === String(formData.staff_id))?.staff_code || `ID: ${formData.staff_id}`})
-                      </span>
-                    </span>
-                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-200 text-slate-600 border border-slate-300">
-                      Read Only
-                    </span>
-                  </div>
-                ) : (
-                  <select
-                    value={formData.staff_id}
-                    onChange={(e) => handleStaffSelect(e.target.value)}
-                    disabled={!formData.clinic_id}
-                    className="w-full px-3 py-2.5 text-xs bg-white border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-800 disabled:bg-slate-100 disabled:cursor-not-allowed cursor-pointer"
-                  >
-                    <option value="">
-                      {!formData.clinic_id
-                        ? '-- Select Clinic Branch First --'
-                        : filteredStaffOptions.length === 0
-                        ? '-- No Staff Found For This Clinic --'
-                        : '-- Choose Staff Member --'}
-                    </option>
-                    {filteredStaffOptions.map((st) => (
-                      <option key={st.id} value={st.id}>
-                        {st.name} ({st.staff_code || `ID: ${st.id}`}) &mdash; Commission: ₹{Number(st.total_commission || 0).toLocaleString('en-IN')} {st.pending_balance > 0 ? `(Pending: ₹${Number(st.pending_balance || 0).toLocaleString('en-IN')})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                )}
-                {formErrors.staff_id && (
-                  <p className="text-[11px] text-rose-500 mt-1 font-medium">{formErrors.staff_id}</p>
-                )}
-
-                {staffOptions.find((s) => String(s.id) === String(formData.staff_id)) && (
-                  <div className="mt-2 p-2.5 bg-emerald-50/80 border border-emerald-200/90 rounded-xl flex items-center justify-between text-xs">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-emerald-700 block">Total Commission</span>
-                      <span className="font-bold text-emerald-900 font-mono text-sm">
-                        {formatCurrency(staffOptions.find((s) => String(s.id) === String(formData.staff_id)).total_commission)}
-                      </span>
-                    </div>
-                    <div className="text-center">
-                      <span className="text-[10px] uppercase font-bold text-slate-600 block">Paid So Far</span>
-                      <span className="font-bold text-slate-800 font-mono text-sm">
-                        {formatCurrency(staffOptions.find((s) => String(s.id) === String(formData.staff_id)).total_paid)}
-                      </span>
-                    </div>
-                    <div className="text-right">
-                      <span className="text-[10px] uppercase font-bold text-amber-700 block">Pending Balance</span>
-                      <span className="font-bold text-amber-900 font-mono text-sm">
-                        {formatCurrency(staffOptions.find((s) => String(s.id) === String(formData.staff_id)).pending_balance)}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Amount and Payout Date */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Payout Amount (₹) <span className="text-rose-500">*</span>
-                  </label>
-                  <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs font-bold">₹</span>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0.01"
-                      placeholder="0.00"
-                      value={formData.amount}
-                      onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                      className="w-full pl-8 pr-3 py-2.5 text-xs bg-white border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-semibold text-slate-900"
-                    />
-                  </div>
-                  {formErrors.amount && (
-                    <p className="text-[11px] text-rose-500 mt-1 font-medium">{formErrors.amount}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Payout Date <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    value={formData.payout_date}
-                    onChange={(e) => setFormData({ ...formData, payout_date: e.target.value })}
-                    className="w-full px-3 py-2.5 text-xs bg-white border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-800"
-                  />
-                  {formErrors.payout_date && (
-                    <p className="text-[11px] text-rose-500 mt-1 font-medium">{formErrors.payout_date}</p>
-                  )}
-                </div>
-              </div>
-
-              {/* Account Type (Cash vs Bank Selection) */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-2">
-                  Account Type (Payment Mode) <span className="text-rose-500">*</span>
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, account_type: 'Cash' })}
-                    className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                      formData.account_type === 'Cash'
-                        ? 'bg-emerald-50 text-emerald-800 border-emerald-400 ring-2 ring-emerald-500/20 shadow-xs'
-                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <Banknote className="w-4 h-4 text-emerald-600" />
-                    <span>Cash</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setFormData({ ...formData, account_type: 'Bank' })}
-                    className={`flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border text-xs font-semibold transition-all cursor-pointer ${
-                      formData.account_type === 'Bank'
-                        ? 'bg-indigo-50 text-indigo-800 border-indigo-400 ring-2 ring-indigo-500/20 shadow-xs'
-                        : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <CreditCard className="w-4 h-4 text-indigo-600" />
-                    <span>Bank (Transfer / UPI)</span>
-                  </button>
-                </div>
-                {formErrors.account_type && (
-                  <p className="text-[11px] text-rose-500 mt-1 font-medium">{formErrors.account_type}</p>
-                )}
-              </div>
-
-              {/* Reference Number */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Reference / Transaction No. (Optional)
-                </label>
-                <input
-                  type="text"
-                  placeholder="e.g. UTR-98234823, Cheque #01924, Receipt #321"
-                  value={formData.reference_number}
-                  onChange={(e) => setFormData({ ...formData, reference_number: e.target.value })}
-                  className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-mono text-slate-800"
-                />
-              </div>
-
-              {/* Note / Remarks */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1">
-                  Note / Remarks (Optional)
-                </label>
-                <textarea
-                  rows="3"
-                  placeholder="e.g. Payout disbursement for current month, travel allowance..."
-                  value={formData.note}
-                  onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                  className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-800 resize-none"
-                />
-              </div>
-
-              {/* Action Buttons */}
-              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  disabled={isSubmitting}
-                  className="px-4 py-2 text-xs font-semibold text-slate-700 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl transition-colors cursor-pointer"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="inline-flex items-center gap-1.5 px-5 py-2 text-xs font-semibold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-xs transition-all disabled:opacity-60 cursor-pointer"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>{editingPayout ? 'Updating...' : 'Recording...'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle2 className="w-3.5 h-3.5" />
-                      <span>{editingPayout ? 'Update Payout' : 'Save Payout'}</span>
-                    </>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* ======================================================== */}
       {/* VIEW VOUCHER MODAL                                       */}
