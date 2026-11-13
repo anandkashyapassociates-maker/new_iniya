@@ -75,13 +75,16 @@ export default function SuperAdminDashboardPage() {
         const data = await superAdminDashboardService.getDashboard();
         setDashboardData(data);
 
-        // Populate clinics list from dashboard data or fallback service
+        // Populate latest 3 clinics list from dashboard data or fallback service
         if (data?.modules?.clinics?.list && data.modules.clinics.list.length > 0) {
-          setClinicsList(data.modules.clinics.list);
+          setClinicsList(data.modules.clinics.list.slice(0, 3));
         } else {
           try {
             const clRes = await clinicManagementService.getClinics({ per_page: 100 });
-            setClinicsList(clRes.data || clRes.clinics || []);
+            const list = clRes.data || clRes.clinics || [];
+            // Sort by latest created/id and take latest 3
+            const sorted = [...list].sort((a, b) => (b.id || 0) - (a.id || 0));
+            setClinicsList(sorted.slice(0, 3));
           } catch (clErr) {
             console.warn('Clinic fallback fetch error:', clErr);
           }
@@ -285,7 +288,10 @@ export default function SuperAdminDashboardPage() {
                     Clinic Network &amp; Multi-Branch Oversight
                   </h2>
                   <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-teal-50 text-teal-700 border border-teal-200/80 shadow-2xs">
-                    <AnimatedCounter value={clinicsList.length || modules.clinics?.total || 0} /> {clinicsList.length === 1 ? 'Clinic' : 'Clinics'}
+                    <AnimatedCounter value={modules.clinics?.total || summary.total_clinics || clinicsList.length} /> Total {modules.clinics?.total === 1 ? 'Clinic' : 'Clinics'}
+                  </span>
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-slate-100 text-slate-700 border border-slate-200">
+                    Latest 3 Active
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
                     <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
@@ -336,8 +342,9 @@ export default function SuperAdminDashboardPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
-            {clinicsList.map((clinic, idx) => {
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+              {clinicsList.slice(0, 3).map((clinic, idx) => {
               const isActive = clinic.status === 'active' || !clinic.status;
               const isMaintenance = clinic.status === 'maintenance';
 
@@ -467,6 +474,22 @@ export default function SuperAdminDashboardPage() {
                 </div>
               );
             })}
+            </div>
+
+            {(modules.clinics?.total || summary.total_clinics || clinicsList.length) > 3 && (
+              <div className="p-3.5 rounded-2xl bg-teal-50/70 border border-teal-200/70 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 text-xs">
+                <span className="text-teal-900 font-medium">
+                  Showing the <strong>latest 3 clinics</strong> of {(modules.clinics?.total || summary.total_clinics || clinicsList.length)} registered branches in the enterprise network.
+                </span>
+                <Link
+                  to="/superadmin/clinics"
+                  className="font-bold text-teal-700 hover:text-teal-900 inline-flex items-center gap-1 shrink-0"
+                >
+                  <span>View All {(modules.clinics?.total || summary.total_clinics || clinicsList.length)} Clinics in Directory</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </section>

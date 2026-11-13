@@ -30,12 +30,13 @@ class SuperAdminDashboardController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        // 0. Clinic Network Metrics & All Clinics List
+        // 0. Clinic Network Metrics & Latest 3 Clinics
         $totalClinics = Clinic::count();
         $activeClinics = Clinic::where('status', Clinic::STATUS_ACTIVE)->count();
         $inactiveClinics = Clinic::where('status', Clinic::STATUS_INACTIVE)->count();
-        $allClinics = Clinic::withCount(['admins', 'staff', 'products', 'salesMembers'])
-            ->orderBy('id', 'asc')
+        $latestClinics = Clinic::withCount(['admins', 'staff', 'products', 'salesMembers'])
+            ->latest()
+            ->take(3)
             ->get([
                 'id',
                 'clinic_code',
@@ -274,7 +275,7 @@ class SuperAdminDashboardController extends Controller
                     'active_rate' => $totalClinics > 0 ? round(($activeClinics / $totalClinics) * 100, 1) : 100,
                     'details_url' => '/superadmin/clinics',
                     'create_url' => '/superadmin/clinics/create',
-                    'list' => $allClinics,
+                    'list' => $latestClinics,
                 ],
                 'admins' => [
                     'label' => 'Admin Management',
