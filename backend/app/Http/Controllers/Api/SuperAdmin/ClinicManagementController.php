@@ -110,10 +110,24 @@ class ClinicManagementController extends Controller
     /**
      * Get active clinics options list for dropdowns (creation/edit forms).
      */
-    public function options(): JsonResponse
+    public function options(Request $request): JsonResponse
     {
-        $clinics = Clinic::where('status', Clinic::STATUS_ACTIVE)
-            ->orderBy('name', 'asc')
+        $query = Clinic::where('status', Clinic::STATUS_ACTIVE)
+            ->withCount('admins');
+
+        if ($request->boolean('unassigned_admin_only')) {
+            $exceptAdminId = $request->input('except_admin_id');
+            $query->where(function ($q) use ($exceptAdminId) {
+                $q->doesntHave('admins');
+                if ($exceptAdminId) {
+                    $q->orWhereHas('admins', function ($sub) use ($exceptAdminId) {
+                        $sub->where('id', $exceptAdminId);
+                    });
+                }
+            });
+        }
+
+        $clinics = $query->orderBy('name', 'asc')
             ->get([
                 'id',
                 'clinic_code',

@@ -44,14 +44,29 @@ export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Load clinic options
+  // Load clinic options (only unassigned clinics + current admin's clinic)
   useEffect(() => {
     let isMounted = true;
     const loadClinics = async () => {
       setIsLoadingClinics(true);
       try {
-        const res = await clinicManagementService.getClinicOptions();
-        const list = res?.clinics || (Array.isArray(res) ? res : []);
+        const res = await clinicManagementService.getClinicOptions({
+          unassigned_admin_only: 1,
+          except_admin_id: admin?.id,
+        });
+        const rawList = res?.clinics || (Array.isArray(res) ? res : []);
+        const currentClinicId = admin?.clinic_id || admin?.clinic?.id;
+        const list = rawList.filter(
+          (c) =>
+            !c.admins_count ||
+            Number(c.admins_count) === 0 ||
+            (currentClinicId && String(c.id) === String(currentClinicId))
+        );
+
+        if (admin?.clinic && !list.some((c) => String(c.id) === String(admin.clinic.id))) {
+          list.unshift(admin.clinic);
+        }
+
         if (isMounted) {
           setClinics(list);
         }
@@ -66,7 +81,7 @@ export default function AdminEditModal({ admin, isOpen, onClose, onSuccess }) {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [admin]);
 
   // Initialize form when admin changes
   useEffect(() => {
