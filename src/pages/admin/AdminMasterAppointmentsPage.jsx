@@ -22,6 +22,7 @@ import {
   MapPin,
 } from 'lucide-react';
 import adminMasterAppointmentService from '../../services/adminMasterAppointmentService';
+import adminInventoryService from '../../services/adminInventoryService';
 import DataTable from '../../components/DataTable';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import AppointmentReceiptModal from '../../components/admin/AppointmentReceiptModal';
@@ -72,12 +73,15 @@ export default function AdminMasterAppointmentsPage() {
     sales_teams: [],
     staff: [],
     inventory_products: [],
+    clinics: [],
   });
+  const [clinics, setClinics] = useState([]);
 
   // Filters
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState(''); // 'current', 'preview', or ''
   const [statusFilter, setStatusFilter] = useState(''); // 'pending', 'in_progress', 'completed', 'cancelled'
+  const [clinicFilter, setClinicFilter] = useState('');
   const [customerIdFilter, setCustomerIdFilter] = useState('');
   const [salesTeamIdFilter, setSalesTeamIdFilter] = useState('');
   const [activeStatCard, setActiveStatCard] = useState('all');
@@ -95,9 +99,21 @@ export default function AdminMasterAppointmentsPage() {
       .then((res) => {
         if (res.success && res.data) {
           setOptions(res.data);
+          if (Array.isArray(res.data.clinics) && res.data.clinics.length > 0) {
+            setClinics(res.data.clinics);
+          }
         }
       })
       .catch((err) => console.error(err));
+
+    adminInventoryService.getClinicDropdown()
+      .then((clinsRes) => {
+        const clins = clinsRes?.clinics || clinsRes || [];
+        if (Array.isArray(clins) && clins.length > 0) {
+          setClinics((prev) => (prev.length > 0 ? prev : clins));
+        }
+      })
+      .catch(() => {});
   }, []);
 
   // Fetch appointments list
@@ -112,6 +128,7 @@ export default function AdminMasterAppointmentsPage() {
         if (search.trim()) params.search = search.trim();
         if (dateFilter) params.date = dateFilter;
         if (statusFilter && statusFilter !== 'all') params.status = statusFilter;
+        if (clinicFilter && clinicFilter !== 'all') params.clinic_id = clinicFilter;
         if (customerIdFilter) params.customer_id = customerIdFilter;
         if (salesTeamIdFilter) params.sales_team_id = salesTeamIdFilter;
 
@@ -132,20 +149,22 @@ export default function AdminMasterAppointmentsPage() {
         setLoading(false);
       }
     },
-    [search, dateFilter, statusFilter, customerIdFilter, salesTeamIdFilter]
+    [search, dateFilter, statusFilter, clinicFilter, customerIdFilter, salesTeamIdFilter]
   );
 
   // Fetch aggregate stats
   const fetchStats = useCallback(async () => {
     try {
-      const res = await adminMasterAppointmentService.getStats();
+      const params = {};
+      if (clinicFilter && clinicFilter !== 'all') params.clinic_id = clinicFilter;
+      const res = await adminMasterAppointmentService.getStats(params);
       if (res.success && res.data) {
         setStats(res.data);
       }
     } catch (err) {
       console.error(err);
     }
-  }, []);
+  }, [clinicFilter]);
 
   useEffect(() => {
     fetchAppointments(1);
@@ -585,20 +604,18 @@ export default function AdminMasterAppointmentsPage() {
               ))}
             </select>
 
-            {/* Session Status filter */}
+            {/* Clinic Branch filter (Replaced All Statuses as requested) */}
             <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setActiveStatCard(e.target.value || 'all');
-              }}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors"
+              value={clinicFilter}
+              onChange={(e) => setClinicFilter(e.target.value)}
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors max-w-[200px] truncate"
             >
-              <option value="">All Statuses</option>
-              <option value="pending">Pending</option>
-              <option value="in_progress">In Progress</option>
-              <option value="completed">Completed</option>
-              <option value="cancelled">Cancelled</option>
+              <option value="">All Clinics (Branches)</option>
+              {clinics.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} {c.branch_name ? `(${c.branch_name})` : (c.location ? `(${c.location})` : '')}
+                </option>
+              ))}
             </select>
           </div>
         </div>

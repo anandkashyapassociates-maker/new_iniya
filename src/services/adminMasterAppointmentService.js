@@ -6,8 +6,8 @@ export const adminMasterAppointmentService = {
     return adminApi.get('/admin/master-appointments', { params }).then(r => r.data);
   },
 
-  getStats() {
-    return adminApi.get('/admin/master-appointments/stats').then(r => r.data);
+  getStats(params = {}) {
+    return adminApi.get('/admin/master-appointments/stats', { params }).then(r => r.data);
   },
 
   getOptions() {
