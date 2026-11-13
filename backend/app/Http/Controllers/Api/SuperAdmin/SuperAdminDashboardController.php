@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Admin;
 use App\Models\AdminActivityLog;
 use App\Models\AppointmentSession;
+use App\Models\Clinic;
 use App\Models\Customer;
 use App\Models\InventoryBrand;
 use App\Models\InventoryCategory;
@@ -29,6 +30,31 @@ class SuperAdminDashboardController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
+        // 0. Clinic Network Metrics & All Clinics List
+        $totalClinics = Clinic::count();
+        $activeClinics = Clinic::where('status', Clinic::STATUS_ACTIVE)->count();
+        $inactiveClinics = Clinic::where('status', Clinic::STATUS_INACTIVE)->count();
+        $allClinics = Clinic::withCount(['admins', 'staff', 'products', 'salesMembers'])
+            ->orderBy('id', 'asc')
+            ->get([
+                'id',
+                'clinic_code',
+                'name',
+                'branch_name',
+                'location',
+                'address',
+                'city',
+                'state',
+                'postal_code',
+                'country',
+                'phone',
+                'alternate_phone',
+                'email',
+                'contact_person',
+                'status',
+                'created_at',
+            ]);
+
         // 1. Admin Management Metrics
         $totalAdmins = Admin::count();
         $activeAdmins = Admin::where('status', Admin::STATUS_ACTIVE)
@@ -210,6 +236,8 @@ class SuperAdminDashboardController extends Controller
 
         return response()->json([
             'summary' => [
+                'total_clinics' => $totalClinics,
+                'active_clinics' => $activeClinics,
                 'total_personnel' => $totalPersonnel,
                 'total_active' => $totalActive,
                 'total_inactive' => $totalInactive,
@@ -238,6 +266,16 @@ class SuperAdminDashboardController extends Controller
                 'pending_payout_liabilities' => $pendingPayoutLiabilities,
             ],
             'modules' => [
+                'clinics' => [
+                    'label' => 'Clinic Network',
+                    'total' => $totalClinics,
+                    'active' => $activeClinics,
+                    'inactive' => $inactiveClinics,
+                    'active_rate' => $totalClinics > 0 ? round(($activeClinics / $totalClinics) * 100, 1) : 100,
+                    'details_url' => '/superadmin/clinics',
+                    'create_url' => '/superadmin/clinics/create',
+                    'list' => $allClinics,
+                ],
                 'admins' => [
                     'label' => 'Admin Management',
                     'total' => $totalAdmins,

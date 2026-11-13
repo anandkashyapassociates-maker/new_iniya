@@ -27,7 +27,12 @@ import {
   ChevronDown,
   TrendingUp,
   Award,
+  MapPin,
+  Compass,
+  Phone,
+  User,
 } from 'lucide-react';
+import clinicManagementService from '../services/clinicManagementService';
 import { useSuperAdminAuth } from '../auth/SuperAdminAuthContext';
 import superAdminDashboardService from '../services/superAdminDashboardService';
 import { useToast } from '../../context/ToastContext';
@@ -55,6 +60,7 @@ export default function SuperAdminDashboardPage() {
   const [error, setError] = useState(null);
   const [activeChartPeriod, setActiveChartPeriod] = useState('Last 6 Months');
   const [auditTrailOpen, setAuditTrailOpen] = useState(false);
+  const [clinicsList, setClinicsList] = useState([]);
 
   const fetchDashboard = useCallback(
     async (isRefresh = false) => {
@@ -68,6 +74,19 @@ export default function SuperAdminDashboardPage() {
       try {
         const data = await superAdminDashboardService.getDashboard();
         setDashboardData(data);
+
+        // Populate clinics list from dashboard data or fallback service
+        if (data?.modules?.clinics?.list && data.modules.clinics.list.length > 0) {
+          setClinicsList(data.modules.clinics.list);
+        } else {
+          try {
+            const clRes = await clinicManagementService.getClinics({ per_page: 100 });
+            setClinicsList(clRes.data || clRes.clinics || []);
+          } catch (clErr) {
+            console.warn('Clinic fallback fetch error:', clErr);
+          }
+        }
+
         if (isRefresh) {
           toast.success('Live executive dashboard updated from database.');
         }
@@ -103,6 +122,8 @@ export default function SuperAdminDashboardPage() {
   }
 
   const summary = dashboardData?.summary || {
+    total_clinics: 0,
+    active_clinics: 0,
     total_personnel: 0,
     total_active: 0,
     total_inactive: 0,
@@ -126,6 +147,7 @@ export default function SuperAdminDashboardPage() {
   };
 
   const modules = dashboardData?.modules || {
+    clinics: { total: 0, active: 0, inactive: 0, active_rate: 100, list: [] },
     admins: { total: 0, active: 0, inactive: 0, blocked: 0, active_rate: 100, recent: [] },
     staff: { total: 0, active: 0, inactive: 0, blocked: 0, departments_count: 0, active_rate: 100, recent: [] },
     vendors: { total: 0, active: 0, inactive: 0, blocked: 0, types_count: 0, active_rate: 100, recent: [] },
@@ -245,6 +267,209 @@ export default function SuperAdminDashboardPage() {
           </Link>
         </div>
       )}
+
+      {/* ======================================================== */}
+      {/* 2.5 Clinic Network Oversight & Branch Directory          */}
+      {/* (Spacious, modern, smoothly animated multi-clinic cards) */}
+      {/* ======================================================== */}
+      <section className="space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1">
+          <div>
+            <div className="flex items-center gap-2.5">
+              <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-teal-500 via-emerald-600 to-cyan-600 text-white flex items-center justify-center icon-3d shadow-md shadow-emerald-500/20 shrink-0">
+                <Building2 className="w-5 h-5 drop-shadow-sm" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h2 className="text-base sm:text-lg font-bold font-display text-slate-900 tracking-tight">
+                    Clinic Network &amp; Multi-Branch Oversight
+                  </h2>
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-extrabold bg-teal-50 text-teal-700 border border-teal-200/80 shadow-2xs">
+                    <AnimatedCounter value={clinicsList.length || modules.clinics?.total || 0} /> {clinicsList.length === 1 ? 'Clinic' : 'Clinics'}
+                  </span>
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span>Live Operational Network</span>
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Multi-branch operational oversight, physical locations, assigned personnel, and branch governance.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+            <Link
+              to="/superadmin/clinics/create"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs hover:shadow-md transition-all duration-200 cursor-pointer active:scale-98"
+            >
+              <PlusCircle className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Add New Clinic</span>
+            </Link>
+            <Link
+              to="/superadmin/clinics"
+              className="inline-flex items-center gap-1 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 hover:text-slate-900 text-xs font-semibold shadow-2xs hover:shadow-xs transition-all duration-200 group/link"
+            >
+              <span>Manage Directory</span>
+              <ArrowUpRight className="w-3.5 h-3.5 text-slate-400 group-hover/link:text-slate-900 group-hover/link:translate-x-0.5 group-hover/link:-translate-y-0.5 transition-transform" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Multi-Clinic Cards Grid (Spacious & Smooth Animated) */}
+        {clinicsList.length === 0 ? (
+          <div className="bg-white rounded-3xl p-8 border border-slate-200/90 text-center shadow-2xs">
+            <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-3">
+              <Building2 className="w-6 h-6" />
+            </div>
+            <h4 className="text-sm font-bold text-slate-900">No Clinics Registered Yet</h4>
+            <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto">
+              Provision your first clinic branch to activate appointments, medical inventory, and staffing oversight.
+            </p>
+            <Link
+              to="/superadmin/clinics/create"
+              className="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all cursor-pointer"
+            >
+              <PlusCircle className="w-4 h-4 text-emerald-400" />
+              <span>Create First Clinic</span>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+            {clinicsList.map((clinic, idx) => {
+              const isActive = clinic.status === 'active' || !clinic.status;
+              const isMaintenance = clinic.status === 'maintenance';
+
+              return (
+                <div
+                  key={clinic.id || idx}
+                  className="group relative bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/90 shadow-2xs hover:shadow-xl hover:-translate-y-1.5 transition-all duration-300 ease-out flex flex-col justify-between overflow-hidden"
+                >
+                  {/* Subtle Ambient Glow on Hover */}
+                  <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-br from-teal-500/10 via-emerald-500/5 to-transparent rounded-full blur-2xl pointer-events-none group-hover:scale-150 transition-transform duration-500" />
+
+                  <div className="relative z-10 space-y-4">
+                    {/* Header Row: 3D Icon + Clinic Code + Status Badge */}
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-teal-500 via-emerald-600 to-cyan-600 text-white flex items-center justify-center icon-3d shadow-md shadow-emerald-500/25 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shrink-0">
+                          <Building2 className="w-6 h-6 drop-shadow-sm" />
+                        </div>
+                        <span className="font-mono text-xs font-bold px-2.5 py-1 rounded-lg bg-blue-50 text-blue-700 border border-blue-200/80 shadow-2xs">
+                          {clinic.clinic_code || `CLN-${String(clinic.id).padStart(4, '0')}`}
+                        </span>
+                      </div>
+
+                      <span
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border shadow-2xs shrink-0 capitalize ${
+                          isActive
+                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200/80'
+                            : isMaintenance
+                            ? 'bg-amber-50 text-amber-700 border-amber-200/80'
+                            : 'bg-slate-100 text-slate-600 border-slate-200/80'
+                        }`}
+                      >
+                        <span
+                          className={`w-1.5 h-1.5 rounded-full ${
+                            isActive
+                              ? 'bg-emerald-500 animate-pulse'
+                              : isMaintenance
+                              ? 'bg-amber-500'
+                              : 'bg-slate-400'
+                          }`}
+                        />
+                        <span>{clinic.status || 'Active'}</span>
+                      </span>
+                    </div>
+
+                    {/* Clinic Name & Branch Pill */}
+                    <div>
+                      <h3 className="text-base sm:text-lg font-bold font-display text-slate-900 group-hover:text-teal-700 transition-colors line-clamp-1" title={clinic.name}>
+                        {clinic.name}
+                      </h3>
+                      <div className="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                        <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200/90 shadow-2xs">
+                          <MapPin className="w-3 h-3 text-purple-600 shrink-0" />
+                          <span>{clinic.branch_name || 'Main Flagship Clinic'}</span>
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Clinic Meta Information Details */}
+                    <div className="space-y-2.5 pt-2 border-t border-slate-100 text-xs">
+                      {/* Location & Area */}
+                      <div className="flex items-start gap-2 text-slate-700">
+                        <Compass className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <span className="font-semibold text-slate-800 block truncate" title={clinic.location || clinic.address}>
+                            {clinic.location || 'Location Not Specified'}
+                          </span>
+                          {(clinic.city || clinic.state) && (
+                            <span className="text-[11px] text-slate-400 font-medium block truncate">
+                              {[clinic.city, clinic.state, clinic.postal_code].filter(Boolean).join(', ')}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Clinic Manager / In-Charge */}
+                      <div className="flex items-center gap-2 text-slate-600">
+                        <User className="w-4 h-4 text-slate-400 shrink-0" />
+                        <span className="truncate">
+                          Manager: <strong className="text-slate-800 font-semibold">{clinic.contact_person || 'Not Assigned'}</strong>
+                        </span>
+                      </div>
+
+                      {/* Phone */}
+                      <div className="flex items-center gap-2 text-slate-600 font-mono text-[11px]">
+                        <Phone className="w-4 h-4 text-slate-400 shrink-0" />
+                        <span>{clinic.phone || clinic.alternate_phone || 'No phone recorded'}</span>
+                      </div>
+                    </div>
+
+                    {/* Operational Highlights Chips */}
+                    <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-100">
+                      <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100/90 text-center flex flex-col items-center">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Admins</span>
+                        <span className="text-xs font-bold text-slate-800 font-mono mt-0.5">
+                          {clinic.admins_count ?? 1} Live
+                        </span>
+                      </div>
+                      <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100/90 text-center flex flex-col items-center">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Staff</span>
+                        <span className="text-xs font-bold text-emerald-600 font-mono mt-0.5">
+                          {clinic.staff_count ?? 0} On Duty
+                        </span>
+                      </div>
+                      <div className="p-2.5 rounded-2xl bg-slate-50 border border-slate-100/90 text-center flex flex-col items-center">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Supplies</span>
+                        <span className="text-xs font-bold text-blue-600 font-mono mt-0.5">
+                          {clinic.products_count ?? 0} SKUs
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Card Bottom: Action Link */}
+                  <div className="mt-5 pt-3.5 border-t border-slate-100 flex items-center justify-between text-xs relative z-10">
+                    <span className="text-[11px] text-slate-400">
+                      {clinic.created_at ? `Est. ${new Date(clinic.created_at).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' })}` : 'Branch Registered'}
+                    </span>
+                    <Link
+                      to="/superadmin/clinics"
+                      className="inline-flex items-center gap-1 font-bold text-teal-600 hover:text-teal-700 transition-colors group-hover:translate-x-0.5 duration-200"
+                    >
+                      <span>Branch Overview</span>
+                      <ArrowUpRight className="w-3.5 h-3.5" />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </section>
 
       {/* ======================================================== */}
       {/* 3. Workforce & Operational Governance (4 Upper Cards)    */}
