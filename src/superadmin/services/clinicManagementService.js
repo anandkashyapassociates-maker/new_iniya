@@ -71,8 +71,8 @@ export const clinicManagementService = {
   /**
    * Fetch active clinics options list for dropdowns.
    */
-  async getClinicOptions() {
-    const response = await superAdminApiClient.get('/superadmin/clinics/options');
+  async getClinicOptions(params = {}) {
+    const response = await superAdminApiClient.get('/superadmin/clinics/options', { params });
     return response.data;
   },
 };

@@ -69,7 +69,12 @@ class AdminManagementController extends Controller
     public function store(Request $request): JsonResponse
     {
         $rules = [
-            'clinic_id' => ['required', 'integer', 'exists:clinics,id'],
+            'clinic_id' => [
+                'required',
+                'integer',
+                'exists:clinics,id',
+                Rule::unique('admins', 'clinic_id'),
+            ],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:admins,email'],
             'mobile' => ['required', 'string', 'min:7', 'max:20', 'unique:admins,mobile'],
@@ -83,7 +88,10 @@ class AdminManagementController extends Controller
             $rules['password'] = ['required', 'string', Password::min(8)];
         }
 
-        $validated = $request->validate($rules);
+        $validated = $request->validate($rules, [
+            'clinic_id.required' => 'Please select a clinic branch for this administrator.',
+            'clinic_id.unique' => 'This clinic branch already has an assigned administrator. Each clinic can only have one admin.',
+        ]);
 
         $status = $validated['status'] ?? (isset($validated['is_active']) ? ($validated['is_active'] ? 'active' : 'inactive') : 'active');
         $isActive = ($status === 'active');
@@ -154,13 +162,22 @@ class AdminManagementController extends Controller
         }
 
         $validated = $request->validate([
-            'clinic_id' => ['sometimes', 'required', 'integer', 'exists:clinics,id'],
+            'clinic_id' => [
+                'sometimes',
+                'required',
+                'integer',
+                'exists:clinics,id',
+                Rule::unique('admins', 'clinic_id')->ignore($admin->id),
+            ],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('admins')->ignore($admin->id)],
             'mobile' => ['nullable', 'string', 'min:7', 'max:20', Rule::unique('admins')->ignore($admin->id)],
             'password' => ['nullable', 'string', Password::min(8)],
             'status' => ['sometimes', 'string', Rule::in(['active', 'inactive', 'blocked'])],
             'is_active' => ['sometimes', 'boolean'],
+        ], [
+            'clinic_id.required' => 'Please select a clinic branch for this administrator.',
+            'clinic_id.unique' => 'This clinic branch already has an assigned administrator. Each clinic can only have one admin.',
         ]);
 
         $dataToUpdate = [
