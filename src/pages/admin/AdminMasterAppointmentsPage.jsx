@@ -192,6 +192,20 @@ export default function AdminMasterAppointmentsPage() {
       ),
     },
     {
+      header: 'DATE',
+      className: 'whitespace-nowrap',
+      render: (row) => {
+        const d = row.appointment_date ? new Date(row.appointment_date) : null;
+        return (
+          <div className="text-xs">
+            <span className="font-semibold text-slate-800">
+              {d ? d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
+            </span>
+          </div>
+        );
+      },
+    },
+    {
       header: 'APPOINTMENT #',
       className: 'font-semibold text-xs',
       render: (row) => (
@@ -244,19 +258,6 @@ export default function AdminMasterAppointmentsPage() {
           <div className="text-xs text-slate-500 font-mono">{row.customer?.mobile || ''}</div>
         </div>
       ),
-    },
-    {
-      header: 'DATE',
-      render: (row) => {
-        const d = row.appointment_date ? new Date(row.appointment_date) : null;
-        return (
-          <div className="text-xs">
-            <span className="font-semibold text-slate-800">
-              {d ? d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : 'N/A'}
-            </span>
-          </div>
-        );
-      },
     },
     {
       header: 'SALES TEAM',
