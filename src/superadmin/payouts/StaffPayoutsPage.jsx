@@ -466,6 +466,7 @@ export default function StaffPayoutsPage() {
                 <th className="py-3 px-4">Voucher No</th>
                 <th className="py-3 px-4">Date</th>
                 <th className="py-3 px-4">Staff Beneficiary</th>
+                <th className="py-3 px-4">Clinic Branch</th>
                 <th className="py-3 px-4 text-right">Total Payout (₹)</th>
                 <th className="py-3 px-4 text-right">Paid Amount (₹)</th>
                 <th className="py-3 px-4 text-right">Balance Due (₹)</th>
@@ -478,7 +479,7 @@ export default function StaffPayoutsPage() {
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan="11" className="py-12 text-center text-slate-500">
+                  <td colSpan="12" className="py-12 text-center text-slate-500">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <RefreshCw className="w-6 h-6 animate-spin text-emerald-600" />
                       <p className="text-xs font-medium">Loading staff payouts...</p>
@@ -487,7 +488,7 @@ export default function StaffPayoutsPage() {
                 </tr>
               ) : payouts.length === 0 ? (
                 <tr>
-                  <td colSpan="11" className="py-12 text-center text-slate-500">
+                  <td colSpan="12" className="py-12 text-center text-slate-500">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <UserCheck className="w-8 h-8 text-slate-300" />
                       <p className="text-xs font-medium text-slate-700">No staff payouts found</p>
@@ -505,6 +506,7 @@ export default function StaffPayoutsPage() {
                   const balAmt = Number(item.balance_amount) || 0;
                   const isPaid = balAmt <= 0;
                   const isPartial = balAmt > 0 && paidAmt > 0;
+                  const clinic = item.staff?.clinic || item.clinic;
 
                   return (
                     <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
@@ -528,16 +530,30 @@ export default function StaffPayoutsPage() {
                             <p className="text-[11px] text-slate-500 font-mono">
                               {item.staff.staff_code} &bull; {item.staff.department || 'General'}
                             </p>
-                            {item.staff.clinic && (
-                              <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/80">
-                                <Building2 className="w-2.5 h-2.5 text-blue-600 shrink-0" />
-                                <span className="truncate max-w-[130px]">{item.staff.clinic.name}</span>
-                                <span className="font-mono text-[9px] text-blue-500">({item.staff.clinic.clinic_code})</span>
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 italic">Unknown Staff Member</span>
+                        )}
+                      </td>
+
+                      {/* Clinic Branch (Separated Column) */}
+                      <td className="py-3 px-4">
+                        {clinic ? (
+                          <div>
+                            <div className="flex items-center gap-1.5 font-semibold text-slate-800">
+                              <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                              <span className="truncate max-w-[170px]" title={clinic.name}>
+                                {clinic.name}
+                              </span>
+                            </div>
+                            {(clinic.location || clinic.branch_name) && (
+                              <p className="text-[11px] text-slate-500 mt-0.5 truncate max-w-[170px]">
+                                {clinic.location || clinic.branch_name}
                               </p>
                             )}
                           </div>
                         ) : (
-                          <span className="text-slate-400 italic">Unknown Staff Member</span>
+                          <span className="text-slate-400 italic text-[11px]">—</span>
                         )}
                       </td>
 

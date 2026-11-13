@@ -178,8 +178,17 @@ export default function StaffPayoutCreatePage() {
         });
       }
     });
+    // Ensure currently selected location appears in options even before clinics finish loading
+    if (selectedLocation && !map.has(selectedLocation)) {
+      map.set(selectedLocation, {
+        location: selectedLocation,
+        city: '',
+        state: '',
+        label: selectedLocation,
+      });
+    }
     return Array.from(map.values());
-  }, [clinics]);
+  }, [clinics, selectedLocation]);
 
   // Search filtered clinics for live search box
   const searchFilteredClinics = useMemo(() => {
@@ -203,11 +212,19 @@ export default function StaffPayoutCreatePage() {
 
   // Filter staff options to those appointed to the selected clinic
   const filteredStaffOptions = useMemo(() => {
-    if (!formData.clinic_id) return [];
-    return staffOptions.filter(
+    if (!formData.clinic_id) return staffOptions;
+    const filtered = staffOptions.filter(
       (s) => String(s.clinic_id) === String(formData.clinic_id) || !s.clinic_id
     );
-  }, [staffOptions, formData.clinic_id]);
+    // If a staff member is currently selected (e.g. in edit mode), make sure they exist in the options
+    if (formData.staff_id && !filtered.some((s) => String(s.id) === String(formData.staff_id))) {
+      const currentStaff = staffOptions.find((s) => String(s.id) === String(formData.staff_id));
+      if (currentStaff) {
+        return [currentStaff, ...filtered];
+      }
+    }
+    return filtered;
+  }, [staffOptions, formData.clinic_id, formData.staff_id]);
 
   // When location is selected: Clinic Name is automatically found and filled!
   const handleLocationSelect = (locKey) => {
@@ -280,7 +297,7 @@ export default function StaffPayoutCreatePage() {
     setFormData((prev) => ({
       ...prev,
       staff_id: staffId,
-      amount: found && found.pending_balance > 0 ? String(found.pending_balance) : prev.amount,
+      amount: !isEditMode && found && found.pending_balance > 0 ? String(found.pending_balance) : prev.amount,
     }));
     if (formErrors.staff_id) {
       setFormErrors((prev) => ({ ...prev, staff_id: null }));
@@ -302,7 +319,7 @@ export default function StaffPayoutCreatePage() {
     setFormErrors({});
 
     const errors = {};
-    if (!formData.clinic_id && !isEditMode) {
+    if (!formData.clinic_id) {
       errors.clinic_id = 'Please select a location to auto-assign clinic branch.';
     }
     if (!formData.staff_id) {
@@ -430,71 +447,69 @@ export default function StaffPayoutCreatePage() {
             </div>
 
             {/* Quick Search Box (Location or Clinic Name) */}
-            {!isEditMode && (
-              <div className="relative">
-                <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-                <input
-                  type="text"
-                  placeholder="Quick Search: Type location or clinic name (e.g. Central, Bengaluru, Iniya)..."
-                  value={clinicSearchTerm}
-                  onChange={(e) => {
-                    setClinicSearchTerm(e.target.value);
-                    setIsSearchDropdownOpen(true);
+            <div className="relative">
+              <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <input
+                type="text"
+                placeholder="Quick Search: Type location or clinic name (e.g. Central, Bengaluru, Iniya)..."
+                value={clinicSearchTerm}
+                onChange={(e) => {
+                  setClinicSearchTerm(e.target.value);
+                  setIsSearchDropdownOpen(true);
+                }}
+                onFocus={() => setIsSearchDropdownOpen(true)}
+                disabled={isLoadingClinics}
+                className="w-full pl-10 pr-9 py-2.5 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 shadow-2xs placeholder:text-slate-400"
+              />
+              {clinicSearchTerm && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setClinicSearchTerm('');
+                    setIsSearchDropdownOpen(false);
                   }}
-                  onFocus={() => setIsSearchDropdownOpen(true)}
-                  disabled={isLoadingClinics}
-                  className="w-full pl-10 pr-9 py-2.5 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 shadow-2xs placeholder:text-slate-400"
-                />
-                {clinicSearchTerm && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setClinicSearchTerm('');
-                      setIsSearchDropdownOpen(false);
-                    }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                )}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer p-0.5"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
 
-                {/* Floating Search Dropdown */}
-                {isSearchDropdownOpen && clinicSearchTerm.trim() && (
-                  <div className="absolute left-0 right-0 top-full mt-1.5 z-30 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden max-h-56 overflow-y-auto divide-y divide-slate-100">
-                    {searchFilteredClinics.length === 0 ? (
-                      <div className="p-4 text-center text-xs text-slate-500">
-                        No clinics found matching &ldquo;{clinicSearchTerm}&rdquo;
-                      </div>
-                    ) : (
-                      searchFilteredClinics.map((c) => (
-                        <button
-                          key={c.id}
-                          type="button"
-                          onClick={() => handleClinicSelect(c)}
-                          className={`w-full text-left px-4 py-3 hover:bg-blue-50/80 transition-colors flex items-center justify-between cursor-pointer ${
-                            String(formData.clinic_id) === String(c.id) ? 'bg-blue-50 text-blue-900 font-semibold' : 'text-slate-800'
-                          }`}
-                        >
-                          <div>
-                            <p className="text-xs font-semibold">{c.name} {c.branch_name ? `(${c.branch_name})` : ''}</p>
-                            <p className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                              <MapPin className="w-3 h-3 text-slate-400" />
-                              <span>{c.location || c.city || 'Location N/A'}</span>
-                              {c.city && c.location && c.city !== c.location && (
-                                <span>&bull; {c.city}</span>
-                              )}
-                            </p>
-                          </div>
-                          <span className="font-mono text-[10px] px-2.5 py-0.5 rounded-md bg-slate-100 text-blue-700 font-bold border border-slate-200 shrink-0">
-                            {c.clinic_code || `ID: ${c.id}`}
-                          </span>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
+              {/* Floating Search Dropdown */}
+              {isSearchDropdownOpen && clinicSearchTerm.trim() && (
+                <div className="absolute left-0 right-0 top-full mt-1.5 z-30 bg-white rounded-xl shadow-xl border border-slate-200 overflow-hidden max-h-56 overflow-y-auto divide-y divide-slate-100">
+                  {searchFilteredClinics.length === 0 ? (
+                    <div className="p-4 text-center text-xs text-slate-500">
+                      No clinics found matching &ldquo;{clinicSearchTerm}&rdquo;
+                    </div>
+                  ) : (
+                    searchFilteredClinics.map((c) => (
+                      <button
+                        key={c.id}
+                        type="button"
+                        onClick={() => handleClinicSelect(c)}
+                        className={`w-full text-left px-4 py-3 hover:bg-blue-50/80 transition-colors flex items-center justify-between cursor-pointer ${
+                          String(formData.clinic_id) === String(c.id) ? 'bg-blue-50 text-blue-900 font-semibold' : 'text-slate-800'
+                        }`}
+                      >
+                        <div>
+                          <p className="text-xs font-semibold">{c.name} {c.branch_name ? `(${c.branch_name})` : ''}</p>
+                          <p className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
+                            <MapPin className="w-3 h-3 text-slate-400" />
+                            <span>{c.location || c.city || 'Location N/A'}</span>
+                            {c.city && c.location && c.city !== c.location && (
+                              <span>&bull; {c.city}</span>
+                            )}
+                          </p>
+                        </div>
+                        <span className="font-mono text-[10px] px-2.5 py-0.5 rounded-md bg-slate-100 text-blue-700 font-bold border border-slate-200 shrink-0">
+                          {c.clinic_code || `ID: ${c.id}`}
+                        </span>
+                      </button>
+                    ))
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Two Columns: 1. Location Selection -> 2. Clinic Name (Readonly & Auto-Filled) */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -504,25 +519,19 @@ export default function StaffPayoutCreatePage() {
                   <MapPin className="w-3.5 h-3.5 text-blue-600" />
                   <span>1. Select Location</span> <span className="text-rose-500">*</span>
                 </label>
-                {isEditMode ? (
-                  <div className="w-full px-3.5 py-2.5 text-xs bg-slate-100 border border-slate-300 rounded-xl text-slate-800 font-medium cursor-not-allowed select-none">
-                    {selectedLocation || selectedClinic?.location || selectedClinic?.city || '—'}
-                  </div>
-                ) : (
-                  <select
-                    value={selectedLocation}
-                    onChange={(e) => handleLocationSelect(e.target.value)}
-                    disabled={isLoadingClinics}
-                    className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 cursor-pointer font-medium disabled:bg-slate-100 disabled:cursor-not-allowed shadow-2xs"
-                  >
-                    <option value="">-- Choose Location --</option>
-                    {availableLocations.map((loc) => (
-                      <option key={loc.location} value={loc.location}>
-                        {loc.label}
-                      </option>
-                    ))}
-                  </select>
-                )}
+                <select
+                  value={selectedLocation}
+                  onChange={(e) => handleLocationSelect(e.target.value)}
+                  disabled={isLoadingClinics}
+                  className="w-full px-3.5 py-2.5 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 cursor-pointer font-medium disabled:bg-slate-100 disabled:cursor-not-allowed shadow-2xs"
+                >
+                  <option value="">-- Choose Location --</option>
+                  {availableLocations.map((loc) => (
+                    <option key={loc.location} value={loc.location}>
+                      {loc.label}
+                    </option>
+                  ))}
+                </select>
                 <p className="text-[11px] text-slate-500 mt-1">
                   Selecting a location automatically assigns the associated Clinic Branch.
                 </p>
@@ -661,39 +670,25 @@ export default function StaffPayoutCreatePage() {
               </label>
             </div>
 
-            {isEditMode ? (
-              <div className="w-full px-3.5 py-3 text-xs bg-slate-100 border border-slate-300 rounded-xl text-slate-800 font-medium flex items-center justify-between cursor-not-allowed select-none">
-                <span className="font-semibold text-slate-900">
-                  {existingPayout?.staff?.name || selectedStaffObj?.name || 'Staff Member'}
-                  <span className="text-slate-500 font-mono text-[11px] ml-1.5">
-                    ({existingPayout?.staff?.staff_code || selectedStaffObj?.staff_code || `ID: ${formData.staff_id}`})
-                  </span>
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-200 text-slate-600 border border-slate-300">
-                  Read Only
-                </span>
-              </div>
-            ) : (
-              <select
-                value={formData.staff_id}
-                onChange={(e) => handleStaffSelect(e.target.value)}
-                disabled={!formData.clinic_id}
-                className="w-full px-3.5 py-3 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-800 disabled:bg-slate-100 disabled:cursor-not-allowed cursor-pointer shadow-2xs font-medium"
-              >
-                <option value="">
-                  {!formData.clinic_id
-                    ? '-- Select Location & Clinic First --'
-                    : filteredStaffOptions.length === 0
-                    ? '-- No Staff Appointed To This Clinic --'
-                    : '-- Choose Staff Member --'}
+            <select
+              value={formData.staff_id}
+              onChange={(e) => handleStaffSelect(e.target.value)}
+              disabled={!formData.clinic_id}
+              className="w-full px-3.5 py-3 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-800 disabled:bg-slate-100 disabled:cursor-not-allowed cursor-pointer shadow-2xs font-medium"
+            >
+              <option value="">
+                {!formData.clinic_id
+                  ? '-- Select Location & Clinic First --'
+                  : filteredStaffOptions.length === 0
+                  ? '-- No Staff Appointed To This Clinic --'
+                  : '-- Choose Staff Member --'}
+              </option>
+              {filteredStaffOptions.map((st) => (
+                <option key={st.id} value={st.id}>
+                  {st.name} ({st.staff_code || `ID: ${st.id}`}) &mdash; Commission: ₹{Number(st.total_commission || 0).toLocaleString('en-IN')} {st.pending_balance > 0 ? `(Pending: ₹${Number(st.pending_balance || 0).toLocaleString('en-IN')})` : ''}
                 </option>
-                {filteredStaffOptions.map((st) => (
-                  <option key={st.id} value={st.id}>
-                    {st.name} ({st.staff_code || `ID: ${st.id}`}) &mdash; Commission: ₹{Number(st.total_commission || 0).toLocaleString('en-IN')} {st.pending_balance > 0 ? `(Pending: ₹${Number(st.pending_balance || 0).toLocaleString('en-IN')})` : ''}
-                  </option>
-                ))}
-              </select>
-            )}
+              ))}
+            </select>
             {formErrors.staff_id && (
               <p className="text-[11px] text-rose-500 font-medium flex items-center gap-1 mt-1">
                 <AlertCircle className="w-3 h-3 shrink-0" />

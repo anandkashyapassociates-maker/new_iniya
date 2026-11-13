@@ -26,6 +26,7 @@ import {
   Phone,
 } from 'lucide-react';
 import { payoutService } from '../services/payoutService';
+import clinicManagementService from '../services/clinicManagementService';
 import { useToast } from '../../context/ToastContext';
 
 export default function PayoutsLedgerPage() {
@@ -33,6 +34,8 @@ export default function PayoutsLedgerPage() {
 
   // Data states
   const [ledger, setLedger] = useState([]);
+  const [clinics, setClinics] = useState([]);
+  const [isLoadingClinics, setIsLoadingClinics] = useState(false);
   const [staffOptions, setStaffOptions] = useState([]);
   const [vendorOptions, setVendorOptions] = useState([]);
   const [summary, setSummary] = useState({
@@ -60,6 +63,7 @@ export default function PayoutsLedgerPage() {
 
   // Filters
   const [search, setSearch] = useState('');
+  const [selectedClinicId, setSelectedClinicId] = useState('');
   const [payoutType, setPayoutType] = useState('all'); // all | staff | vendor
   const [selectedStaffId, setSelectedStaffId] = useState('');
   const [selectedVendorId, setSelectedVendorId] = useState('');
@@ -75,22 +79,61 @@ export default function PayoutsLedgerPage() {
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [selectedPayout, setSelectedPayout] = useState(null);
 
-  // Load dropdown options
-  useEffect(() => {
-    const loadOptions = async () => {
+  // Load clinic options using getClinicOptions + fallback
+  const loadClinics = useCallback(async () => {
+    setIsLoadingClinics(true);
+    try {
+      let list = [];
       try {
-        const [staffRes, vendorRes] = await Promise.all([
-          payoutService.getStaffOptions(),
-          payoutService.getVendorOptions(),
-        ]);
-        setStaffOptions(staffRes || []);
-        setVendorOptions(vendorRes || []);
-      } catch (err) {
-        console.error('Failed to load filter options:', err);
+        const res = await clinicManagementService.getClinicOptions();
+        list = res?.clinics || res?.data || (Array.isArray(res) ? res : []);
+      } catch (optErr) {
+        console.warn('getClinicOptions failed, trying fallback to getClinics:', optErr);
       }
-    };
-    loadOptions();
+
+      if (!list || list.length === 0) {
+        const fallbackRes = await clinicManagementService.getClinics({ per_page: 100 });
+        list = fallbackRes?.data || fallbackRes?.clinics || (Array.isArray(fallbackRes) ? fallbackRes : []);
+      }
+
+      setClinics(Array.isArray(list) ? list : []);
+    } catch (err) {
+      console.error('Failed to load clinic options:', err);
+    } finally {
+      setIsLoadingClinics(false);
+    }
   }, []);
+
+  // Load staff options scoped to selectedClinicId
+  const loadStaffOptions = useCallback(async () => {
+    try {
+      const data = await payoutService.getStaffOptions({
+        clinic_id: selectedClinicId || undefined,
+      });
+      setStaffOptions(data || []);
+    } catch (err) {
+      console.error('Failed to load staff list:', err);
+    }
+  }, [selectedClinicId]);
+
+  // Load vendor options
+  const loadVendorOptions = useCallback(async () => {
+    try {
+      const vendorRes = await payoutService.getVendorOptions();
+      setVendorOptions(vendorRes || []);
+    } catch (err) {
+      console.error('Failed to load vendor options:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadClinics();
+    loadVendorOptions();
+  }, [loadClinics, loadVendorOptions]);
+
+  useEffect(() => {
+    loadStaffOptions();
+  }, [loadStaffOptions]);
 
   // Fetch unified ledger
   const fetchLedger = useCallback(async () => {
@@ -100,6 +143,7 @@ export default function PayoutsLedgerPage() {
         page,
         per_page: perPage,
         search: search.trim() || undefined,
+        clinic_id: selectedClinicId || undefined,
         payout_type: payoutType !== 'all' ? payoutType : undefined,
         staff_id: selectedStaffId || undefined,
         vendor_id: selectedVendorId || undefined,
@@ -129,7 +173,7 @@ export default function PayoutsLedgerPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, perPage, search, payoutType, selectedStaffId, selectedVendorId, selectedAccountType, selectedStatus, datePreset, fromDate, toDate, toast]);
+  }, [page, perPage, search, selectedClinicId, payoutType, selectedStaffId, selectedVendorId, selectedAccountType, selectedStatus, datePreset, fromDate, toDate, toast]);
 
   useEffect(() => {
     fetchLedger();
@@ -169,6 +213,7 @@ export default function PayoutsLedgerPage() {
 
   const handleResetFilters = () => {
     setSearch('');
+    setSelectedClinicId('');
     setPayoutType('all');
     setSelectedStaffId('');
     setSelectedVendorId('');
@@ -374,7 +419,7 @@ export default function PayoutsLedgerPage() {
               />
             </div>
 
-            {(search || payoutType !== 'all' || selectedStaffId || selectedVendorId || selectedAccountType || selectedStatus || datePreset !== 'all_time' || fromDate || toDate) && (
+            {(search || selectedClinicId || payoutType !== 'all' || selectedStaffId || selectedVendorId || selectedAccountType || selectedStatus || datePreset !== 'all_time' || fromDate || toDate) && (
               <button
                 onClick={handleResetFilters}
                 className="flex items-center gap-1 px-2.5 py-1 text-xs text-rose-600 hover:bg-rose-50 rounded-lg font-medium transition-colors cursor-pointer ml-1"
@@ -388,7 +433,7 @@ export default function PayoutsLedgerPage() {
         </div>
 
         {/* Secondary Filter Controls Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-7 gap-3">
           {/* Keyword Search */}
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
@@ -402,6 +447,27 @@ export default function PayoutsLedgerPage() {
               }}
               className="w-full pl-8 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
+          </div>
+
+          {/* Clinic Branch Filter */}
+          <div>
+            <select
+              value={selectedClinicId}
+              disabled={payoutType === 'vendor' || isLoadingClinics}
+              onChange={(e) => {
+                setSelectedClinicId(e.target.value);
+                setSelectedStaffId('');
+                setPage(1);
+              }}
+              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <option value="">All Clinic Branches</option>
+              {clinics.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.clinic_code || `ID: ${c.id}`})
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Beneficiary Type (All, Staff, Vendor) */}
@@ -519,6 +585,7 @@ export default function PayoutsLedgerPage() {
                 <th className="py-3 px-4">Voucher No</th>
                 <th className="py-3 px-4">Date</th>
                 <th className="py-3 px-4">Beneficiary</th>
+                <th className="py-3 px-4">Clinic Branch</th>
                 <th className="py-3 px-4 text-right">Total Payout (₹)</th>
                 <th className="py-3 px-4 text-right">Paid Amount (₹)</th>
                 <th className="py-3 px-4 text-right">Balance Due (₹)</th>
@@ -531,7 +598,7 @@ export default function PayoutsLedgerPage() {
             <tbody className="divide-y divide-slate-100">
               {isLoading ? (
                 <tr>
-                  <td colSpan="11" className="py-12 text-center text-slate-500">
+                  <td colSpan="12" className="py-12 text-center text-slate-500">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <RefreshCw className="w-6 h-6 animate-spin text-blue-600" />
                       <p className="text-xs font-medium">Filtering ledger records...</p>
@@ -540,7 +607,7 @@ export default function PayoutsLedgerPage() {
                 </tr>
               ) : ledger.length === 0 ? (
                 <tr>
-                  <td colSpan="11" className="py-12 text-center text-slate-500">
+                  <td colSpan="12" className="py-12 text-center text-slate-500">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Wallet className="w-8 h-8 text-slate-300" />
                       <p className="text-xs font-medium text-slate-700">No payout records found</p>
@@ -559,6 +626,7 @@ export default function PayoutsLedgerPage() {
                   const balAmt = Number(item.balance_amount) || 0;
                   const isPaid = balAmt <= 0;
                   const isPartial = balAmt > 0 && paidAmt > 0;
+                  const clinic = isStaff ? (item.staff?.clinic || item.clinic) : null;
 
                   return (
                     <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
@@ -599,6 +667,27 @@ export default function PayoutsLedgerPage() {
                           </div>
                         ) : (
                           <span className="text-slate-400 italic">Beneficiary not found</span>
+                        )}
+                      </td>
+
+                      {/* Clinic Branch */}
+                      <td className="py-3 px-4">
+                        {clinic ? (
+                          <div>
+                            <div className="flex items-center gap-1.5 font-semibold text-slate-800">
+                              <Building2 className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                              <span className="truncate max-w-[170px]" title={clinic.name}>
+                                {clinic.name}
+                              </span>
+                            </div>
+                            {(clinic.location || clinic.branch_name) && (
+                              <p className="text-[11px] text-slate-500 mt-0.5 truncate max-w-[170px]">
+                                {clinic.location || clinic.branch_name}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <span className="text-slate-400 italic text-[11px]">—</span>
                         )}
                       </td>
 

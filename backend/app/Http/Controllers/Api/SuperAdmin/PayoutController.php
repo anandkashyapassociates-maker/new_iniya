@@ -754,6 +754,15 @@ class PayoutController extends Controller
             });
         }
 
+        // Filter by Clinic ID (via staff)
+        if ($clinicId = $request->input('clinic_id')) {
+            if ($clinicId !== 'all' && $clinicId !== '') {
+                $query->whereHas('staff', function ($sq) use ($clinicId) {
+                    $sq->where('clinic_id', $clinicId);
+                });
+            }
+        }
+
         // 1. Filter by Beneficiary Type (All, Staff, Vendor)
         if ($type = $request->input('payout_type')) {
             if (in_array($type, [Payout::TYPE_STAFF, Payout::TYPE_VENDOR])) {
