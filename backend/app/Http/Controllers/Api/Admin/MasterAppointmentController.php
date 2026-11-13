@@ -27,7 +27,7 @@ class MasterAppointmentController extends Controller
     public function index(Request $request): JsonResponse
     {
         $query = MasterAppointment::with([
-            'clinic:id,clinic_code,name,branch_name,location,city',
+            'clinic:id,clinic_code,name,branch_name,location,address,city,state,postal_code,phone,email',
             'customer:id,name,mobile,email,gender',
             'salesTeam:id,sales_code,name,email,mobile,department',
             'admin:id,name,email',
@@ -445,7 +445,7 @@ class MasterAppointmentController extends Controller
     public function show(int $id): JsonResponse
     {
         $master = MasterAppointment::with([
-            'clinic:id,clinic_code,name,branch_name,location,city',
+            'clinic:id,clinic_code,name,branch_name,location,address,city,state,postal_code,phone,email',
             'customer',
             'salesTeam',
             'admin:id,name,email',

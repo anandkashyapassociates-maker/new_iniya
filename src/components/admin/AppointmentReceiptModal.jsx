@@ -11,6 +11,7 @@ import {
   Sparkles,
   Layers,
   Package,
+  Building2,
 } from 'lucide-react';
 
 // Number to Indian Currency Words helper
@@ -65,6 +66,19 @@ export default function AppointmentReceiptModal({
   const sessions = appointment.sessions || [];
   const salesTeam = appointment.sales_team || {};
   const admin = appointment.admin || {};
+  const clinic = appointment.clinic || session?.master_appointment?.clinic || appointment.master_appointment?.clinic || {};
+  const clinicName = clinic.name || 'INIYA CLINIC & OPD CARE';
+  const clinicBranch = clinic.branch_name ? `${clinic.branch_name} Branch` : (clinic.name ? 'Clinic Branch' : 'Aesthetics, Wellness & Clinical Care');
+  const clinicCode = clinic.clinic_code || 'INIYA-OPD-DEL-8921A';
+  const fullClinicLocation = [
+    clinic.address,
+    clinic.location,
+    clinic.city,
+    clinic.state,
+    clinic.postal_code,
+  ].filter(Boolean).join(', ') || clinic.location || clinic.city || '78, Connaught Place, New Delhi - 110001';
+  const clinicPhone = clinic.phone || clinic.alternate_phone || '+91 9833003300';
+  const clinicEmail = clinic.email || 'care@iniyaclinic.com';
 
   // Receipt Numbers & Dates
   const receiptNumber = isSessionType
@@ -204,6 +218,12 @@ export default function AppointmentReceiptModal({
               </h3>
               <p className="text-[11px] text-slate-400 font-mono">
                 {receiptNumber} &bull; {customer.name || 'Patient'}
+                {clinic.name && (
+                  <>
+                    {' '}&bull;{' '}
+                    <span className="text-teal-400 font-sans font-semibold">{clinic.name}</span>
+                  </>
+                )}
               </p>
             </div>
           </div>
@@ -243,31 +263,32 @@ export default function AppointmentReceiptModal({
                 />
                 <div>
                   <h1 className="text-base sm:text-lg font-black font-display text-slate-900 tracking-tight leading-tight">
-                    INIYA CLINIC & OPD CARE
+                    {clinicName}
                   </h1>
-                  <p className="text-[10px] text-slate-500 font-medium">
-                    Aesthetics, Wellness & Clinical Care
+                  <p className="text-[10px] text-teal-700 font-semibold flex items-center gap-1 mt-0.5">
+                    <Building2 className="w-3 h-3 text-teal-600 shrink-0" />
+                    <span>{clinicBranch}</span>
                   </p>
                   <p className="text-[9px] text-slate-400 mt-0.5 flex flex-wrap gap-x-2 font-mono">
-                    <span>Reg: INIYA-OPD-DEL-8921A</span>
+                    <span>Reg: {clinicCode}</span>
                     <span>&bull;</span>
                     <span>GSTIN: 07AAAAA0000A1Z5</span>
                   </p>
                 </div>
               </div>
 
-              <div className="text-left sm:text-right text-[10px] text-slate-500 font-medium space-y-0.5 shrink-0">
+              <div className="text-left sm:text-right text-[10px] text-slate-500 font-medium space-y-0.5 shrink-0 max-w-[280px]">
                 <div className="flex items-center sm:justify-end gap-1.5 text-slate-700">
                   <MapPin className="w-3 h-3 text-blue-600 shrink-0" />
-                  <span>78, Connaught Place, New Delhi - 110001</span>
+                  <span className="truncate">{fullClinicLocation}</span>
                 </div>
                 <div className="flex items-center sm:justify-end gap-1.5 text-slate-700">
                   <Phone className="w-3 h-3 text-blue-600 shrink-0" />
-                  <span>+91 9833003300</span>
+                  <span>{clinicPhone}</span>
                 </div>
                 <div className="flex items-center sm:justify-end gap-1.5 text-slate-700">
                   <Mail className="w-3 h-3 text-blue-600 shrink-0" />
-                  <span>care@iniyaclinic.com</span>
+                  <span>{clinicEmail}</span>
                 </div>
               </div>
             </div>
@@ -357,6 +378,22 @@ export default function AppointmentReceiptModal({
                     <span className="text-slate-400">Master Appt Number:</span>
                     <span className="font-mono font-bold text-blue-700">{appointment.appointment_number}</span>
                   </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400">Clinic Branch:</span>
+                    <span className="font-semibold text-teal-800 flex items-center gap-1">
+                      <Building2 className="w-3 h-3 text-teal-600 shrink-0" />
+                      <span className="truncate max-w-[170px]">{clinic.name || 'Main Flagship Clinic'}</span>
+                    </span>
+                  </div>
+                  {(clinic.location || clinic.city || clinic.branch_name) && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400">Branch Location:</span>
+                      <span className="text-slate-700 font-medium flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span className="truncate max-w-[170px]">{clinic.location || clinic.city || clinic.branch_name}</span>
+                      </span>
+                    </div>
+                  )}
                   <div className="flex items-center justify-between">
                     <span className="text-slate-400">Booking Date:</span>
                     <span className="font-semibold text-slate-800">{apptDateFormatted}</span>
