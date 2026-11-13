@@ -12,8 +12,8 @@ export const payoutService = {
   /**
    * Fetch active staff options for dropdown selection.
    */
-  async getStaffOptions() {
-    const response = await superAdminApiClient.get('/superadmin/payouts/staff-options');
+  async getStaffOptions(params = {}) {
+    const response = await superAdminApiClient.get('/superadmin/payouts/staff-options', { params });
     return response.data;
   },
 
