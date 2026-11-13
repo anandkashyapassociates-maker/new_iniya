@@ -19,6 +19,7 @@ import {
   Building2,
   Lock,
   Compass,
+  MapPin,
 } from 'lucide-react';
 import DataTable from '../../components/DataTable';
 import superAdminInventoryService from '../services/superAdminInventoryService';
@@ -169,13 +170,15 @@ export default function SuperAdminProductsPage() {
               {clinic?.name || 'Iniya Clinic'}
             </span>
             <div className="flex items-center gap-1.5 mt-0.5">
-              <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-indigo-50 border border-indigo-100/80 text-indigo-700 font-mono text-[10px] font-bold">
-                <Lock className="w-2.5 h-2.5 text-indigo-500" />
-                {clinic?.clinic_code || (clinic?.id ? `CLN-${String(clinic.id).padStart(4, '0')}` : 'CLN-0001')}
-              </span>
-              {(clinic?.branch_name || clinic?.location) && (
-                <span className="text-[11px] text-slate-400 truncate">
-                  {clinic.branch_name || clinic.location}
+              {clinic?.branch_name ? (
+                <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200/90 shadow-2xs w-fit">
+                  <MapPin className="w-2.5 h-2.5 text-purple-600 shrink-0" />
+                  <span>{clinic.branch_name}</span>
+                </span>
+              ) : null}
+              {(clinic?.location || clinic?.city) && (
+                <span className="text-[11px] text-slate-400 truncate" title={clinic.location || clinic.city}>
+                  {clinic.location || clinic.city}
                 </span>
               )}
             </div>

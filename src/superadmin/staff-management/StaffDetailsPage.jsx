@@ -17,6 +17,7 @@ import {
   Pencil,
   Hash,
   MapPin,
+  Compass,
 } from 'lucide-react';
 import StaffStatusBadge from './StaffStatusBadge';
 import StaffEditModal from './StaffEditModal';
@@ -485,7 +486,8 @@ export default function StaffDetailsPage() {
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                   <th className="py-3.5 px-4 w-14 text-center whitespace-nowrap">Sr. No.</th>
                   <th className="py-3.5 px-4 whitespace-nowrap min-w-[120px]">Staff Code</th>
-                  <th className="py-3.5 px-4 whitespace-nowrap min-w-[180px]">Clinic Branch</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap min-w-[210px]">Clinic &amp; Branch</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap min-w-[190px]">Location</th>
                   <th className="py-3.5 px-4 whitespace-nowrap min-w-[160px]">Full Name</th>
                   <th className="py-3.5 px-4 whitespace-nowrap min-w-[180px]">Email</th>
                   <th className="py-3.5 px-4 whitespace-nowrap min-w-[130px]">Mobile</th>
@@ -515,32 +517,36 @@ export default function StaffDetailsPage() {
                       </span>
                     </td>
 
-                    {/* Clinic Branch */}
+                    {/* Clinic & Branch (Without Clinic Code) */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       {member.clinic ? (
-                        <div className="flex flex-col gap-1 min-w-[220px]">
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-900 text-xs truncate max-w-[190px]">
-                              {member.clinic.name}
-                            </span>
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200/80 shrink-0">
-                              {member.clinic.clinic_code}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200/90 shadow-2xs shrink-0">
-                              <MapPin className="w-3 h-3 text-purple-600 shrink-0" />
-                              <span>{member.clinic.branch_name || 'Main Branch'}</span>
-                            </span>
-                            {(member.clinic.location || member.clinic.city) && (
-                              <span className="text-[11px] text-slate-400 font-medium truncate max-w-[140px]" title={member.clinic.location || member.clinic.city}>
-                                • {member.clinic.location || member.clinic.city}
-                              </span>
-                            )}
-                          </div>
+                        <div className="flex flex-col gap-1 min-w-[200px]">
+                          <span className="font-bold text-slate-900 text-xs">
+                            {member.clinic.name}
+                          </span>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200/90 shadow-2xs w-fit">
+                            <MapPin className="w-3 h-3 text-purple-600 shrink-0" />
+                            <span>{member.clinic.branch_name || 'Main Branch'}</span>
+                          </span>
                         </div>
                       ) : (
-                        <span className="text-slate-400 italic text-xs">Unassigned</span>
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500">
+                          Unassigned
+                        </span>
+                      )}
+                    </td>
+
+                    {/* Dedicated Location Column */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      {member.clinic?.location || member.clinic?.city ? (
+                        <div className="flex items-center gap-1.5 text-slate-700 text-xs font-medium">
+                          <Compass className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                          <span title={member.clinic.address || member.clinic.location}>
+                            {member.clinic.location || member.clinic.city}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 italic text-[11px]">Not recorded</span>
                       )}
                     </td>
 
