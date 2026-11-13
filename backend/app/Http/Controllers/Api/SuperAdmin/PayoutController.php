@@ -58,7 +58,14 @@ class PayoutController extends Controller
     public function staffOptions(?Request $request = null): JsonResponse
     {
         $staffQuery = Staff::select(['id', 'clinic_id', 'staff_code', 'name', 'department', 'designation', 'mobile', 'email', 'status', 'is_active'])
+            ->with(['clinic:id,name,clinic_code,branch_name,location,address,city,state,phone,email'])
             ->where('status', '!=', Staff::STATUS_BLOCKED);
+
+        if ($clinicId = $request?->input('clinic_id')) {
+            if ($clinicId !== 'all' && $clinicId !== '') {
+                $staffQuery->where('clinic_id', $clinicId);
+            }
+        }
 
         $user = $request?->user();
         if ($user && ! empty($user->clinic_id)) {
@@ -140,9 +147,19 @@ class PayoutController extends Controller
     public function staffPayouts(Request $request): JsonResponse
     {
         $query = Payout::with([
-            'staff:id,staff_code,name,department,designation,email,mobile',
+            'staff:id,clinic_id,staff_code,name,department,designation,email,mobile',
+            'staff.clinic:id,name,clinic_code,branch_name,location,address,city,state,phone,email',
             'superAdmin:id,name,email',
         ])->where('payout_type', Payout::TYPE_STAFF);
+
+        // Filter by Clinic ID (via staff)
+        if ($clinicId = $request->input('clinic_id')) {
+            if ($clinicId !== 'all' && $clinicId !== '') {
+                $query->whereHas('staff', function ($sq) use ($clinicId) {
+                    $sq->where('clinic_id', $clinicId);
+                });
+            }
+        }
 
         // Search by payout_number, staff name, staff_code, note, or reference_number
         if ($search = $request->input('search')) {
@@ -309,7 +326,8 @@ class PayoutController extends Controller
         ]);
 
         $payout->load([
-            'staff:id,staff_code,name,department,designation,email,mobile',
+            'staff:id,clinic_id,staff_code,name,department,designation,email,mobile',
+            'staff.clinic:id,name,clinic_code,branch_name,location,address,city,state,phone,email',
             'superAdmin:id,name,email',
         ]);
 
@@ -384,7 +402,8 @@ class PayoutController extends Controller
         ]);
 
         $payout->load([
-            'staff:id,staff_code,name,department,designation,email,mobile',
+            'staff:id,clinic_id,staff_code,name,department,designation,email,mobile',
+            'staff.clinic:id,name,clinic_code,branch_name,location,address,city,state,phone,email',
             'superAdmin:id,name,email',
         ]);
 
@@ -718,6 +737,7 @@ class PayoutController extends Controller
     {
         $query = Payout::with([
             'staff:id,clinic_id,staff_code,name,department,designation',
+            'staff.clinic:id,name,clinic_code,branch_name,location,address,city,state,phone,email',
             'vendor:id,vendor_code,vendor_name,company_name',
             'superAdmin:id,name,email',
         ]);
@@ -863,7 +883,8 @@ class PayoutController extends Controller
     public function show(string $id): JsonResponse
     {
         $payout = Payout::with([
-            'staff:id,staff_code,name,department,designation,email,mobile',
+            'staff:id,clinic_id,staff_code,name,department,designation,email,mobile',
+            'staff.clinic:id,name,clinic_code,branch_name,location,address,city,state,phone,email',
             'vendor:id,vendor_code,vendor_name,company_name,email,mobile',
             'superAdmin:id,name,email',
         ])->find($id);

@@ -22,6 +22,8 @@ import {
   RotateCcw,
   Clock,
   AlertCircle,
+  MapPin,
+  Phone,
 } from 'lucide-react';
 import { payoutService } from '../services/payoutService';
 import { useToast } from '../../context/ToastContext';
@@ -769,6 +771,39 @@ export default function PayoutsLedgerPage() {
                   <p className="text-slate-400 italic">Beneficiary not found</p>
                 )}
               </div>
+
+              {/* Assigned Clinic Details for Staff Payout */}
+              {selectedPayout.payout_type === 'staff' && selectedPayout.staff?.clinic && (
+                <div className="p-3.5 bg-blue-50/70 rounded-xl border border-blue-200/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-blue-900 font-semibold text-xs">
+                      <Building2 className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Assigned Clinic Branch</span>
+                    </div>
+                    <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md bg-white text-blue-700 border border-blue-200">
+                      {selectedPayout.staff.clinic.clinic_code || 'CLINIC'}
+                    </span>
+                  </div>
+                  <p className="text-xs font-bold text-slate-900">
+                    {selectedPayout.staff.clinic.name}
+                    {selectedPayout.staff.clinic.branch_name ? ` (${selectedPayout.staff.clinic.branch_name})` : ''}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-slate-600 pt-0.5">
+                    {(selectedPayout.staff.clinic.location || selectedPayout.staff.clinic.city || selectedPayout.staff.clinic.address) && (
+                      <p className="flex items-center gap-1 truncate" title={selectedPayout.staff.clinic.address || selectedPayout.staff.clinic.location}>
+                        <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span>{[selectedPayout.staff.clinic.location, selectedPayout.staff.clinic.city, selectedPayout.staff.clinic.state].filter(Boolean).join(', ') || selectedPayout.staff.clinic.address}</span>
+                      </p>
+                    )}
+                    {(selectedPayout.staff.clinic.phone || selectedPayout.staff.clinic.email) && (
+                      <p className="flex items-center gap-1 truncate font-mono text-[10px]">
+                        <Phone className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span>{selectedPayout.staff.clinic.phone || selectedPayout.staff.clinic.email}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Total Payout, Paid Amount, Balance Due */}
               <div className="grid grid-cols-3 gap-2.5">
