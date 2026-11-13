@@ -16,6 +16,7 @@ import {
   Briefcase,
   Pencil,
   Hash,
+  MapPin,
 } from 'lucide-react';
 import StaffStatusBadge from './StaffStatusBadge';
 import StaffEditModal from './StaffEditModal';
@@ -517,17 +518,25 @@ export default function StaffDetailsPage() {
                     {/* Clinic Branch */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       {member.clinic ? (
-                        <div className="flex flex-col">
-                          <span className="font-bold text-slate-900 text-xs truncate max-w-[190px]">
-                            {member.clinic.name}
-                          </span>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200/60 shrink-0">
+                        <div className="flex flex-col gap-1 min-w-[220px]">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-900 text-xs truncate max-w-[190px]">
+                              {member.clinic.name}
+                            </span>
+                            <span className="px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200/80 shrink-0">
                               {member.clinic.clinic_code}
                             </span>
-                            <span className="text-[11px] text-slate-500 font-medium truncate max-w-[140px]">
-                              {member.clinic.branch_name || member.clinic.location || member.clinic.city}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200/90 shadow-2xs shrink-0">
+                              <MapPin className="w-3 h-3 text-purple-600 shrink-0" />
+                              <span>{member.clinic.branch_name || 'Main Branch'}</span>
                             </span>
+                            {(member.clinic.location || member.clinic.city) && (
+                              <span className="text-[11px] text-slate-400 font-medium truncate max-w-[140px]" title={member.clinic.location || member.clinic.city}>
+                                • {member.clinic.location || member.clinic.city}
+                              </span>
+                            )}
                           </div>
                         </div>
                       ) : (

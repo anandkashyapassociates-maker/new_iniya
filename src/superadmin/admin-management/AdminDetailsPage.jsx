@@ -17,6 +17,7 @@ import {
   Eye,
   Building2,
   Lock,
+  MapPin,
 } from 'lucide-react';
 import AdminStatusBadge from './AdminStatusBadge';
 import AdminEditModal from './AdminEditModal';
@@ -442,29 +443,29 @@ export default function AdminDetailsPage() {
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  <th className="py-3.5 px-4 w-16 text-center">Sr. No.</th>
-                  <th className="py-3.5 px-4">Full Name</th>
-                  <th className="py-3.5 px-4">Clinic Branch</th>
-                  <th className="py-3.5 px-4">Email Address</th>
-                  <th className="py-3.5 px-4">Mobile Number</th>
-                  <th className="py-3.5 px-4">Account Status</th>
-                  <th className="py-3.5 px-4">Created Date</th>
-                  <th className="py-3.5 px-4">Last Updated</th>
-                  <th className="py-3.5 px-4 text-right">Actions</th>
+                  <th className="py-3.5 px-4 w-14 text-center whitespace-nowrap">Sr. No.</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap min-w-[150px]">Full Name</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap min-w-[260px]">Clinic &amp; Branch</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap min-w-[180px]">Email Address</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap min-w-[130px]">Mobile Number</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap min-w-[120px]">Account Status</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap min-w-[120px]">Created Date</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap min-w-[120px]">Last Updated</th>
+                  <th className="py-3.5 px-4 text-right whitespace-nowrap min-w-[90px]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
                 {admins.map((adm, index) => (
                   <tr key={adm.id} className="hover:bg-slate-50/60 transition-colors">
                     {/* Sr. No. */}
-                    <td className="py-3.5 px-4 text-center">
+                    <td className="py-3.5 px-4 text-center whitespace-nowrap">
                       <span className="inline-flex items-center justify-center w-7 h-7 rounded-lg bg-slate-100 text-slate-600 font-mono text-[11px] font-medium">
                         {(pagination?.from || 1) + index}
                       </span>
                     </td>
 
                     {/* Full Name */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 whitespace-nowrap">
                       <div className="flex items-center gap-2.5">
                         <div className="w-7 h-7 rounded-lg bg-blue-50 border border-blue-200/60 text-blue-700 flex items-center justify-center font-bold text-[11px] shrink-0">
                           {adm.name ? adm.name.charAt(0).toUpperCase() : 'A'}
@@ -473,26 +474,30 @@ export default function AdminDetailsPage() {
                       </div>
                     </td>
 
-                    {/* Clinic Branch */}
-                    <td className="py-3.5 px-4">
+                    {/* Clinic & Branch */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
                       {adm.clinic ? (
-                        <div className="flex flex-col gap-0.5">
-                          <span className="font-bold text-slate-900 text-xs">
-                            {adm.clinic.name}
-                          </span>
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200/60">
-                              <Lock className="w-2.5 h-2.5" />
+                        <div className="flex flex-col gap-1.5 min-w-[240px]">
+                          {/* Row 1: Clinic Name & Code */}
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-900 text-xs">
+                              {adm.clinic.name}
+                            </span>
+                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200/80 shrink-0">
+                              <Building2 className="w-2.5 h-2.5 text-blue-500" />
                               {adm.clinic.clinic_code}
                             </span>
-                            {adm.clinic.branch_name && (
-                              <span className="text-[11px] text-slate-500 font-medium">
-                                {adm.clinic.branch_name}
-                              </span>
-                            )}
-                            {adm.clinic.location && (
-                              <span className="text-[10px] text-slate-400">
-                                • {adm.clinic.location}
+                          </div>
+
+                          {/* Row 2: Special Branch Badge & Location */}
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200/90 shadow-2xs shrink-0">
+                              <MapPin className="w-3 h-3 text-purple-600 shrink-0" />
+                              <span>{adm.clinic.branch_name || 'Main Flagship Clinic'}</span>
+                            </span>
+                            {(adm.clinic.location || adm.clinic.city) && (
+                              <span className="text-[11px] text-slate-400 font-medium truncate max-w-[170px]" title={adm.clinic.location || adm.clinic.city}>
+                                • {adm.clinic.location || adm.clinic.city}
                               </span>
                             )}
                           </div>
@@ -505,7 +510,7 @@ export default function AdminDetailsPage() {
                     </td>
 
                     {/* Email */}
-                    <td className="py-3.5 px-4 text-slate-600 font-mono text-[11px]">
+                    <td className="py-3.5 px-4 text-slate-600 font-mono text-[11px] whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <Mail className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                         <span>{adm.email}</span>
@@ -513,7 +518,7 @@ export default function AdminDetailsPage() {
                     </td>
 
                     {/* Mobile */}
-                    <td className="py-3.5 px-4 text-slate-600 font-mono text-[11px]">
+                    <td className="py-3.5 px-4 text-slate-600 font-mono text-[11px] whitespace-nowrap">
                       {adm.mobile ? (
                         <div className="flex items-center gap-1.5">
                           <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
@@ -525,12 +530,12 @@ export default function AdminDetailsPage() {
                     </td>
 
                     {/* Status Badge */}
-                    <td className="py-3.5 px-4">
+                    <td className="py-3.5 px-4 whitespace-nowrap">
                       <AdminStatusBadge status={adm.status} isActive={adm.is_active} size="small" />
                     </td>
 
                     {/* Created Date */}
-                    <td className="py-3.5 px-4 text-slate-500 font-mono text-[11px]">
+                    <td className="py-3.5 px-4 text-slate-500 font-mono text-[11px] whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <Calendar className="w-3 h-3 text-slate-400 shrink-0" />
                         <span>{new Date(adm.created_at).toLocaleDateString()}</span>
@@ -538,7 +543,7 @@ export default function AdminDetailsPage() {
                     </td>
 
                     {/* Last Updated Date */}
-                    <td className="py-3.5 px-4 text-slate-500 font-mono text-[11px]">
+                    <td className="py-3.5 px-4 text-slate-500 font-mono text-[11px] whitespace-nowrap">
                       <div className="flex items-center gap-1.5">
                         <Clock className="w-3 h-3 text-slate-400 shrink-0" />
                         <span>
@@ -548,7 +553,7 @@ export default function AdminDetailsPage() {
                     </td>
 
                     {/* Actions: Login & Edit buttons */}
-                    <td className="py-3.5 px-4 text-right">
+                    <td className="py-3.5 px-4 text-right whitespace-nowrap">
                       <div className="flex items-center justify-end gap-2">
                         <button
                           type="button"

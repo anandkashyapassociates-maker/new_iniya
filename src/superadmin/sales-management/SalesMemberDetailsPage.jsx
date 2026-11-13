@@ -502,21 +502,27 @@ export default function SalesMemberDetailsPage() {
                     {/* 2. Clinic Branch */}
                     <td className="py-3 px-4 whitespace-nowrap">
                       {member.clinic ? (
-                        <div className="flex flex-col">
-                          <span className="font-bold text-slate-800">{member.clinic.name}</span>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 border border-purple-200/60">
+                        <div className="flex flex-col gap-1 min-w-[220px]">
+                          <div className="flex items-center gap-2">
+                            <span className="font-bold text-slate-800 text-xs">{member.clinic.name}</span>
+                            <span className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-200/80 shrink-0">
                               {member.clinic.clinic_code}
                             </span>
-                            {member.clinic.branch_name && (
-                              <span className="text-[11px] text-slate-500 font-medium">
-                                {member.clinic.branch_name}
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200/90 shadow-2xs shrink-0">
+                              <MapPin className="w-3 h-3 text-purple-600 shrink-0" />
+                              <span>{member.clinic.branch_name || 'Main Branch'}</span>
+                            </span>
+                            {(member.clinic.location || member.clinic.city) && (
+                              <span className="text-[11px] text-slate-400 font-medium truncate max-w-[140px]" title={member.clinic.location || member.clinic.city}>
+                                • {member.clinic.location || member.clinic.city}
                               </span>
                             )}
                           </div>
                         </div>
                       ) : (
-                        <span className="text-slate-400 italic">Not Assigned</span>
+                        <span className="text-slate-400 italic text-xs">Not Assigned</span>
                       )}
                     </td>
 

@@ -22,7 +22,7 @@ class AdminManagementController extends Controller
     {
         $query = Admin::with([
             'superAdmin:id,name,email',
-            'clinic:id,clinic_code,name,branch_name,location,city,address,phone',
+            'clinic:id,clinic_code,name,branch_name,location,city,state,address,phone',
         ]);
 
         // Search by name, email, or mobile
@@ -114,7 +114,7 @@ class AdminManagementController extends Controller
             'message' => 'Admin account created successfully.',
             'admin' => $admin->load([
                 'superAdmin:id,name,email',
-                'clinic:id,clinic_code,name,branch_name,location,city,address,phone',
+                'clinic:id,clinic_code,name,branch_name,location,city,state,address,phone',
             ]),
         ], 201);
     }
@@ -126,7 +126,7 @@ class AdminManagementController extends Controller
     {
         $admin = Admin::with([
             'superAdmin:id,name,email',
-            'clinic:id,clinic_code,name,branch_name,location,city,address,phone',
+            'clinic:id,clinic_code,name,branch_name,location,city,state,address,phone',
         ])->find($id);
 
         if (! $admin) {
@@ -210,7 +210,7 @@ class AdminManagementController extends Controller
             'message' => 'Admin account updated successfully.',
             'admin' => $admin->fresh()->load([
                 'superAdmin:id,name,email',
-                'clinic:id,clinic_code,name,branch_name,location,city,address,phone',
+                'clinic:id,clinic_code,name,branch_name,location,city,state,address,phone',
             ]),
         ]);
     }
