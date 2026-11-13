@@ -515,8 +515,8 @@ export default function AdminMasterAppointmentDetailsPage() {
             <thead className="bg-slate-50/80 text-[11px] font-bold text-slate-500 uppercase tracking-wider border-y border-slate-200/70">
               <tr>
                 <th className="py-3 px-3.5 text-center w-12 whitespace-nowrap">S.NO.</th>
-                <th className="py-3 px-4 min-w-[200px]">Treatment / Procedure</th>
                 <th className="py-3 px-4 whitespace-nowrap">Date & Time</th>
+                <th className="py-3 px-4 min-w-[200px]">Treatment / Procedure</th>
                 <th className="py-3 px-4 min-w-[140px]">Assigned Staff</th>
                 <th className="py-3 px-4 whitespace-nowrap">Commission</th>
                 <th className="py-3 px-4 min-w-[140px]">Product Used</th>
@@ -539,6 +539,17 @@ export default function AdminMasterAppointmentDetailsPage() {
                       {ses.session_number}
                     </td>
 
+                    {/* Date & Time */}
+                    <td className="py-3 px-4 text-xs">
+                      <div className="font-semibold text-slate-800">
+                        {ses.session_date ? String(ses.session_date).slice(0, 10) : ''}
+                      </div>
+                      <div className="text-slate-500 flex items-center space-x-1 mt-0.5">
+                        <Clock className="w-3 h-3 text-slate-400" />
+                        <span>{ses.session_time}</span>
+                      </div>
+                    </td>
+
                     {/* Treatment / Service */}
                     <td className="py-3 px-4 font-semibold text-slate-900 max-w-xs">
                       <div>{ses.treatment_details || (ses.service ? ses.service.name : 'Clinical Procedure')}</div>
@@ -554,17 +565,6 @@ export default function AdminMasterAppointmentDetailsPage() {
                           <span>Rescheduled ({ses.reschedule_histories.length}x)</span>
                         </div>
                       )}
-                    </td>
-
-                    {/* Date & Time */}
-                    <td className="py-3 px-4 text-xs">
-                      <div className="font-semibold text-slate-800">
-                        {ses.session_date ? String(ses.session_date).slice(0, 10) : ''}
-                      </div>
-                      <div className="text-slate-500 flex items-center space-x-1 mt-0.5">
-                        <Clock className="w-3 h-3 text-slate-400" />
-                        <span>{ses.session_time}</span>
-                      </div>
                     </td>
 
                     {/* Staff */}
