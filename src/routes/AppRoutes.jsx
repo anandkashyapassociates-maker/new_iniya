@@ -34,6 +34,7 @@ import SuperAdminInventoryReportsPage from '../superadmin/inventory/SuperAdminIn
 
 // Super Admin Payouts Module
 import StaffPayoutsPage from '../superadmin/payouts/StaffPayoutsPage';
+import StaffPayoutCreatePage from '../superadmin/payouts/StaffPayoutCreatePage';
 import VendorPayoutsPage from '../superadmin/payouts/VendorPayoutsPage';
 import PayoutsLedgerPage from '../superadmin/payouts/PayoutsLedgerPage';
 
@@ -160,6 +161,8 @@ export default function AppRoutes() {
           {/* Super Admin Payouts Management Module */}
           <Route path="/superadmin/payouts" element={<Navigate to="/superadmin/payouts/ledger" replace />} />
           <Route path="/superadmin/payouts/staff" element={<StaffPayoutsPage />} />
+          <Route path="/superadmin/payouts/staff/create" element={<StaffPayoutCreatePage />} />
+          <Route path="/superadmin/payouts/staff/edit/:id" element={<StaffPayoutCreatePage />} />
           <Route path="/superadmin/payouts/vendors" element={<VendorPayoutsPage />} />
           <Route path="/superadmin/payouts/ledger" element={<PayoutsLedgerPage />} />
 
