@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\AdminActivityLog;
 use App\Models\AppointmentSession;
+use App\Models\Clinic;
 use App\Models\Customer;
 use App\Models\InventoryProduct;
 use App\Models\MasterAppointment;
@@ -42,14 +43,11 @@ class MasterAppointmentController extends Controller
             },
         ]);
 
-        // Enforce clinic scoping strictly for logged-in admin
+        // Filter by clinic (supports All Clinics or specific branch filter)
         $user = $request->user();
-        if ($user && ! empty($user->clinic_id)) {
-            $query->where('clinic_id', $user->clinic_id);
-        } elseif ($clinicId = $request->input('clinic_id')) {
-            if ($clinicId !== '' && $clinicId !== 'all') {
-                $query->where('clinic_id', $clinicId);
-            }
+        $clinicInput = $request->input('clinic_id');
+        if (! empty($clinicInput) && $clinicInput !== 'all') {
+            $query->where('clinic_id', $clinicInput);
         }
 
         // Search by appointment number, customer name/mobile, or sales member name/code
@@ -145,7 +143,8 @@ class MasterAppointmentController extends Controller
     {
         $admin = $request->user();
         $adminId = $admin?->id;
-        $clinicId = $admin?->clinic_id;
+        $clinicInput = $request->input('clinic_id');
+        $clinicId = (! empty($clinicInput) && $clinicInput !== 'all') ? $clinicInput : null;
         $isStaffUser = ($admin instanceof Staff)
             || (isset($admin->role) && in_array(strtolower($admin->role), ['staff', 'staff practitioner']))
             || (isset($admin->user_type) && strtolower($admin->user_type) === 'staff')
@@ -270,6 +269,11 @@ class MasterAppointmentController extends Controller
             ->orderBy('name')
             ->get();
 
+        $clinics = Clinic::where('status', Clinic::STATUS_ACTIVE)
+            ->select('id', 'name', 'branch_name', 'location', 'clinic_code')
+            ->orderBy('name')
+            ->get();
+
         return response()->json([
             'success' => true,
             'data' => [
@@ -278,6 +282,7 @@ class MasterAppointmentController extends Controller
                 'staff' => $staff,
                 'inventory_products' => $inventoryProducts,
                 'services_tree' => $servicesTree,
+                'clinics' => $clinics,
             ],
         ]);
     }
