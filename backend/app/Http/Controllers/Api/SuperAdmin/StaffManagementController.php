@@ -117,7 +117,7 @@ class StaffManagementController extends Controller
             'clinic_id' => ['nullable', 'integer', 'exists:clinics,id'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:staff,email'],
-            'password' => ['nullable', 'string', 'min:6'],
+            'password' => ['nullable', 'string', 'min:8'],
             'mobile' => ['nullable', 'string', 'min:7', 'max:25'],
             'department' => ['nullable', 'string', 'max:100'],
             'designation' => ['nullable', 'string', 'max:100'],
@@ -136,7 +136,7 @@ class StaffManagementController extends Controller
 
         // Concurrency-safe backend generated Staff Code
         $staffCode = Staff::generateUniqueCode();
-        $plainPassword = ! empty($validated['password']) ? $validated['password'] : '123456';
+        $plainPassword = ! empty($validated['password']) ? $validated['password'] : '12345678';
         $clinicId = $validated['clinic_id'] ?? \App\Models\Clinic::orderBy('id')->value('id');
 
         $staff = Staff::create([
@@ -212,7 +212,7 @@ class StaffManagementController extends Controller
             'clinic_id' => ['sometimes', 'nullable', 'integer', 'exists:clinics,id'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('staff')->ignore($staff->id)],
-            'password' => ['nullable', 'string', 'min:6'],
+            'password' => ['nullable', 'string', 'min:8'],
             'mobile' => ['nullable', 'string', 'min:7', 'max:25'],
             'department' => ['nullable', 'string', 'max:100'],
             'designation' => ['nullable', 'string', 'max:100'],

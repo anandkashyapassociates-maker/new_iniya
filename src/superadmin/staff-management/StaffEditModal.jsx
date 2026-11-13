@@ -186,6 +186,10 @@ export default function StaffEditModal({ staff, isOpen, onClose, onSuccess }) {
       }
     }
 
+    if (formData.password && formData.password.trim() && formData.password.trim().length < 8) {
+      errs.password = 'Password must be at least 8 characters.';
+    }
+
     return errs;
   };
 
@@ -507,7 +511,7 @@ export default function StaffEditModal({ staff, isOpen, onClose, onSuccess }) {
                   {/* Password (Optional update) */}
                   <div className="min-w-0">
                     <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-                      Reset Password <span className="text-slate-400 font-normal lowercase">(leave blank to keep current)</span>
+                      Reset Password <span className="text-slate-400 font-normal lowercase">(min. 8 characters, or leave blank to keep current)</span>
                     </label>
                     <div className="relative">
                       <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -515,11 +519,18 @@ export default function StaffEditModal({ staff, isOpen, onClose, onSuccess }) {
                         type="password"
                         value={formData.password}
                         onChange={(e) => handleChange('password', e.target.value)}
-                        placeholder="Enter new password (optional)"
+                        placeholder="Enter new password (min. 8 characters)"
                         disabled={isSubmitting}
-                        className="w-full pl-10 pr-3.5 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/15 transition-all duration-200"
+                        className={`w-full pl-10 pr-3.5 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white focus:outline-none focus:ring-4 transition-all duration-200 ${
+                          errors.password
+                            ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-500/15'
+                            : 'border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/15'
+                        }`}
                       />
                     </div>
+                    {errors.password && (
+                      <p className="text-[11px] text-rose-600 mt-1 font-medium">{errors.password}</p>
+                    )}
                   </div>
                 </div>
               </div>

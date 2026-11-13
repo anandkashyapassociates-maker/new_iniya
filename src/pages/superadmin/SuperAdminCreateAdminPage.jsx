@@ -19,6 +19,15 @@ export default function SuperAdminCreateAdminPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setErrors({});
+
+    if (!password) {
+      setErrors({ password: ['Password is required.'] });
+      return;
+    } else if (password.length < 8) {
+      setErrors({ password: ['Password must be at least 8 characters.'] });
+      return;
+    }
+
     setIsLoading(true);
 
     try {
