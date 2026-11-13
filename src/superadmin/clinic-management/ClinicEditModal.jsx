@@ -41,6 +41,20 @@ export default function ClinicEditModal({ isOpen, onClose, clinic, onSuccess }) 
 
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [existingClinics, setExistingClinics] = useState([]);
+
+  // Load existing clinics to prevent duplicate location selection
+  useEffect(() => {
+    if (isOpen) {
+      clinicManagementService
+        .getClinicOptions()
+        .then((res) => {
+          const list = res?.clinics || (Array.isArray(res) ? res : []);
+          setExistingClinics(list);
+        })
+        .catch(() => {});
+    }
+  }, [isOpen]);
 
   useEffect(() => {
     if (clinic) {
@@ -86,6 +100,25 @@ export default function ClinicEditModal({ isOpen, onClose, clinic, onSuccess }) 
         return next;
       });
     }
+
+    // Real-time location uniqueness check (excluding current clinic)
+    if (field === 'location') {
+      const trimmed = value.trim().toLowerCase();
+      if (trimmed) {
+        const dup = existingClinics.find(
+          (c) =>
+            String(c.id) !== String(clinic?.id) &&
+            c.location &&
+            c.location.trim().toLowerCase() === trimmed
+        );
+        if (dup) {
+          setErrors((prev) => ({
+            ...prev,
+            location: `A clinic is already registered at this location ('${dup.name}' - ${dup.clinic_code || ''}). Each clinic must have a unique location.`,
+          }));
+        }
+      }
+    }
   };
 
   const validate = () => {
@@ -99,6 +132,17 @@ export default function ClinicEditModal({ isOpen, onClose, clinic, onSuccess }) 
 
     if (!formData.location.trim()) {
       errs.location = 'Clinic location / area is required.';
+    } else {
+      const trimmed = formData.location.trim().toLowerCase();
+      const dup = existingClinics.find(
+        (c) =>
+          String(c.id) !== String(clinic?.id) &&
+          c.location &&
+          c.location.trim().toLowerCase() === trimmed
+      );
+      if (dup) {
+        errs.location = `A clinic is already registered at this location ('${dup.name}' - ${dup.clinic_code || ''}). Each clinic must have a unique location.`;
+      }
     }
 
     if (!formData.address.trim()) {
@@ -133,8 +177,13 @@ export default function ClinicEditModal({ isOpen, onClose, clinic, onSuccess }) 
       onClose();
     } catch (err) {
       console.error('Error updating clinic:', err);
+      const resErrors = err.response?.data?.errors || {};
+      const formatted = {};
+      for (const [key, val] of Object.entries(resErrors)) {
+        formatted[key] = Array.isArray(val) ? val[0] : val;
+      }
       const msg = err.response?.data?.message || 'Failed to update clinic record.';
-      setErrors({ general: msg });
+      setErrors((prev) => ({ ...prev, ...formatted, general: msg }));
       toast.error(msg);
     } finally {
       setIsSubmitting(false);
