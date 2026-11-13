@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Wallet,
   PlusCircle,
@@ -21,8 +21,16 @@ import {
   AlertCircle,
   Clock,
   RotateCcw,
+  Lock,
+  Compass,
+  Globe,
+  MapPin,
+  Phone,
+  Mail,
+  Sparkles,
 } from 'lucide-react';
 import { payoutService } from '../services/payoutService';
+import clinicManagementService from '../services/clinicManagementService';
 import { useToast } from '../../context/ToastContext';
 
 export default function StaffPayoutsPage() {
@@ -31,6 +39,8 @@ export default function StaffPayoutsPage() {
   // Data states
   const [payouts, setPayouts] = useState([]);
   const [staffOptions, setStaffOptions] = useState([]);
+  const [clinics, setClinics] = useState([]);
+  const [isLoadingClinics, setIsLoadingClinics] = useState(false);
   const [summary, setSummary] = useState({
     total_payout_amount: 0,
     total_paid_amount: 0,
@@ -50,6 +60,7 @@ export default function StaffPayoutsPage() {
 
   // Filters
   const [search, setSearch] = useState('');
+  const [selectedClinicId, setSelectedClinicId] = useState('');
   const [selectedStaffId, setSelectedStaffId] = useState('');
   const [selectedAccountType, setSelectedAccountType] = useState('');
   const [selectedStatus, setSelectedStatus] = useState('');
@@ -65,8 +76,9 @@ export default function StaffPayoutsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingPayout, setEditingPayout] = useState(null);
 
-  // Standard Form State (Unchanged single Amount input per user requirement)
+  // Standard Form State with Clinic selection as Step 1
   const [formData, setFormData] = useState({
+    clinic_id: '',
     staff_id: '',
     amount: '',
     payout_date: new Date().toISOString().split('T')[0],
@@ -75,6 +87,19 @@ export default function StaffPayoutsPage() {
     note: '',
   });
   const [formErrors, setFormErrors] = useState({});
+
+  // Load clinics list on mount
+  const loadClinics = useCallback(async () => {
+    setIsLoadingClinics(true);
+    try {
+      const res = await clinicManagementService.getClinics({ status: 'active', per_page: 100 });
+      setClinics(res.clinics || []);
+    } catch (err) {
+      console.error('Failed to load clinic options:', err);
+    } finally {
+      setIsLoadingClinics(false);
+    }
+  }, []);
 
   // Load staff options for selection
   const loadStaffOptions = useCallback(async () => {
@@ -94,6 +119,7 @@ export default function StaffPayoutsPage() {
         page,
         per_page: perPage,
         search: search.trim() || undefined,
+        clinic_id: selectedClinicId || undefined,
         staff_id: selectedStaffId || undefined,
         account_type: selectedAccountType || undefined,
         status: selectedStatus || undefined,
@@ -120,7 +146,11 @@ export default function StaffPayoutsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [page, perPage, search, selectedStaffId, selectedAccountType, selectedStatus, fromDate, toDate, toast]);
+  }, [page, perPage, search, selectedClinicId, selectedStaffId, selectedAccountType, selectedStatus, fromDate, toDate, toast]);
+
+  useEffect(() => {
+    loadClinics();
+  }, [loadClinics]);
 
   useEffect(() => {
     loadStaffOptions();
@@ -130,13 +160,33 @@ export default function StaffPayoutsPage() {
     fetchPayouts();
   }, [fetchPayouts]);
 
+  // Selected clinic object for showing location/address preview
+  const selectedClinic = useMemo(() => {
+    if (formData.clinic_id) {
+      return clinics.find((c) => String(c.id) === String(formData.clinic_id)) || null;
+    }
+    if (editingPayout?.staff?.clinic) {
+      return editingPayout.staff.clinic;
+    }
+    return null;
+  }, [clinics, formData.clinic_id, editingPayout]);
+
+  // Filter staff options to those appointed to the selected clinic
+  const filteredStaffOptions = useMemo(() => {
+    if (!formData.clinic_id) return [];
+    return staffOptions.filter(
+      (s) => String(s.clinic_id) === String(formData.clinic_id) || !s.clinic_id
+    );
+  }, [staffOptions, formData.clinic_id]);
+
   // Open creation modal
   const handleOpenModal = () => {
     setEditingPayout(null);
-    const defaultStaff = staffOptions.length > 0 ? staffOptions[0] : null;
+    const initialClinicId = clinics.length === 1 ? String(clinics[0].id) : '';
     setFormData({
-      staff_id: defaultStaff ? defaultStaff.id : '',
-      amount: defaultStaff && defaultStaff.pending_balance > 0 ? String(defaultStaff.pending_balance) : '',
+      clinic_id: initialClinicId,
+      staff_id: '',
+      amount: '',
       payout_date: new Date().toISOString().split('T')[0],
       account_type: 'Bank',
       reference_number: '',
@@ -149,7 +199,9 @@ export default function StaffPayoutsPage() {
   // Open edit modal
   const handleOpenEditModal = (item) => {
     setEditingPayout(item);
+    const staffClinicId = item.staff?.clinic_id || item.staff?.clinic?.id || '';
     setFormData({
+      clinic_id: staffClinicId ? String(staffClinicId) : '',
       staff_id: item.staff_id || '',
       amount: String(item.paid_amount || item.amount || ''),
       payout_date: item.payout_date ? item.payout_date.split('T')[0] : new Date().toISOString().split('T')[0],
@@ -159,6 +211,22 @@ export default function StaffPayoutsPage() {
     });
     setFormErrors({});
     setIsModalOpen(true);
+  };
+
+  const handleClinicSelect = (clinicId) => {
+    setFormData((prev) => {
+      const currentStaff = staffOptions.find((s) => String(s.id) === String(prev.staff_id));
+      const staffMatchesClinic = currentStaff && String(currentStaff.clinic_id) === String(clinicId);
+      return {
+        ...prev,
+        clinic_id: clinicId,
+        staff_id: staffMatchesClinic ? prev.staff_id : '',
+        amount: staffMatchesClinic ? prev.amount : '',
+      };
+    });
+    if (formErrors.clinic_id) {
+      setFormErrors((prev) => ({ ...prev, clinic_id: null }));
+    }
   };
 
   const handleStaffSelect = (staffId) => {
@@ -179,7 +247,26 @@ export default function StaffPayoutsPage() {
     setFormErrors({});
 
     const errors = {};
-    if (!formData.staff_id) errors.staff_id = 'Please select a staff member';
+    if (!formData.clinic_id && !editingPayout) {
+      errors.clinic_id = 'Please select a clinic branch first.';
+    }
+    if (!formData.staff_id) {
+      errors.staff_id = 'Please select a staff member.';
+    }
+    if (!formData.amount || Number(formData.amount) <= 0) {
+      errors.amount = 'Please enter a valid payout amount greater than 0.';
+    }
+    if (!formData.payout_date) {
+      errors.payout_date = 'Please select a payout date.';
+    }
+    if (!formData.account_type) {
+      errors.account_type = 'Please select a payment mode.';
+    }
+
+    if (Object.keys(errors).length > 0) {
+      setFormErrors(errors);
+      return;
+    }
     if (!formData.amount || Number(formData.amount) <= 0) {
       errors.amount = 'Valid amount is required';
     }
@@ -217,6 +304,7 @@ export default function StaffPayoutsPage() {
 
   const handleResetFilters = () => {
     setSearch('');
+    setSelectedClinicId('');
     setSelectedStaffId('');
     setSelectedAccountType('');
     setSelectedStatus('');
@@ -371,7 +459,7 @@ export default function StaffPayoutsPage() {
             <Filter className="w-3.5 h-3.5 text-blue-600" />
             <span>Search & Filter Staff Payouts</span>
           </div>
-          {(search || selectedStaffId || selectedAccountType || selectedStatus || fromDate || toDate) && (
+          {(search || selectedClinicId || selectedStaffId || selectedAccountType || selectedStatus || fromDate || toDate) && (
             <button
               onClick={handleResetFilters}
               className="text-xs text-blue-600 hover:text-blue-800 font-medium hover:underline cursor-pointer flex items-center gap-1"
@@ -382,13 +470,13 @@ export default function StaffPayoutsPage() {
           )}
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3">
           {/* Keyword Search */}
-          <div className="lg:col-span-2 relative">
+          <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Search voucher #, staff name, note..."
+              placeholder="Search voucher, staff, note..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
@@ -396,6 +484,25 @@ export default function StaffPayoutsPage() {
               }}
               className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"
             />
+          </div>
+
+          {/* Clinic Branch Filter */}
+          <div>
+            <select
+              value={selectedClinicId}
+              onChange={(e) => {
+                setSelectedClinicId(e.target.value);
+                setPage(1);
+              }}
+              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-700 font-medium"
+            >
+              <option value="">All Clinic Branches</option>
+              {clinics.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name} ({c.clinic_code || `ID: ${c.id}`})
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Staff Dropdown */}
@@ -563,6 +670,13 @@ export default function StaffPayoutsPage() {
                             <p className="text-[11px] text-slate-500 font-mono">
                               {item.staff.staff_code} &bull; {item.staff.department || 'General'}
                             </p>
+                            {item.staff.clinic && (
+                              <p className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200/80">
+                                <Building2 className="w-2.5 h-2.5 text-blue-600 shrink-0" />
+                                <span className="truncate max-w-[130px]">{item.staff.clinic.name}</span>
+                                <span className="font-mono text-[9px] text-blue-500">({item.staff.clinic.clinic_code})</span>
+                              </p>
+                            )}
                           </div>
                         ) : (
                           <span className="text-slate-400 italic">Unknown Staff Member</span>
@@ -696,9 +810,9 @@ export default function StaffPayoutsPage() {
       {/* ======================================================== */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[92vh] flex flex-col overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60">
+            <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/60 shrink-0">
               <div className="flex items-center gap-2.5">
                 <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white flex items-center justify-center shadow-xs">
                   <UserCheck className="w-4 h-4" />
@@ -723,8 +837,131 @@ export default function StaffPayoutsPage() {
             </div>
 
             {/* Modal Form */}
-            <form onSubmit={handleSubmitPayout} className="p-6 space-y-4">
-              {/* Staff Member Selection */}
+            <form onSubmit={handleSubmitPayout} className="p-6 space-y-4 overflow-y-auto">
+              {/* Step 1: Select Clinic Branch */}
+              <div className="space-y-1.5">
+                <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-1.5">
+                  <Building2 className="w-3.5 h-3.5 text-blue-600" />
+                  <span>Select Clinic Branch</span> <span className="text-rose-500">*</span>
+                </label>
+                {editingPayout ? (
+                  <div className="w-full px-3 py-2.5 text-xs bg-slate-100 border border-slate-300 rounded-xl text-slate-800 font-medium flex items-center justify-between cursor-not-allowed select-none">
+                    <span className="font-semibold text-slate-900 flex items-center gap-1.5">
+                      <Building2 className="w-3.5 h-3.5 text-slate-500" />
+                      {selectedClinic?.name || 'Clinic Branch'}
+                      {selectedClinic?.clinic_code ? (
+                        <span className="text-slate-500 font-mono text-[11px]">({selectedClinic.clinic_code})</span>
+                      ) : null}
+                    </span>
+                    <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-200 text-slate-600 border border-slate-300">
+                      Assigned
+                    </span>
+                  </div>
+                ) : (
+                  <div className="relative">
+                    <Building2 className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <select
+                      value={formData.clinic_id}
+                      onChange={(e) => handleClinicSelect(e.target.value)}
+                      disabled={isLoadingClinics}
+                      className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer font-medium ${
+                        formErrors.clinic_id ? 'border-rose-400 focus:border-rose-500' : 'border-slate-300'
+                      }`}
+                    >
+                      <option value="">
+                        {isLoadingClinics ? 'Loading available clinics...' : '-- Choose Clinic Branch --'}
+                      </option>
+                      {clinics.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} ({c.clinic_code}) {c.branch_name ? `— ${c.branch_name}` : ''} [Location: {c.location || c.city || 'N/A'}]
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+                {formErrors.clinic_id && (
+                  <p className="text-[11px] text-rose-500 font-medium flex items-center gap-1 mt-1">
+                    <AlertCircle className="w-3 h-3 shrink-0" />
+                    <span>{formErrors.clinic_id}</span>
+                  </p>
+                )}
+              </div>
+
+              {/* Selected Clinic Details Auto-Preview Card */}
+              {selectedClinic ? (
+                <div className="p-3.5 sm:p-4 rounded-2xl bg-gradient-to-br from-blue-50/80 via-indigo-50/40 to-slate-50 border border-blue-200/90 space-y-2.5 animate-in fade-in duration-200">
+                  <div className="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-blue-200/60">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                      <span className="text-xs font-bold text-blue-900">
+                        Assigned Clinic Profile Loaded
+                      </span>
+                    </div>
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold bg-white text-blue-700 border border-blue-200 shadow-2xs">
+                      <Lock className="w-3 h-3" />
+                      {selectedClinic.clinic_code || 'CLINIC'}
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 text-xs">
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5">
+                        Clinic / Branch
+                      </span>
+                      <p className="px-2.5 py-1.5 bg-white/95 rounded-lg border border-blue-100 text-slate-900 font-semibold truncate text-[11px]">
+                        {selectedClinic.name} {selectedClinic.branch_name ? `(${selectedClinic.branch_name})` : ''}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 flex items-center gap-1">
+                        <Compass className="w-3 h-3 text-blue-500" />
+                        <span>Location / Area</span>
+                      </span>
+                      <p className="px-2.5 py-1.5 bg-white/95 rounded-lg border border-blue-100 text-slate-800 font-medium truncate text-[11px]">
+                        {selectedClinic.location || selectedClinic.city || '—'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 flex items-center gap-1">
+                        <Globe className="w-3 h-3 text-blue-500" />
+                        <span>City / State</span>
+                      </span>
+                      <p className="px-2.5 py-1.5 bg-white/95 rounded-lg border border-blue-100 text-slate-800 font-medium truncate text-[11px]">
+                        {[selectedClinic.city, selectedClinic.state].filter(Boolean).join(', ') || '—'}
+                      </p>
+                    </div>
+
+                    <div className="sm:col-span-2">
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 flex items-center gap-1">
+                        <MapPin className="w-3 h-3 text-blue-500" />
+                        <span>Clinic Address</span>
+                      </span>
+                      <p className="px-2.5 py-1.5 bg-white/95 rounded-lg border border-blue-100 text-slate-800 font-medium truncate text-[11px]">
+                        {selectedClinic.address || selectedClinic.location || '—'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-0.5 flex items-center gap-1">
+                        <Phone className="w-3 h-3 text-blue-500" />
+                        <span>Clinic Contact</span>
+                      </span>
+                      <p className="px-2.5 py-1.5 bg-white/95 rounded-lg border border-blue-100 text-slate-800 font-mono text-[11px] truncate">
+                        {selectedClinic.phone || selectedClinic.phone_number || selectedClinic.email || '—'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="p-3 rounded-xl bg-slate-50 border border-dashed border-slate-300 text-center text-slate-500 text-xs flex items-center justify-center gap-2">
+                  <Building2 className="w-4 h-4 text-slate-400" />
+                  <span>Please choose a Clinic Branch above to load clinic details and available staff.</span>
+                </div>
+              )}
+
+              {/* Step 2: Staff Member Selection */}
               <div>
                 <label className="block text-xs font-semibold text-slate-700 mb-1">
                   {editingPayout ? 'Staff Member (Read Only)' : 'Select Staff Member'} <span className="text-rose-500">*</span>
@@ -745,10 +982,17 @@ export default function StaffPayoutsPage() {
                   <select
                     value={formData.staff_id}
                     onChange={(e) => handleStaffSelect(e.target.value)}
-                    className="w-full px-3 py-2.5 text-xs bg-white border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-800"
+                    disabled={!formData.clinic_id}
+                    className="w-full px-3 py-2.5 text-xs bg-white border border-slate-300 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 text-slate-800 disabled:bg-slate-100 disabled:cursor-not-allowed cursor-pointer"
                   >
-                    <option value="">-- Choose Staff Member --</option>
-                    {staffOptions.map((st) => (
+                    <option value="">
+                      {!formData.clinic_id
+                        ? '-- Select Clinic Branch First --'
+                        : filteredStaffOptions.length === 0
+                        ? '-- No Staff Found For This Clinic --'
+                        : '-- Choose Staff Member --'}
+                    </option>
+                    {filteredStaffOptions.map((st) => (
                       <option key={st.id} value={st.id}>
                         {st.name} ({st.staff_code || `ID: ${st.id}`}) &mdash; Commission: ₹{Number(st.total_commission || 0).toLocaleString('en-IN')} {st.pending_balance > 0 ? `(Pending: ₹${Number(st.pending_balance || 0).toLocaleString('en-IN')})` : ''}
                       </option>
@@ -964,6 +1208,39 @@ export default function StaffPayoutsPage() {
                   Staff Code: <span className="font-mono font-semibold">{selectedPayout.staff?.staff_code || '-'}</span> &bull; {selectedPayout.staff?.department || 'General'}
                 </p>
               </div>
+
+              {/* Assigned Clinic Details */}
+              {selectedPayout.staff?.clinic && (
+                <div className="p-3.5 bg-blue-50/70 rounded-xl border border-blue-200/80 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-1.5 text-blue-900 font-semibold text-xs">
+                      <Building2 className="w-3.5 h-3.5 text-blue-600" />
+                      <span>Assigned Clinic Branch</span>
+                    </div>
+                    <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md bg-white text-blue-700 border border-blue-200">
+                      {selectedPayout.staff.clinic.clinic_code || 'CLINIC'}
+                    </span>
+                  </div>
+                  <p className="text-xs font-bold text-slate-900">
+                    {selectedPayout.staff.clinic.name}
+                    {selectedPayout.staff.clinic.branch_name ? ` (${selectedPayout.staff.clinic.branch_name})` : ''}
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5 text-[11px] text-slate-600 pt-0.5">
+                    {(selectedPayout.staff.clinic.location || selectedPayout.staff.clinic.city || selectedPayout.staff.clinic.address) && (
+                      <p className="flex items-center gap-1 truncate" title={selectedPayout.staff.clinic.address || selectedPayout.staff.clinic.location}>
+                        <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span>{[selectedPayout.staff.clinic.location, selectedPayout.staff.clinic.city, selectedPayout.staff.clinic.state].filter(Boolean).join(', ') || selectedPayout.staff.clinic.address}</span>
+                      </p>
+                    )}
+                    {(selectedPayout.staff.clinic.phone || selectedPayout.staff.clinic.email) && (
+                      <p className="flex items-center gap-1 truncate font-mono text-[10px]">
+                        <Phone className="w-3 h-3 text-slate-400 shrink-0" />
+                        <span>{selectedPayout.staff.clinic.phone || selectedPayout.staff.clinic.email}</span>
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Total Payout, Paid Amount, Balance Breakdown */}
               <div className="grid grid-cols-3 gap-2.5">
