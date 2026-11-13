@@ -15,6 +15,7 @@ import {
   Layers,
 } from 'lucide-react';
 import clinicManagementService from '../services/clinicManagementService';
+import { INDIAN_STATES } from '../../utils/indiaStates';
 
 export default function ClinicForm({
   onSubmit,
@@ -255,13 +256,21 @@ export default function ClinicForm({
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
               State
             </label>
-            <input
-              type="text"
-              value={formData.state}
+            <select
+              value={formData.state || ''}
               onChange={(e) => handleChange('state', e.target.value)}
-              placeholder="e.g. Karnataka"
-              className="w-full bg-white border border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 text-xs font-medium rounded-xl px-3.5 py-2.5 outline-none transition-all"
-            />
+              className="w-full bg-white border border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 text-xs font-medium text-slate-800 rounded-xl px-3.5 py-2.5 outline-none cursor-pointer transition-all"
+            >
+              <option value="">Select State</option>
+              {formData.state && !INDIAN_STATES.includes(formData.state) && (
+                <option value={formData.state}>{formData.state}</option>
+              )}
+              {INDIAN_STATES.map((st) => (
+                <option key={st} value={st}>
+                  {st}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Complete Street Address */}
@@ -297,19 +306,22 @@ export default function ClinicForm({
             />
           </div>
 
-          {/* Country */}
+          {/* Country (Read-Only) */}
           <div className="space-y-1.5 sm:col-span-2">
-            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
-              Country
-            </label>
+            <div className="flex items-center justify-between">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Country
+              </label>
+              <span className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Fixed / Readonly</span>
+            </div>
             <div className="relative">
               <Globe className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
               <input
                 type="text"
-                value={formData.country}
-                onChange={(e) => handleChange('country', e.target.value)}
-                placeholder="India"
-                className="w-full bg-white border border-slate-200 hover:border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-500/10 text-xs font-medium rounded-xl pl-10 pr-3.5 py-2.5 outline-none transition-all"
+                readOnly
+                value={formData.country || 'India'}
+                className="w-full bg-slate-100/80 border border-slate-200 text-slate-600 font-semibold text-xs rounded-xl pl-10 pr-3.5 py-2.5 outline-none cursor-not-allowed select-none transition-all"
+                title="Country is set to India by default (read-only)"
               />
             </div>
           </div>
