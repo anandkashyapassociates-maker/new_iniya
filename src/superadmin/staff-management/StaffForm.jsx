@@ -167,8 +167,8 @@ export default function StaffForm({
       }
     }
 
-    if (formData.password && formData.password.length > 0 && formData.password.length < 6) {
-      errs.password = 'Password must be at least 6 characters.';
+    if (formData.password && formData.password.length > 0 && formData.password.length < 8) {
+      errs.password = 'Password must be at least 8 characters.';
     }
 
     return errs;
@@ -540,7 +540,7 @@ export default function StaffForm({
           {/* Login Password */}
           <div className="min-w-0">
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
-              Login Password <span className="text-slate-400 font-normal lowercase">(default: 123456)</span>
+              Login Password <span className="text-slate-400 font-normal lowercase">(default: 12345678, min. 8 chars)</span>
             </label>
             <div className="relative">
               <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
@@ -548,7 +548,7 @@ export default function StaffForm({
                 type="password"
                 value={formData.password}
                 onChange={(e) => handleChange('password', e.target.value)}
-                placeholder="Leave blank for default (123456)"
+                placeholder="Leave blank for default (12345678) or enter min. 8 characters"
                 disabled={isLoading}
                 className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 shadow-2xs ${
                   errors.password

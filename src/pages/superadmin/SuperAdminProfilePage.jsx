@@ -74,6 +74,12 @@ export default function SuperAdminProfilePage() {
     e.preventDefault();
     setPasswordErrors({});
 
+    if (newPassword.length < 8) {
+      setPasswordErrors({ password: ['Password must be at least 8 characters.'] });
+      toast.error('Password must be at least 8 characters.');
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       setPasswordErrors({ password_confirmation: ['Passwords do not match.'] });
       return;

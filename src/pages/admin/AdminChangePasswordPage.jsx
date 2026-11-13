@@ -19,6 +19,11 @@ export default function AdminChangePasswordPage() {
     e.preventDefault();
     setErrors({});
 
+    if (newPassword.length < 8) {
+      setErrors({ password: ['Password must be at least 8 characters.'] });
+      return;
+    }
+
     if (newPassword !== confirmPassword) {
       setErrors({ password_confirmation: ['Passwords do not match.'] });
       return;

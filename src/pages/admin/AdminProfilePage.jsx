@@ -124,6 +124,12 @@ export default function AdminProfilePage() {
     e.preventDefault();
     setPasswordErrors({});
 
+    if (password.length < 8) {
+      setPasswordErrors({ password: ['Password must be at least 8 characters.'] });
+      toast.error('Password must be at least 8 characters.');
+      return;
+    }
+
     if (password !== passwordConfirmation) {
       setPasswordErrors({ password_confirmation: ['Password confirmation does not match.'] });
       toast.error('New password and confirmation do not match.');
