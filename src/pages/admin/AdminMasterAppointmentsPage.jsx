@@ -239,37 +239,6 @@ export default function AdminMasterAppointmentsPage() {
       ),
     },
     {
-      header: 'CLINIC BRANCH',
-      className: 'text-xs',
-      render: (row) => {
-        const clinic = row.clinic;
-        if (!clinic) {
-          return <span className="text-slate-400 font-medium">N/A</span>;
-        }
-
-        const locationText = clinic.location || clinic.city || clinic.branch_name || clinic.address || '';
-
-        return (
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
-              <Building2 className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-              <span className="truncate max-w-[170px]" title={clinic.name}>
-                {clinic.name}
-              </span>
-            </div>
-            {locationText && (
-              <div className="flex items-center gap-1 text-[11px] text-slate-500 pl-5">
-                <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
-                <span className="truncate max-w-[160px]" title={locationText}>
-                  {locationText}
-                </span>
-              </div>
-            )}
-          </div>
-        );
-      },
-    },
-    {
       header: 'CUSTOMER',
       render: (row) => (
         <div>

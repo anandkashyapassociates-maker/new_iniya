@@ -26,6 +26,7 @@ import {
   X,
   Check,
   Building2,
+  MapPin,
 } from 'lucide-react';
 import adminMasterAppointmentService from '../../services/adminMasterAppointmentService';
 import SessionRescheduleModal from '../../components/admin/SessionRescheduleModal';
@@ -518,6 +519,7 @@ export default function AdminMasterAppointmentDetailsPage() {
                 <th className="py-3 px-4 whitespace-nowrap">Date & Time</th>
                 <th className="py-3 px-4 min-w-[200px]">Treatment / Procedure</th>
                 <th className="py-3 px-4 min-w-[140px]">Assigned Staff</th>
+                <th className="py-3 px-4 min-w-[160px]">Clinic Branch</th>
                 <th className="py-3 px-4 whitespace-nowrap">Commission</th>
                 <th className="py-3 px-4 min-w-[140px]">Product Used</th>
                 <th className="py-3 px-3 text-center whitespace-nowrap">Session Photo</th>
@@ -571,6 +573,35 @@ export default function AdminMasterAppointmentDetailsPage() {
                     <td className="py-3 px-4 text-xs">
                       <div className="font-semibold text-slate-800">{ses.staff?.name || 'Unassigned'}</div>
                       <div className="text-slate-400 text-[11px]">{ses.staff?.department || ''}</div>
+                    </td>
+
+                    {/* Clinic Branch */}
+                    <td className="py-3 px-4 text-xs">
+                      {(() => {
+                        const clinic = appointment?.clinic || ses.staff?.clinic;
+                        if (!clinic) {
+                          return <span className="text-slate-400 font-medium">N/A</span>;
+                        }
+                        const locationText = clinic.location || clinic.city || clinic.branch_name || clinic.address || '';
+                        return (
+                          <div className="space-y-0.5 min-w-[150px]">
+                            <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
+                              <Building2 className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                              <span className="truncate max-w-[170px]" title={clinic.name}>
+                                {clinic.name}
+                              </span>
+                            </div>
+                            {locationText && (
+                              <div className="flex items-center gap-1 text-[11px] text-slate-500 pl-5">
+                                <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                                <span className="truncate max-w-[160px]" title={locationText}>
+                                  {locationText}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })()}
                     </td>
 
                     {/* Commission */}
