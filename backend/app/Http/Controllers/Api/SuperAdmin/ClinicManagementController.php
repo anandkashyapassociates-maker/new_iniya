@@ -143,13 +143,19 @@ class ClinicManagementController extends Controller
     public function store(Request $request): JsonResponse
     {
         $request->merge([
+            'location' => $request->filled('location') ? trim($request->input('location')) : null,
             'email' => $request->filled('email') ? strtolower(trim($request->input('email'))) : null,
         ]);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'branch_name' => ['nullable', 'string', 'max:120'],
-            'location' => ['required', 'string', 'max:150'],
+            'location' => [
+                'required',
+                'string',
+                'max:150',
+                Rule::unique('clinics', 'location'),
+            ],
             'address' => ['required', 'string', 'max:1000'],
             'city' => ['nullable', 'string', 'max:100'],
             'state' => ['nullable', 'string', 'max:100'],
@@ -161,6 +167,9 @@ class ClinicManagementController extends Controller
             'contact_person' => ['nullable', 'string', 'max:150'],
             'status' => ['nullable', 'string', Rule::in(Clinic::ALL_STATUSES)],
             'notes' => ['nullable', 'string', 'max:2000'],
+        ], [
+            'location.required' => 'Clinic location / area is required.',
+            'location.unique' => 'A clinic is already registered at this location. Each clinic must have a unique location.',
         ]);
 
         $superAdmin = $request->user();
@@ -221,13 +230,19 @@ class ClinicManagementController extends Controller
         $clinic = Clinic::findOrFail($id);
 
         $request->merge([
+            'location' => $request->filled('location') ? trim($request->input('location')) : null,
             'email' => $request->filled('email') ? strtolower(trim($request->input('email'))) : null,
         ]);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:150'],
             'branch_name' => ['nullable', 'string', 'max:120'],
-            'location' => ['required', 'string', 'max:150'],
+            'location' => [
+                'required',
+                'string',
+                'max:150',
+                Rule::unique('clinics', 'location')->ignore($clinic->id),
+            ],
             'address' => ['required', 'string', 'max:1000'],
             'city' => ['nullable', 'string', 'max:100'],
             'state' => ['nullable', 'string', 'max:100'],
@@ -239,6 +254,9 @@ class ClinicManagementController extends Controller
             'contact_person' => ['nullable', 'string', 'max:150'],
             'status' => ['nullable', 'string', Rule::in(Clinic::ALL_STATUSES)],
             'notes' => ['nullable', 'string', 'max:2000'],
+        ], [
+            'location.required' => 'Clinic location / area is required.',
+            'location.unique' => 'A clinic is already registered at this location. Each clinic must have a unique location.',
         ]);
 
         $clinic->update($validated);

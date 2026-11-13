@@ -9,9 +9,11 @@ export default function ClinicCreationPage() {
   const navigate = useNavigate();
   const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [serverErrors, setServerErrors] = useState({});
 
   const handleClinicSubmit = async (formData) => {
     setIsSubmitting(true);
+    setServerErrors({});
     try {
       const response = await clinicManagementService.createClinic(formData);
       const clinicCode = response.clinic?.clinic_code || '';
@@ -21,6 +23,12 @@ export default function ClinicCreationPage() {
       navigate('/superadmin/clinics');
     } catch (err) {
       console.error('Error creating clinic:', err);
+      const resErrors = err.response?.data?.errors || {};
+      const formatted = {};
+      for (const [key, val] of Object.entries(resErrors)) {
+        formatted[key] = Array.isArray(val) ? val[0] : val;
+      }
+      setServerErrors(formatted);
       const msg = err.response?.data?.message || 'Failed to create clinic. Please verify all required fields.';
       toast.error(msg);
     } finally {
@@ -80,6 +88,7 @@ export default function ClinicCreationPage() {
             onSubmit={handleClinicSubmit}
             isLoading={isSubmitting}
             cancelPath="/superadmin/clinics"
+            serverErrors={serverErrors}
           />
         </div>
       </div>

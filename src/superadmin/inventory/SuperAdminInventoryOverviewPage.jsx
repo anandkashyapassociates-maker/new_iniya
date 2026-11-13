@@ -17,6 +17,7 @@ import {
   Sparkles,
   Building2,
   Lock,
+  MapPin,
 } from 'lucide-react';
 import StatCard from '../../components/StatCard';
 import superAdminInventoryService from '../services/superAdminInventoryService';
@@ -429,10 +430,16 @@ export default function SuperAdminInventoryOverviewPage() {
                       <span className="font-semibold text-slate-800 block truncate max-w-[140px]">
                         {p.clinic?.name || 'Iniya Clinic'}
                       </span>
-                      <span className="inline-flex items-center gap-1 font-mono text-[10px] text-indigo-700 bg-indigo-50 px-1.5 py-0.2 rounded border border-indigo-100/80">
-                        <Lock className="w-2.5 h-2.5 text-indigo-500" />
-                        {p.clinic?.clinic_code || (p.clinic?.id ? `CLN-${String(p.clinic.id).padStart(4, '0')}` : 'CLN-0001')}
-                      </span>
+                      {p.clinic?.branch_name ? (
+                        <span className="inline-flex items-center gap-1 font-sans text-[10px] font-bold text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200/90 shadow-2xs mt-0.5">
+                          <MapPin className="w-2.5 h-2.5 text-purple-600 shrink-0" />
+                          <span>{p.clinic.branch_name}</span>
+                        </span>
+                      ) : (p.clinic?.location || p.clinic?.city) ? (
+                        <span className="text-[10px] text-slate-400 block truncate max-w-[120px]">
+                          {p.clinic.location || p.clinic.city}
+                        </span>
+                      ) : null}
                     </td>
                     <td className="py-3.5 px-3 text-slate-600 font-medium">
                       {p.category?.name || <span className="text-slate-400 italic">Uncategorized</span>}

@@ -23,6 +23,7 @@ export default function ClinicForm({
   isLoading = false,
   cancelPath = '/superadmin/clinics',
   isEdit = false,
+  serverErrors = {},
 }) {
   const [formData, setFormData] = useState({
     name: initialData?.name || '',
@@ -43,6 +44,25 @@ export default function ClinicForm({
 
   const [previewCode, setPreviewCode] = useState(initialData?.clinic_code || '');
   const [errors, setErrors] = useState({});
+  const [existingClinics, setExistingClinics] = useState([]);
+
+  // Fetch existing clinics for real-time location uniqueness check
+  useEffect(() => {
+    clinicManagementService
+      .getClinicOptions()
+      .then((res) => {
+        const list = res?.clinics || (Array.isArray(res) ? res : []);
+        setExistingClinics(list);
+      })
+      .catch(() => {});
+  }, []);
+
+  // Sync server errors when submission fails
+  useEffect(() => {
+    if (serverErrors && Object.keys(serverErrors).length > 0) {
+      setErrors((prev) => ({ ...prev, ...serverErrors }));
+    }
+  }, [serverErrors]);
 
   useEffect(() => {
     if (!isEdit && !previewCode) {
@@ -68,6 +88,25 @@ export default function ClinicForm({
         return next;
       });
     }
+
+    // Real-time location uniqueness check
+    if (field === 'location') {
+      const trimmed = value.trim().toLowerCase();
+      if (trimmed) {
+        const dup = existingClinics.find(
+          (c) =>
+            (!initialData?.id || String(c.id) !== String(initialData.id)) &&
+            c.location &&
+            c.location.trim().toLowerCase() === trimmed
+        );
+        if (dup) {
+          setErrors((prev) => ({
+            ...prev,
+            location: `A clinic is already registered at this location ('${dup.name}' - ${dup.clinic_code || ''}). Each clinic must have a unique location.`,
+          }));
+        }
+      }
+    }
   };
 
   const validate = () => {
@@ -81,6 +120,17 @@ export default function ClinicForm({
 
     if (!formData.location.trim()) {
       errs.location = 'Clinic location / area is required.';
+    } else {
+      const trimmed = formData.location.trim().toLowerCase();
+      const dup = existingClinics.find(
+        (c) =>
+          (!initialData?.id || String(c.id) !== String(initialData.id)) &&
+          c.location &&
+          c.location.trim().toLowerCase() === trimmed
+      );
+      if (dup) {
+        errs.location = `A clinic is already registered at this location ('${dup.name}' - ${dup.clinic_code || ''}). Each clinic must have a unique location.`;
+      }
     }
 
     if (!formData.address.trim()) {

@@ -18,6 +18,7 @@ import {
   Building2,
   Lock,
   MapPin,
+  Compass,
 } from 'lucide-react';
 import AdminStatusBadge from './AdminStatusBadge';
 import AdminEditModal from './AdminEditModal';
@@ -445,7 +446,8 @@ export default function AdminDetailsPage() {
                 <tr className="bg-slate-50/80 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                   <th className="py-3.5 px-4 w-14 text-center whitespace-nowrap">Sr. No.</th>
                   <th className="py-3.5 px-4 whitespace-nowrap min-w-[150px]">Full Name</th>
-                  <th className="py-3.5 px-4 whitespace-nowrap min-w-[260px]">Clinic &amp; Branch</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap min-w-[210px]">Clinic &amp; Branch</th>
+                  <th className="py-3.5 px-4 whitespace-nowrap min-w-[190px]">Location</th>
                   <th className="py-3.5 px-4 whitespace-nowrap min-w-[180px]">Email Address</th>
                   <th className="py-3.5 px-4 whitespace-nowrap min-w-[130px]">Mobile Number</th>
                   <th className="py-3.5 px-4 whitespace-nowrap min-w-[120px]">Account Status</th>
@@ -474,38 +476,36 @@ export default function AdminDetailsPage() {
                       </div>
                     </td>
 
-                    {/* Clinic & Branch */}
+                    {/* Clinic & Branch (Without Clinic Code) */}
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       {adm.clinic ? (
-                        <div className="flex flex-col gap-1.5 min-w-[240px]">
-                          {/* Row 1: Clinic Name & Code */}
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-slate-900 text-xs">
-                              {adm.clinic.name}
-                            </span>
-                            <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-50 text-blue-700 border border-blue-200/80 shrink-0">
-                              <Building2 className="w-2.5 h-2.5 text-blue-500" />
-                              {adm.clinic.clinic_code}
-                            </span>
-                          </div>
-
-                          {/* Row 2: Special Branch Badge & Location */}
-                          <div className="flex items-center gap-1.5 flex-wrap">
-                            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200/90 shadow-2xs shrink-0">
-                              <MapPin className="w-3 h-3 text-purple-600 shrink-0" />
-                              <span>{adm.clinic.branch_name || 'Main Flagship Clinic'}</span>
-                            </span>
-                            {(adm.clinic.location || adm.clinic.city) && (
-                              <span className="text-[11px] text-slate-400 font-medium truncate max-w-[170px]" title={adm.clinic.location || adm.clinic.city}>
-                                • {adm.clinic.location || adm.clinic.city}
-                              </span>
-                            )}
-                          </div>
+                        <div className="flex flex-col gap-1 min-w-[200px]">
+                          <span className="font-bold text-slate-900 text-xs">
+                            {adm.clinic.name}
+                          </span>
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 border border-purple-200/90 shadow-2xs w-fit">
+                            <MapPin className="w-3 h-3 text-purple-600 shrink-0" />
+                            <span>{adm.clinic.branch_name || 'Main Flagship Clinic'}</span>
+                          </span>
                         </div>
                       ) : (
                         <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500">
                           Unassigned
                         </span>
+                      )}
+                    </td>
+
+                    {/* Dedicated Location Column */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      {adm.clinic?.location || adm.clinic?.city ? (
+                        <div className="flex items-center gap-1.5 text-slate-700 text-xs font-medium">
+                          <Compass className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                          <span title={adm.clinic.address || adm.clinic.location}>
+                            {adm.clinic.location || adm.clinic.city}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-slate-400 italic text-[11px]">Not recorded</span>
                       )}
                     </td>
 
