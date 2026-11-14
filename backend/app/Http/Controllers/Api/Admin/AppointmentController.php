@@ -27,6 +27,11 @@ class AppointmentController extends Controller
             'admin:id,name,email',
         ]);
 
+        $user = $request->user();
+        if ($user && ! empty($user->clinic_id)) {
+            $query->whereHas('staff', fn ($sq) => $sq->where('clinic_id', $user->clinic_id));
+        }
+
         // Search by customer name/mobile/email, appointment number, treatment name, or staff name
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
