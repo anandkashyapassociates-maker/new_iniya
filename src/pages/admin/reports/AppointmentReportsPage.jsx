@@ -33,6 +33,7 @@ import {
   ZoomIn,
   TrendingUp,
   Building2,
+  Image as ImageIcon,
 } from 'lucide-react';
 import appointmentReportService from '../../../services/appointmentReportService';
 import { useToast } from '../../../context/ToastContext';
@@ -118,6 +119,7 @@ export default function AppointmentReportsPage({
 
   // Detail Modal State
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [selectedSessionPhotoId, setSelectedSessionPhotoId] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
 
@@ -315,8 +317,8 @@ export default function AppointmentReportsPage({
         headers = [
           'Appointment Number',
           'Booking Date',
-          'Clinic Name',
-          'Clinic Branch',
+          'Clinic',
+          'Branch Location',
           'Clinic Code',
           'Patient Name',
           'Patient Mobile',
@@ -335,12 +337,13 @@ export default function AppointmentReportsPage({
 
         rows = reportData.map((item) => {
           const stats = item.session_stats || {};
+          const clinic = item.clinic || {};
           return [
             `"${item.appointment_number || ''}"`,
             `"${item.appointment_date || ''}"`,
-            `"${item.clinic?.name || 'Central'}"`,
-            `"${item.clinic?.branch_name || item.clinic?.city || ''}"`,
-            `"${item.clinic?.clinic_code || ''}"`,
+            `"${(clinic.name || 'Central').replace(/"/g, '""')}"`,
+            `"${(clinic.location || clinic.city || clinic.branch_name || '').replace(/"/g, '""')}"`,
+            `"${(clinic.clinic_code || '').replace(/"/g, '""')}"`,
             `"${item.customer?.name || 'Walk-in'}"`,
             `"${item.customer?.mobile || ''}"`,
             `"${item.customer?.gender || ''}"`,
@@ -360,11 +363,11 @@ export default function AppointmentReportsPage({
         headers = [
           'Session Number',
           'Master Appointment',
-          'Clinic Name',
-          'Clinic Branch',
-          'Clinic Code',
           'Session Date',
           'Session Time',
+          'Clinic',
+          'Branch Location',
+          'Clinic Code',
           'Patient Name',
           'Patient Mobile',
           'Service Name',
@@ -379,27 +382,31 @@ export default function AppointmentReportsPage({
           'Payment Notes',
         ];
 
-        rows = reportData.map((s) => [
-          `"Session #${s.session_number}"`,
-          `"${s.master_appointment?.appointment_number || ''}"`,
-          `"${s.master_appointment?.clinic?.name || 'Central'}"`,
-          `"${s.master_appointment?.clinic?.branch_name || s.master_appointment?.clinic?.city || ''}"`,
-          `"${s.master_appointment?.clinic?.clinic_code || ''}"`,
-          `"${s.session_date || ''}"`,
-          `"${s.session_time || ''}"`,
-          `"${s.master_appointment?.customer?.name || 'Walk-in'}"`,
-          `"${s.master_appointment?.customer?.mobile || ''}"`,
-          `"${s.service?.name || s.treatment_details || ''}"`,
-          `"${s.staff?.name || 'Unassigned'}"`,
-          `"${s.staff?.staff_code || ''}"`,
-          `"${s.staff?.department || ''}"`,
-          s.staff_commission || 0,
-          `"${s.status || 'pending'}"`,
-          s.payment_amount || 0,
-          `"${s.payment_date || ''}"`,
-          `"${s.payment_mode || ''}"`,
-          `"${(s.payment_notes || '').replace(/"/g, '""')}"`,
-        ]);
+        rows = reportData.map((s) => {
+          const master = s.master_appointment || {};
+          const clinic = master.clinic || s.staff?.clinic || {};
+          return [
+            `"Session #${s.session_number}"`,
+            `"${master.appointment_number || ''}"`,
+            `"${s.session_date || ''}"`,
+            `"${s.session_time || ''}"`,
+            `"${(clinic.name || 'Central').replace(/"/g, '""')}"`,
+            `"${(clinic.location || clinic.city || clinic.branch_name || '').replace(/"/g, '""')}"`,
+            `"${(clinic.clinic_code || '').replace(/"/g, '""')}"`,
+            `"${master.customer?.name || 'Walk-in'}"`,
+            `"${master.customer?.mobile || ''}"`,
+            `"${s.service?.name || s.treatment_details || ''}"`,
+            `"${s.staff?.name || 'Unassigned'}"`,
+            `"${s.staff?.staff_code || ''}"`,
+            `"${s.staff?.department || ''}"`,
+            s.staff_commission || 0,
+            `"${s.status || 'pending'}"`,
+            s.payment_amount || 0,
+            `"${s.payment_date || ''}"`,
+            `"${s.payment_mode || ''}"`,
+            `"${(s.payment_notes || '').replace(/"/g, '""')}"`,
+          ];
+        });
       }
 
       const csvContent =
@@ -427,6 +434,12 @@ export default function AppointmentReportsPage({
   // Open Details Modal
   const handleOpenDetailModal = (record) => {
     setSelectedRecord(record);
+    if (activeTab === 'appointments' && record?.sessions) {
+      const withPhoto = record.sessions.find((s) => Boolean(s.image_url || s.image));
+      setSelectedSessionPhotoId(withPhoto ? withPhoto.id : null);
+    } else {
+      setSelectedSessionPhotoId(null);
+    }
     setIsDetailModalOpen(true);
   };
 
@@ -873,7 +886,7 @@ export default function AppointmentReportsPage({
                 <tr className="bg-slate-50/90 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   <th className="py-3.5 px-4">Appointment #</th>
                   <th className="py-3.5 px-4">Booking Date</th>
-                  <th className="py-3.5 px-4">Clinic / Branch</th>
+                  <th className="py-3.5 px-4">Clinic &amp; Branch</th>
                   <th className="py-3.5 px-4">Patient Profile</th>
                   <th className="py-3.5 px-4">Referral Sales Member</th>
                   <th className="py-3.5 px-4 text-right">Consultation Fees</th>
@@ -909,22 +922,29 @@ export default function AppointmentReportsPage({
                         {item.appointment_date || '-'}
                       </td>
 
-                      {/* Clinic / Branch */}
-                      <td className="py-3.5 px-4">
-                        {item.clinic ? (
-                          <div>
-                            <div className="flex items-center gap-1.5 font-bold text-slate-900">
-                              <Building2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                              <span className="truncate max-w-[150px]">{item.clinic.name}</span>
+                      {/* Clinic & Branch */}
+                      <td className="py-3.5 px-4 text-xs">
+                        {(() => {
+                          const clinic = item.clinic;
+                          if (!clinic) return <span className="text-slate-400 font-medium italic">N/A</span>;
+                          const locationText = clinic.location || clinic.city || clinic.branch_name || clinic.address || '';
+                          return (
+                            <div className="space-y-0.5 min-w-[140px]">
+                              <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
+                                <Building2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                                <span className="truncate max-w-[170px]" title={clinic.name}>{clinic.name}</span>
+                              </div>
+                              {locationText && (
+                                <div className="flex items-center gap-1 text-[11px] text-slate-500 pl-5">
+                                  <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                                  <span className="truncate max-w-[160px]" title={locationText}>
+                                    {locationText} {clinic.clinic_code && `(${clinic.clinic_code})`}
+                                  </span>
+                                </div>
+                              )}
                             </div>
-                            <p className="text-[10px] text-slate-400 font-mono pl-5 truncate max-w-[150px]">
-                              {item.clinic.branch_name || item.clinic.city || item.clinic.location || 'Main'}
-                              {item.clinic.clinic_code && ` • ${item.clinic.clinic_code}`}
-                            </p>
-                          </div>
-                        ) : (
-                          <span className="text-[11px] text-slate-400 italic">Central</span>
-                        )}
+                          );
+                        })()}
                       </td>
 
                       {/* Patient */}
@@ -1026,15 +1046,14 @@ export default function AppointmentReportsPage({
               <thead>
                 <tr className="bg-slate-50/90 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   <th className="py-3.5 px-4">Session Info</th>
-                  <th className="py-3.5 px-4">Clinic / Branch</th>
                   <th className="py-3.5 px-4">Schedule Date &amp; Time</th>
+                  <th className="py-3.5 px-4">Clinic &amp; Branch</th>
                   <th className="py-3.5 px-4">Patient Profile</th>
                   <th className="py-3.5 px-4">Clinical Service</th>
                   <th className="py-3.5 px-4">Assigned Practitioner</th>
                   <th className="py-3.5 px-4 text-center">Status</th>
                   <th className="py-3.5 px-4 text-right">Patient Payment</th>
                   <th className="py-3.5 px-4 text-right">Commission</th>
-                  <th className="py-3.5 px-4 text-center">Photos</th>
                   <th className="py-3.5 px-4 text-right">Action</th>
                 </tr>
               </thead>
@@ -1057,28 +1076,35 @@ export default function AppointmentReportsPage({
                         </div>
                       </td>
 
-                      {/* Clinic / Branch */}
-                      <td className="py-3.5 px-4">
-                        {master.clinic ? (
-                          <div>
-                            <div className="flex items-center gap-1.5 font-bold text-slate-900">
-                              <Building2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
-                              <span className="truncate max-w-[150px]">{master.clinic.name}</span>
-                            </div>
-                            <p className="text-[10px] text-slate-400 font-mono pl-5 truncate max-w-[150px]">
-                              {master.clinic.branch_name || master.clinic.city || master.clinic.location || 'Main'}
-                              {master.clinic.clinic_code && ` • ${master.clinic.clinic_code}`}
-                            </p>
-                          </div>
-                        ) : (
-                          <span className="text-[11px] text-slate-400 italic">Central</span>
-                        )}
-                      </td>
-
                       {/* Schedule Date & Time */}
                       <td className="py-3.5 px-4 font-mono text-slate-700">
                         <p className="font-semibold">{s.session_date || '-'}</p>
                         <p className="text-[10px] text-slate-400">{formatTimeSlot(s.session_time)}</p>
+                      </td>
+
+                      {/* Clinic & Branch */}
+                      <td className="py-3.5 px-4 text-xs">
+                        {(() => {
+                          const clinic = master.clinic || s.staff?.clinic;
+                          if (!clinic) return <span className="text-slate-400 font-medium italic">N/A</span>;
+                          const locationText = clinic.location || clinic.city || clinic.branch_name || clinic.address || '';
+                          return (
+                            <div className="space-y-0.5 min-w-[140px]">
+                              <div className="flex items-center gap-1.5 font-bold text-slate-900 text-xs">
+                                <Building2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                                <span className="truncate max-w-[170px]" title={clinic.name}>{clinic.name}</span>
+                              </div>
+                              {locationText && (
+                                <div className="flex items-center gap-1 text-[11px] text-slate-500 pl-5">
+                                  <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                                  <span className="truncate max-w-[160px]" title={locationText}>
+                                    {locationText} {clinic.clinic_code && `(${clinic.clinic_code})`}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </td>
 
                       {/* Patient */}
@@ -1152,28 +1178,6 @@ export default function AppointmentReportsPage({
                       {/* Staff Commission */}
                       <td className="py-3.5 px-4 text-right font-mono text-slate-800 font-semibold">
                         {formatCurrency(s.staff_commission)}
-                      </td>
-
-                      {/* Photos Indicator */}
-                      <td className="py-3.5 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          {s.image_url ? (
-                            <span
-                              className="w-2.5 h-2.5 rounded-full bg-emerald-500"
-                              title="Clinical photo attached"
-                            />
-                          ) : (
-                            <span className="w-2.5 h-2.5 rounded-full bg-slate-200" title="No clinical photo" />
-                          )}
-                          {master.image_url ? (
-                            <span
-                              className="w-2.5 h-2.5 rounded-full bg-purple-500"
-                              title="Master prescription attached"
-                            />
-                          ) : (
-                            <span className="w-2.5 h-2.5 rounded-full bg-slate-200" title="No prescription" />
-                          )}
-                        </div>
                       </td>
 
                       {/* Action */}
@@ -1379,6 +1383,20 @@ export default function AppointmentReportsPage({
                             >
                               {ses.status}
                             </span>
+                            {Boolean(ses.image_url || ses.image) && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedSessionPhotoId(ses.id);
+                                  setLightboxImage(getImageUrl(ses.image_url || ses.image));
+                                }}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 transition-colors cursor-pointer"
+                                title="Click to view session clinical photo"
+                              >
+                                <ImageIcon className="w-3 h-3 text-purple-600" />
+                                <span>Clinical Photo</span>
+                              </button>
+                            )}
                           </div>
                           <p className="text-[11px] text-slate-600 mt-0.5">
                             {ses.service?.name || ses.treatment_details || 'Treatment'} • {ses.session_date} ({formatTimeSlot(ses.session_time)})
@@ -1476,29 +1494,107 @@ export default function AppointmentReportsPage({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                 {/* Session Photo */}
                 <div className="border border-slate-200 rounded-2xl p-3 bg-slate-50 space-y-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                    Session Clinical Photo
-                  </span>
-                  {selectedRecord.image_url ? (
-                    <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-900 h-36 flex items-center justify-center">
-                      <img
-                        src={getImageUrl(selectedRecord.image_url || selectedRecord.image)}
-                        alt="Clinical"
-                        className="w-full h-full object-contain"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setLightboxImage(getImageUrl(selectedRecord.image_url || selectedRecord.image))}
-                        className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-1 text-[11px] font-bold cursor-pointer"
-                      >
-                        <ZoomIn className="w-4 h-4" /> View Full
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-[11px] text-slate-400 italic py-6 text-center">
-                      No clinical photo attached
-                    </p>
-                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                      Session Clinical Photo
+                    </span>
+                    {activeTab === 'appointments' && (
+                      <span className="text-[10px] font-medium text-slate-400">
+                        {(() => {
+                          const count = (selectedRecord.sessions || []).filter((s) => Boolean(s.image_url || s.image)).length;
+                          return count > 0 ? `${count} photo${count > 1 ? 's' : ''}` : '';
+                        })()}
+                      </span>
+                    )}
+                  </div>
+
+                  {(() => {
+                    if (activeTab === 'sessions') {
+                      const sessionImg = getImageUrl(selectedRecord.image_url || selectedRecord.image);
+                      return sessionImg ? (
+                        <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-900 h-36 flex items-center justify-center">
+                          <img
+                            src={sessionImg}
+                            alt={`Session #${selectedRecord.session_number} Clinical`}
+                            className="w-full h-full object-contain"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setLightboxImage(sessionImg)}
+                            className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-1 text-[11px] font-bold cursor-pointer"
+                          >
+                            <ZoomIn className="w-4 h-4" /> View Full
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-slate-400 italic py-6 text-center">
+                          No clinical photo attached
+                        </p>
+                      );
+                    }
+
+                    // activeTab === 'appointments'
+                    const sessionsWithPhotos = (selectedRecord.sessions || []).filter((s) =>
+                      Boolean(s.image_url || s.image)
+                    );
+
+                    if (sessionsWithPhotos.length === 0) {
+                      return (
+                        <p className="text-[11px] text-slate-400 italic py-6 text-center">
+                          No clinical photo attached to any session
+                        </p>
+                      );
+                    }
+
+                    const activeSession =
+                      sessionsWithPhotos.find((s) => s.id === selectedSessionPhotoId) ||
+                      sessionsWithPhotos[0];
+                    const activeSessionImg = getImageUrl(activeSession.image_url || activeSession.image);
+
+                    return (
+                      <div className="space-y-2">
+                        {sessionsWithPhotos.length > 1 && (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {sessionsWithPhotos.map((s) => {
+                              const isActive = activeSession.id === s.id;
+                              return (
+                                <button
+                                  key={s.id}
+                                  type="button"
+                                  onClick={() => setSelectedSessionPhotoId(s.id)}
+                                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                                    isActive
+                                      ? 'bg-purple-600 text-white shadow-xs'
+                                      : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'
+                                  }`}
+                                >
+                                  Session #{s.session_number}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-900 h-36 flex items-center justify-center">
+                          <img
+                            src={activeSessionImg}
+                            alt={`Session #${activeSession.session_number} Clinical`}
+                            className="w-full h-full object-contain"
+                          />
+                          <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-xs text-[10px] text-white font-mono font-bold">
+                            Session #{activeSession.session_number}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setLightboxImage(activeSessionImg)}
+                            className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-1 text-[11px] font-bold cursor-pointer"
+                          >
+                            <ZoomIn className="w-4 h-4" /> View Full
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Master Photo */}
