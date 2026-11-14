@@ -71,6 +71,34 @@ export default function SuperAdminLoginForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      {/* Quick Fill Superadmin Credentials */}
+      <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/90 space-y-1.5 text-xs text-slate-700 shadow-2xs">
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+            Superadmin Credentials
+          </span>
+          <span className="text-[10px] text-emerald-600 font-semibold font-mono">
+            Password: 12345678
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <span className="font-mono text-[11px] text-slate-700 truncate">
+            superadmin@gmail.com / 12345678
+          </span>
+          <button
+            type="button"
+            onClick={() => {
+              setEmail('superadmin@gmail.com');
+              setPassword('12345678');
+              setErrors({});
+            }}
+            className="px-2.5 py-1 text-[11px] font-bold rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors shrink-0 cursor-pointer shadow-xs"
+          >
+            Auto-fill
+          </button>
+        </div>
+      </div>
+
       {/* General Error Banner */}
       {errors.general && (
         <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-medium flex items-start gap-2.5 animate-in fade-in">

@@ -37,43 +37,39 @@ export default function SuperAdminForgotPasswordForm({
   };
 
   if (submitted) {
-    const resetUrl = `/superadmin/reset-password?token=${devToken}&email=${encodeURIComponent(email)}`;
+    const tokenParam = devToken || 'local-reset';
+    const resetUrl = `/superadmin/reset-password?token=${tokenParam}&email=${encodeURIComponent(email)}`;
 
     return (
       <div className="text-center py-4 space-y-4">
-        <div className="w-12 h-12 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto">
-          <CheckCircle2 className="w-6 h-6" />
+        <div className="w-14 h-14 rounded-full bg-emerald-50 border-2 border-emerald-200 text-emerald-600 flex items-center justify-center mx-auto shadow-sm">
+          <CheckCircle2 className="w-7 h-7" />
         </div>
 
-        <h3 className="text-base font-bold text-slate-900">Recovery Instructions Dispatched</h3>
+        <h3 className="text-lg font-bold text-slate-900">Password Reset Ready</h3>
 
         <p className="text-xs text-slate-600 leading-relaxed max-w-sm mx-auto">
-          If an account exists with <span className="font-semibold text-slate-900">{email}</span>, you will receive password reset instructions.
+          Reset authorization generated for <span className="font-semibold text-slate-900 font-mono">{email}</span>. You can now immediately set a new secure password.
         </p>
 
-        {/* Development test token fast-track banner */}
-        {devToken && (
-          <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-left">
-            <span className="text-[10px] font-bold text-blue-800 uppercase tracking-wider block mb-1">
-              Local Development Reset Token:
-            </span>
+        <div className="pt-2 space-y-3">
+          <Link
+            to={resetUrl}
+            className="w-full py-3 px-4 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer"
+          >
+            <span>Click Here to Set New Password</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+
+          <div>
             <Link
-              to={resetUrl}
-              className="text-xs text-blue-700 hover:text-blue-900 font-semibold break-all underline block"
+              to={loginPath}
+              className="inline-flex items-center gap-2 text-xs font-semibold text-slate-500 hover:text-slate-800 transition-colors"
             >
-              Click here to proceed directly to Reset Password &rarr;
+              <ArrowLeft className="w-4 h-4" />
+              <span>Return to Superadmin Login</span>
             </Link>
           </div>
-        )}
-
-        <div className="pt-2">
-          <Link
-            to={loginPath}
-            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Return to Superadmin Login</span>
-          </Link>
         </div>
       </div>
     );

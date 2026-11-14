@@ -39,45 +39,41 @@ export default function ForgotPasswordForm({
   };
 
   if (submitted) {
+    const tokenParam = devToken || 'local-reset';
     const resetUrl = isSuperAdmin 
-      ? `/superadmin/reset-password?token=${devToken}&email=${encodeURIComponent(email)}`
-      : `/admin/reset-password?token=${devToken}&email=${encodeURIComponent(email)}`;
+      ? `/superadmin/reset-password?token=${tokenParam}&email=${encodeURIComponent(email)}`
+      : `/admin/reset-password?token=${tokenParam}&email=${encodeURIComponent(email)}`;
 
     return (
       <div className="text-center py-4 space-y-4">
-        <div className="w-12 h-12 rounded-full bg-emerald-950/60 border border-emerald-700/60 text-emerald-400 flex items-center justify-center mx-auto">
-          <CheckCircle2 className="w-6 h-6" />
+        <div className="w-14 h-14 rounded-full bg-emerald-950/60 border-2 border-emerald-500/60 text-emerald-400 flex items-center justify-center mx-auto shadow-md">
+          <CheckCircle2 className="w-7 h-7" />
         </div>
 
-        <h3 className="text-base font-semibold text-white font-display">Recovery Instructions Sent</h3>
+        <h3 className="text-base font-semibold text-white font-display">Password Reset Ready</h3>
 
         <p className="text-xs text-slate-300 leading-relaxed font-normal">
-          If an account exists with <span className="font-semibold text-white font-mono">{email}</span>, you will receive password reset instructions.
+          Reset authorization generated for <span className="font-semibold text-white font-mono">{email}</span>. You can now immediately set a new secure password.
         </p>
 
-        {/* Development fast-track link */}
-        {devToken && (
-          <div className="p-3 bg-slate-950/80 border border-purple-500/40 rounded-xl text-left">
-            <span className="text-[10px] font-semibold text-purple-300 uppercase tracking-widest block mb-1 micro-label">
-              Development Test Token Generated:
-            </span>
+        <div className="pt-2 space-y-3">
+          <Link
+            to={resetUrl}
+            className="w-full py-3 px-4 rounded-xl text-xs font-bold text-white bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:to-indigo-700 shadow-md shadow-blue-500/25 flex items-center justify-center gap-2 transition-all cursor-pointer font-display"
+          >
+            <span>Click Here to Set New Password</span>
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+
+          <div>
             <Link
-              to={resetUrl}
-              className="text-xs text-blue-400 hover:text-blue-300 break-all underline block font-mono"
+              to={loginPath}
+              className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors font-display"
             >
-              Click here to proceed directly to Password Reset &rarr;
+              <ArrowLeft className="w-4 h-4" />
+              <span>Return to Login</span>
             </Link>
           </div>
-        )}
-
-        <div className="pt-2">
-          <Link
-            to={loginPath}
-            className="inline-flex items-center gap-2 text-xs font-semibold text-slate-400 hover:text-white transition-colors font-display"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            <span>Return to Login</span>
-          </Link>
         </div>
       </div>
     );
