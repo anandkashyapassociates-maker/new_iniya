@@ -28,7 +28,10 @@ Route::get('/storage/{path}', function (string $path) {
         abort(404);
     }
 
-    return response()->file($filePath);
+    return response()->file($filePath, [
+        'Access-Control-Allow-Origin' => '*',
+        'Access-Control-Allow-Methods' => 'GET, HEAD, OPTIONS',
+    ]);
 })->where('path', '.*');
 
 // 3. SPA Fallback
