@@ -71,11 +71,28 @@ class SessionRescheduleController extends Controller
         $adminName = $request->user()?->name ?? 'Admin';
 
         // Execute in transaction with row locking
-        $result = DB::transaction(function () use ($id, $validated, $adminName) {
+        $result = DB::transaction(function () use ($id, $validated, $adminName, $user) {
             /** @var AppointmentSession $session */
-            $session = AppointmentSession::where('id', $id)
+            $session = AppointmentSession::with('masterAppointment')->where('id', $id)
                 ->lockForUpdate()
                 ->firstOrFail();
+
+            if ($user && ! empty($user->clinic_id) && (int) $session->masterAppointment?->clinic_id !== (int) $user->clinic_id) {
+                throw ValidationException::withMessages([
+                    'session' => ['Unauthorized: This appointment session belongs to a different clinic branch.'],
+                ]);
+            }
+
+            if ($session->masterAppointment?->clinic_id) {
+                $staffValid = Staff::where('id', $validated['staff_id'])
+                    ->where('clinic_id', $session->masterAppointment->clinic_id)
+                    ->exists();
+                if (! $staffValid) {
+                    throw ValidationException::withMessages([
+                        'staff_id' => ['Selected staff member does not belong to this clinic branch.'],
+                    ]);
+                }
+            }
 
             // STRICT STATUS ENFORCEMENT
             if ($session->status !== AppointmentSession::STATUS_PENDING) {

@@ -161,7 +161,14 @@ class AppointmentSessionController extends Controller
      */
     public function updateStatus(Request $request, int $id): JsonResponse
     {
-        $session = AppointmentSession::findOrFail($id);
+        $session = AppointmentSession::with('masterAppointment')->findOrFail($id);
+
+        $user = $request->user();
+        if ($user && ! empty($user->clinic_id) && (int) $session->masterAppointment?->clinic_id !== (int) $user->clinic_id) {
+            return response()->json([
+                'message' => 'Unauthorized: This appointment session belongs to a different clinic branch.',
+            ], 403);
+        }
 
         $validated = $request->validate([
             'status' => ['required', Rule::in(AppointmentSession::ALL_STATUSES)],
@@ -305,6 +312,13 @@ class AppointmentSessionController extends Controller
             'inventoryProduct',
             'service.category.parent',
         ])->findOrFail($id);
+
+        $user = $request->user();
+        if ($user && ! empty($user->clinic_id) && $session->masterAppointment && (int) $session->masterAppointment->clinic_id !== (int) $user->clinic_id) {
+            return response()->json([
+                'message' => 'Unauthorized: This appointment session belongs to a different clinic branch.',
+            ], 403);
+        }
 
         $admin = $request->user();
         if ($admin) {

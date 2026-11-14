@@ -43,10 +43,12 @@ class MasterAppointmentController extends Controller
             },
         ]);
 
-        // Filter by clinic (supports All Clinics or specific branch filter)
+        // Enforce clinic isolation: Logged-in admin/staff must strictly access appointments of their assigned clinic
         $user = $request->user();
         $clinicInput = $request->input('clinic_id');
-        if (! empty($clinicInput) && $clinicInput !== 'all') {
+        if ($user && ! empty($user->clinic_id)) {
+            $query->where('clinic_id', $user->clinic_id);
+        } elseif (! empty($clinicInput) && $clinicInput !== 'all') {
             $query->where('clinic_id', $clinicInput);
         }
 
@@ -143,8 +145,12 @@ class MasterAppointmentController extends Controller
     {
         $admin = $request->user();
         $adminId = $admin?->id;
-        $clinicInput = $request->input('clinic_id');
-        $clinicId = (! empty($clinicInput) && $clinicInput !== 'all') ? $clinicInput : null;
+        if ($admin && ! empty($admin->clinic_id)) {
+            $clinicId = $admin->clinic_id;
+        } else {
+            $clinicInput = $request->input('clinic_id');
+            $clinicId = (! empty($clinicInput) && $clinicInput !== 'all') ? $clinicInput : null;
+        }
         $isStaffUser = ($admin instanceof Staff)
             || (isset($admin->role) && in_array(strtolower($admin->role), ['staff', 'staff practitioner']))
             || (isset($admin->user_type) && strtolower($admin->user_type) === 'staff')
@@ -269,7 +275,11 @@ class MasterAppointmentController extends Controller
             ->orderBy('name')
             ->get();
 
-        $clinics = Clinic::where('status', Clinic::STATUS_ACTIVE)
+        $clinicsQuery = Clinic::where('status', Clinic::STATUS_ACTIVE);
+        if ($clinicId) {
+            $clinicsQuery->where('id', $clinicId);
+        }
+        $clinics = $clinicsQuery
             ->select('id', 'name', 'branch_name', 'location', 'clinic_code')
             ->orderBy('name')
             ->get();
@@ -371,9 +381,49 @@ class MasterAppointmentController extends Controller
             }
         }
 
-        $masterAppointment = DB::transaction(function () use ($validated, $request, $imagePath) {
+        $user = $request->user();
+        $clinicId = $user?->clinic_id ?? $request->input('clinic_id') ?? \App\Models\Clinic::orderBy('id')->value('id');
+
+        // Enforce clinic integrity: sales member, staff, and inventory products must belong to the clinic
+        if ($clinicId) {
+            $salesValid = SalesMember::where('id', $validated['sales_team_id'])
+                ->where('clinic_id', $clinicId)
+                ->exists();
+            if (! $salesValid) {
+                throw ValidationException::withMessages([
+                    'sales_team_id' => ['Selected sales member does not belong to your assigned clinic.'],
+                ]);
+            }
+
+            foreach ($validated['sessions'] as $idx => $sData) {
+                $staffValid = Staff::where('id', $sData['staff_id'])
+                    ->where('clinic_id', $clinicId)
+                    ->exists();
+                if (! $staffValid) {
+                    throw ValidationException::withMessages([
+                        "sessions.{$idx}.staff_id" => ['Selected staff member does not belong to your assigned clinic.'],
+                    ]);
+                }
+
+                $productIds = ! empty($sData['inventory_product_ids'])
+                    ? array_map('intval', (array) $sData['inventory_product_ids'])
+                    : (! empty($sData['inventory_product_id']) ? [(int) $sData['inventory_product_id']] : []);
+
+                if (! empty($productIds)) {
+                    $invalidProducts = InventoryProduct::whereIn('id', $productIds)
+                        ->where('clinic_id', '!=', $clinicId)
+                        ->exists();
+                    if ($invalidProducts) {
+                        throw ValidationException::withMessages([
+                            "sessions.{$idx}.inventory_product_id" => ['Selected inventory product does not belong to your assigned clinic.'],
+                        ]);
+                    }
+                }
+            }
+        }
+
+        $masterAppointment = DB::transaction(function () use ($validated, $request, $imagePath, $clinicId) {
             $appointmentNumber = MasterAppointment::generateUniqueNumber($validated['appointment_date']);
-            $clinicId = $request->user()?->clinic_id ?? 1;
 
             $master = MasterAppointment::create([
                 'clinic_id' => $clinicId,
@@ -609,6 +659,13 @@ class MasterAppointmentController extends Controller
                 ])->orderBy('session_number');
             },
         ])->findOrFail($id);
+
+        $user = $request->user();
+        if ($user && ! empty($user->clinic_id) && (int) $master->clinic_id !== (int) $user->clinic_id) {
+            return response()->json([
+                'message' => 'Unauthorized: This master appointment belongs to a different clinic branch.',
+            ], 403);
+        }
 
         if ($master->sessions->isNotEmpty()) {
             $computedFee = $master->sessions->reduce(function ($sum, $s) {

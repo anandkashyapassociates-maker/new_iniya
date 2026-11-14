@@ -81,7 +81,7 @@ export default function AdminMasterAppointmentsPage() {
   const [search, setSearch] = useState('');
   const [dateFilter, setDateFilter] = useState(''); // 'current', 'preview', or ''
   const [statusFilter, setStatusFilter] = useState(''); // 'pending', 'in_progress', 'completed', 'cancelled'
-  const [clinicFilter, setClinicFilter] = useState('');
+  const [clinicFilter, setClinicFilter] = useState(user?.clinic_id ? String(user.clinic_id) : '');
   const [customerIdFilter, setCustomerIdFilter] = useState('');
   const [salesTeamIdFilter, setSalesTeamIdFilter] = useState('');
   const [activeStatCard, setActiveStatCard] = useState('all');
@@ -573,19 +573,28 @@ export default function AdminMasterAppointmentsPage() {
               ))}
             </select>
 
-            {/* Clinic Branch filter (Replaced All Statuses as requested) */}
-            <select
-              value={clinicFilter}
-              onChange={(e) => setClinicFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors max-w-[200px] truncate"
-            >
-              <option value="">All Clinics (Branches)</option>
-              {clinics.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} {c.branch_name ? `(${c.branch_name})` : (c.location ? `(${c.location})` : '')}
-                </option>
-              ))}
-            </select>
+            {/* Clinic Branch Badge (Locked to admin's assigned clinic) */}
+            {user?.clinic ? (
+              <div className="px-3 py-2 bg-indigo-50 border border-indigo-200/80 rounded-xl text-xs font-bold text-indigo-700 flex items-center gap-1.5 shrink-0 shadow-2xs">
+                <Building2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                <span className="truncate max-w-[190px]">
+                  {user.clinic.name} {user.clinic.branch_name ? `(${user.clinic.branch_name})` : ''}
+                </span>
+              </div>
+            ) : clinics.length > 0 ? (
+              <select
+                value={clinicFilter}
+                onChange={(e) => setClinicFilter(e.target.value)}
+                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-colors max-w-[200px] truncate"
+              >
+                <option value="">All Clinics (Branches)</option>
+                {clinics.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} {c.branch_name ? `(${c.branch_name})` : (c.location ? `(${c.location})` : '')}
+                  </option>
+                ))}
+              </select>
+            ) : null}
           </div>
         </div>
 
