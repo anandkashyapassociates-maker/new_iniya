@@ -22,9 +22,17 @@ function getBackendOrigin() {
  * 2. Absolute URLs with localhost / 127.0.0.1 (rewrites to backend origin)
  * 3. Insecure http:// URLs on https:// pages (upgrades to https://)
  * 4. Relative storage paths ("appointments/...", "/storage/appointments/...")
+ * 5. Windows backslashes normalization
  */
 export function getImageUrl(pathOrUrl) {
   if (!pathOrUrl) return null;
+
+  // Handle possible object wrappers
+  if (typeof pathOrUrl === 'object') {
+    pathOrUrl = pathOrUrl.url || pathOrUrl.path || pathOrUrl.image || pathOrUrl.src;
+  }
+  if (!pathOrUrl) return null;
+
   let str = String(pathOrUrl).trim();
   if (!str) return null;
 
@@ -57,6 +65,8 @@ export function getImageUrl(pathOrUrl) {
   }
 
   // 3. Relative storage paths (e.g. "appointments/...", "/storage/appointments/...")
+  // Normalize Windows backslashes to forward slashes
+  str = str.replace(/\\/g, '/');
   let cleanPath = str.startsWith('/') ? str.slice(1) : str;
   if (cleanPath.startsWith('storage/')) {
     cleanPath = cleanPath.slice('storage/'.length);
