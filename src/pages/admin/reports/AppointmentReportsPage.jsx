@@ -983,7 +983,6 @@ export default function AppointmentReportsPage({
                   <th className="py-3.5 px-4 text-center">Status</th>
                   <th className="py-3.5 px-4 text-right">Patient Payment</th>
                   <th className="py-3.5 px-4 text-right">Commission</th>
-                  <th className="py-3.5 px-4 text-center">Photos</th>
                   <th className="py-3.5 px-4 text-right">Action</th>
                 </tr>
               </thead>
@@ -1083,28 +1082,6 @@ export default function AppointmentReportsPage({
                       {/* Staff Commission */}
                       <td className="py-3.5 px-4 text-right font-mono text-slate-800 font-semibold">
                         {formatCurrency(s.staff_commission)}
-                      </td>
-
-                      {/* Photos Indicator */}
-                      <td className="py-3.5 px-4 text-center">
-                        <div className="flex items-center justify-center gap-1">
-                          {s.image_url ? (
-                            <span
-                              className="w-2.5 h-2.5 rounded-full bg-emerald-500"
-                              title="Clinical photo attached"
-                            />
-                          ) : (
-                            <span className="w-2.5 h-2.5 rounded-full bg-slate-200" title="No clinical photo" />
-                          )}
-                          {master.image_url ? (
-                            <span
-                              className="w-2.5 h-2.5 rounded-full bg-purple-500"
-                              title="Master prescription attached"
-                            />
-                          ) : (
-                            <span className="w-2.5 h-2.5 rounded-full bg-slate-200" title="No prescription" />
-                          )}
-                        </div>
                       </td>
 
                       {/* Action */}
