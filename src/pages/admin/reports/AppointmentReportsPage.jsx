@@ -33,6 +33,7 @@ import {
   ZoomIn,
   TrendingUp,
   Building2,
+  Image as ImageIcon,
 } from 'lucide-react';
 import appointmentReportService from '../../../services/appointmentReportService';
 import { useToast } from '../../../context/ToastContext';
@@ -116,6 +117,7 @@ export default function AppointmentReportsPage({
 
   // Detail Modal State
   const [selectedRecord, setSelectedRecord] = useState(null);
+  const [selectedSessionPhotoId, setSelectedSessionPhotoId] = useState(null);
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
   const [lightboxImage, setLightboxImage] = useState(null);
 
@@ -409,6 +411,12 @@ export default function AppointmentReportsPage({
   // Open Details Modal
   const handleOpenDetailModal = (record) => {
     setSelectedRecord(record);
+    if (activeTab === 'appointments' && record?.sessions) {
+      const withPhoto = record.sessions.find((s) => Boolean(s.image_url || s.image));
+      setSelectedSessionPhotoId(withPhoto ? withPhoto.id : null);
+    } else {
+      setSelectedSessionPhotoId(null);
+    }
     setIsDetailModalOpen(true);
   };
 
@@ -1266,6 +1274,20 @@ export default function AppointmentReportsPage({
                             >
                               {ses.status}
                             </span>
+                            {Boolean(ses.image_url || ses.image) && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setSelectedSessionPhotoId(ses.id);
+                                  setLightboxImage(getImageUrl(ses.image_url || ses.image));
+                                }}
+                                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 transition-colors cursor-pointer"
+                                title="Click to view session clinical photo"
+                              >
+                                <ImageIcon className="w-3 h-3 text-purple-600" />
+                                <span>Clinical Photo</span>
+                              </button>
+                            )}
                           </div>
                           <p className="text-[11px] text-slate-600 mt-0.5">
                             {ses.service?.name || ses.treatment_details || 'Treatment'} • {ses.session_date} ({formatTimeSlot(ses.session_time)})
@@ -1363,29 +1385,107 @@ export default function AppointmentReportsPage({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
                 {/* Session Photo */}
                 <div className="border border-slate-200 rounded-2xl p-3 bg-slate-50 space-y-2">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
-                    Session Clinical Photo
-                  </span>
-                  {selectedRecord.image_url ? (
-                    <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-900 h-36 flex items-center justify-center">
-                      <img
-                        src={getImageUrl(selectedRecord.image_url || selectedRecord.image)}
-                        alt="Clinical"
-                        className="w-full h-full object-contain"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setLightboxImage(getImageUrl(selectedRecord.image_url || selectedRecord.image))}
-                        className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-1 text-[11px] font-bold cursor-pointer"
-                      >
-                        <ZoomIn className="w-4 h-4" /> View Full
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-[11px] text-slate-400 italic py-6 text-center">
-                      No clinical photo attached
-                    </p>
-                  )}
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 block">
+                      Session Clinical Photo
+                    </span>
+                    {activeTab === 'appointments' && (
+                      <span className="text-[10px] font-medium text-slate-400">
+                        {(() => {
+                          const count = (selectedRecord.sessions || []).filter((s) => Boolean(s.image_url || s.image)).length;
+                          return count > 0 ? `${count} photo${count > 1 ? 's' : ''}` : '';
+                        })()}
+                      </span>
+                    )}
+                  </div>
+
+                  {(() => {
+                    if (activeTab === 'sessions') {
+                      const sessionImg = getImageUrl(selectedRecord.image_url || selectedRecord.image);
+                      return sessionImg ? (
+                        <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-900 h-36 flex items-center justify-center">
+                          <img
+                            src={sessionImg}
+                            alt={`Session #${selectedRecord.session_number} Clinical`}
+                            className="w-full h-full object-contain"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setLightboxImage(sessionImg)}
+                            className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-1 text-[11px] font-bold cursor-pointer"
+                          >
+                            <ZoomIn className="w-4 h-4" /> View Full
+                          </button>
+                        </div>
+                      ) : (
+                        <p className="text-[11px] text-slate-400 italic py-6 text-center">
+                          No clinical photo attached
+                        </p>
+                      );
+                    }
+
+                    // activeTab === 'appointments'
+                    const sessionsWithPhotos = (selectedRecord.sessions || []).filter((s) =>
+                      Boolean(s.image_url || s.image)
+                    );
+
+                    if (sessionsWithPhotos.length === 0) {
+                      return (
+                        <p className="text-[11px] text-slate-400 italic py-6 text-center">
+                          No clinical photo attached to any session
+                        </p>
+                      );
+                    }
+
+                    const activeSession =
+                      sessionsWithPhotos.find((s) => s.id === selectedSessionPhotoId) ||
+                      sessionsWithPhotos[0];
+                    const activeSessionImg = getImageUrl(activeSession.image_url || activeSession.image);
+
+                    return (
+                      <div className="space-y-2">
+                        {sessionsWithPhotos.length > 1 && (
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {sessionsWithPhotos.map((s) => {
+                              const isActive = activeSession.id === s.id;
+                              return (
+                                <button
+                                  key={s.id}
+                                  type="button"
+                                  onClick={() => setSelectedSessionPhotoId(s.id)}
+                                  className={`px-2 py-0.5 rounded-md text-[10px] font-bold transition-all cursor-pointer ${
+                                    isActive
+                                      ? 'bg-purple-600 text-white shadow-xs'
+                                      : 'bg-white hover:bg-slate-200 text-slate-700 border border-slate-200'
+                                  }`}
+                                >
+                                  Session #{s.session_number}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+
+                        <div className="relative group rounded-xl overflow-hidden border border-slate-200 bg-slate-900 h-36 flex items-center justify-center">
+                          <img
+                            src={activeSessionImg}
+                            alt={`Session #${activeSession.session_number} Clinical`}
+                            className="w-full h-full object-contain"
+                          />
+                          <div className="absolute top-2 left-2 px-1.5 py-0.5 rounded bg-black/60 backdrop-blur-xs text-[10px] text-white font-mono font-bold">
+                            Session #{activeSession.session_number}
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setLightboxImage(activeSessionImg)}
+                            className="absolute inset-0 bg-slate-950/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white gap-1 text-[11px] font-bold cursor-pointer"
+                          >
+                            <ZoomIn className="w-4 h-4" /> View Full
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 {/* Master Photo */}
