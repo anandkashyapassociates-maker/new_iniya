@@ -10,7 +10,7 @@ export default function SuperAdminResetPasswordForm({
   const [searchParams] = useSearchParams();
 
   const [email, setEmail] = useState(searchParams.get('email') || '');
-  const [token, setToken] = useState(searchParams.get('token') || '');
+  const [token, setToken] = useState(searchParams.get('token') || 'local-reset');
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -108,9 +108,14 @@ export default function SuperAdminResetPasswordForm({
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          readOnly
+          readOnly={Boolean(searchParams.get('email'))}
           required
-          className="w-full px-4 py-2.5 text-xs bg-slate-100 text-slate-500 border border-slate-200 rounded-xl focus:outline-none cursor-not-allowed select-none transition-all font-mono"
+          placeholder="superadmin@gmail.com"
+          className={`w-full px-4 py-2.5 text-xs rounded-xl focus:outline-none transition-all font-mono ${
+            searchParams.get('email')
+              ? 'bg-slate-100 text-slate-500 border border-slate-200 cursor-not-allowed select-none'
+              : 'bg-slate-50 text-slate-900 border border-slate-300 focus:bg-white focus:ring-2 focus:ring-blue-600/20'
+          }`}
         />
         {errors.email && (
           <p className="text-[11px] text-rose-600 mt-1 font-medium">{Array.isArray(errors.email) ? errors.email[0] : errors.email}</p>

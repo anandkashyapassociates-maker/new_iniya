@@ -83,20 +83,20 @@ export default function LoginForm({
               : 'Admin Demo Credentials'}
           </span>
           <span className="text-[10px] text-emerald-400 font-medium">
-            Password: 123456
+            Password: 12345678
           </span>
         </div>
 
         {isSuperAdmin ? (
           <div className="flex items-center justify-between">
             <span className="font-mono text-[11px] text-slate-200">
-              superadmin@gmail.com / 123456
+              superadmin@gmail.com / 12345678
             </span>
             <button
               type="button"
               onClick={() => {
                 setEmail('superadmin@gmail.com');
-                setPassword('123456');
+                setPassword('12345678');
                 setErrors({});
               }}
               className="px-3 py-1.5 text-xs font-semibold rounded-xl text-white transition-all cursor-pointer shadow-xs font-display bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500"
@@ -111,7 +111,7 @@ export default function LoginForm({
               onClick={() => {
                 setAccountType('admin');
                 setEmail('admin@gmail.com');
-                setPassword('123456');
+                setPassword('12345678');
                 setErrors({});
               }}
               className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${
@@ -132,7 +132,7 @@ export default function LoginForm({
               onClick={() => {
                 setAccountType('staff');
                 setEmail('ramesh@iniya.com');
-                setPassword('123456');
+                setPassword('12345678');
                 setErrors({});
               }}
               className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex flex-col justify-between ${

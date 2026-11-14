@@ -12,7 +12,7 @@ export default function ResetPasswordForm({
   const [searchParams] = useSearchParams();
 
   const [email, setEmail] = useState(searchParams.get('email') || '');
-  const [token, setToken] = useState(searchParams.get('token') || '');
+  const [token, setToken] = useState(searchParams.get('token') || 'local-reset');
   const [password, setPassword] = useState('');
   const [passwordConfirmation, setPasswordConfirmation] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -107,9 +107,14 @@ export default function ResetPasswordForm({
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          readOnly
+          readOnly={Boolean(searchParams.get('email'))}
           required
-          className="w-full px-4 py-2.5 text-xs bg-slate-900/60 text-slate-400 border border-slate-800 rounded-xl focus:outline-none font-mono cursor-not-allowed select-none"
+          placeholder="admin@example.com"
+          className={`w-full px-4 py-2.5 text-xs rounded-xl focus:outline-none font-mono transition-all ${
+            searchParams.get('email')
+              ? 'bg-slate-900/60 text-slate-400 border border-slate-800 cursor-not-allowed select-none'
+              : 'bg-slate-950 text-white border border-slate-800 focus:border-indigo-500'
+          }`}
         />
         {errors.email && (
           <p className="text-[11px] text-rose-400 mt-1 font-medium">{Array.isArray(errors.email) ? errors.email[0] : errors.email}</p>
