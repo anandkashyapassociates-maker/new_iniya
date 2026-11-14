@@ -218,6 +218,7 @@ class AppointmentReportController extends Controller
 
         $query = AppointmentSession::with([
             'masterAppointment:id,clinic_id,appointment_number,customer_id,sales_team_id,appointment_date,appointment_fees,notes,image',
+            'masterAppointment.clinic:id,clinic_code,name,branch_name,location,city',
             'masterAppointment.customer:id,name,mobile,email,gender,age,address,image',
             'masterAppointment.salesTeam:id,sales_code,name,email,mobile,department',
             'staff:id,staff_code,name,department,designation,mobile',
