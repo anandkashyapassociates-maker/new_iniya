@@ -92,6 +92,7 @@ export default function AppointmentReportsPage({
 
   // Dropdown filter options
   const [filterOptions, setFilterOptions] = useState({
+    clinics: [],
     staff: [],
     sales_team: [],
     services: [],
@@ -102,6 +103,7 @@ export default function AppointmentReportsPage({
 
   // Filter States
   const [search, setSearch] = useState('');
+  const [selectedClinicId, setSelectedClinicId] = useState('');
   const [datePreset, setDatePreset] = useState('all_time');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
@@ -126,6 +128,7 @@ export default function AppointmentReportsPage({
         const res = await appointmentReportService.getFilterOptions(role);
         if (res && res.success) {
           setFilterOptions({
+            clinics: res.clinics || [],
             staff: res.staff || [],
             sales_team: res.sales_team || [],
             services: res.services || [],
@@ -149,6 +152,7 @@ export default function AppointmentReportsPage({
         page,
         per_page: perPage,
         search: search.trim() || undefined,
+        clinic_id: selectedClinicId || undefined,
         preset: datePreset,
         from_date: fromDate || undefined,
         to_date: toDate || undefined,
@@ -192,6 +196,7 @@ export default function AppointmentReportsPage({
     page,
     perPage,
     search,
+    selectedClinicId,
     datePreset,
     fromDate,
     toDate,
@@ -256,6 +261,7 @@ export default function AppointmentReportsPage({
   // Reset all filters
   const handleResetFilters = () => {
     setSearch('');
+    setSelectedClinicId('');
     setDatePreset('all_time');
     setFromDate('');
     setToDate('');
@@ -309,6 +315,9 @@ export default function AppointmentReportsPage({
         headers = [
           'Appointment Number',
           'Booking Date',
+          'Clinic Name',
+          'Clinic Branch',
+          'Clinic Code',
           'Patient Name',
           'Patient Mobile',
           'Patient Gender',
@@ -329,6 +338,9 @@ export default function AppointmentReportsPage({
           return [
             `"${item.appointment_number || ''}"`,
             `"${item.appointment_date || ''}"`,
+            `"${item.clinic?.name || 'Central'}"`,
+            `"${item.clinic?.branch_name || item.clinic?.city || ''}"`,
+            `"${item.clinic?.clinic_code || ''}"`,
             `"${item.customer?.name || 'Walk-in'}"`,
             `"${item.customer?.mobile || ''}"`,
             `"${item.customer?.gender || ''}"`,
@@ -348,6 +360,9 @@ export default function AppointmentReportsPage({
         headers = [
           'Session Number',
           'Master Appointment',
+          'Clinic Name',
+          'Clinic Branch',
+          'Clinic Code',
           'Session Date',
           'Session Time',
           'Patient Name',
@@ -367,6 +382,9 @@ export default function AppointmentReportsPage({
         rows = reportData.map((s) => [
           `"Session #${s.session_number}"`,
           `"${s.master_appointment?.appointment_number || ''}"`,
+          `"${s.master_appointment?.clinic?.name || 'Central'}"`,
+          `"${s.master_appointment?.clinic?.branch_name || s.master_appointment?.clinic?.city || ''}"`,
+          `"${s.master_appointment?.clinic?.clinic_code || ''}"`,
           `"${s.session_date || ''}"`,
           `"${s.session_time || ''}"`,
           `"${s.master_appointment?.customer?.name || 'Walk-in'}"`,
@@ -623,9 +641,9 @@ export default function AppointmentReportsPage({
         </div>
 
         {/* Filter Inputs Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3">
           {/* 1. Search */}
-          <div className="lg:col-span-2 relative">
+          <div className="relative">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
@@ -636,8 +654,8 @@ export default function AppointmentReportsPage({
               }}
               placeholder={
                 activeTab === 'appointments'
-                  ? 'Search by Appt #, patient, mobile, sales code...'
-                  : 'Search by session, Appt #, patient, doctor, service...'
+                  ? 'Search Appt #, patient, mobile...'
+                  : 'Search session, Appt #, patient...'
               }
               className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 focus:bg-white transition-all text-slate-800"
             />
@@ -652,7 +670,28 @@ export default function AppointmentReportsPage({
             )}
           </div>
 
-          {/* 2. Status Filter */}
+          {/* 2. Clinic Branch Filter (SuperAdmin or Multi-Clinic) */}
+          {(isSuperAdmin || (filterOptions.clinics && filterOptions.clinics.length > 1)) && (
+            <div>
+              <select
+                value={selectedClinicId}
+                onChange={(e) => {
+                  setSelectedClinicId(e.target.value);
+                  setPage(1);
+                }}
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-hidden focus:ring-2 focus:ring-purple-500/20 text-slate-700 font-medium"
+              >
+                <option value="">All Clinics (Branches)</option>
+                {(filterOptions.clinics || []).map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name} {c.branch_name ? `(${c.branch_name})` : ''} {c.clinic_code ? `[${c.clinic_code}]` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* 3. Status Filter */}
           <div>
             <select
               value={selectedStatus}
@@ -670,7 +709,7 @@ export default function AppointmentReportsPage({
             </select>
           </div>
 
-          {/* 3. Practitioner / Staff Filter */}
+          {/* 4. Practitioner / Staff Filter */}
           <div>
             <select
               value={selectedStaffId}
@@ -689,7 +728,7 @@ export default function AppointmentReportsPage({
             </select>
           </div>
 
-          {/* 4. Tab Specific Filter: Sales Referral OR Clinical Service */}
+          {/* 5. Tab Specific Filter: Sales Referral OR Clinical Service */}
           {activeTab === 'appointments' ? (
             <div>
               <select
@@ -728,7 +767,7 @@ export default function AppointmentReportsPage({
             </div>
           )}
 
-          {/* 5. Payment Status Filter */}
+          {/* 6. Payment Status Filter */}
           <div>
             <select
               value={selectedPaymentStatus}
@@ -834,6 +873,7 @@ export default function AppointmentReportsPage({
                 <tr className="bg-slate-50/90 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   <th className="py-3.5 px-4">Appointment #</th>
                   <th className="py-3.5 px-4">Booking Date</th>
+                  <th className="py-3.5 px-4">Clinic / Branch</th>
                   <th className="py-3.5 px-4">Patient Profile</th>
                   <th className="py-3.5 px-4">Referral Sales Member</th>
                   <th className="py-3.5 px-4 text-right">Consultation Fees</th>
@@ -867,6 +907,24 @@ export default function AppointmentReportsPage({
                       {/* Date */}
                       <td className="py-3.5 px-4 font-mono text-slate-600">
                         {item.appointment_date || '-'}
+                      </td>
+
+                      {/* Clinic / Branch */}
+                      <td className="py-3.5 px-4">
+                        {item.clinic ? (
+                          <div>
+                            <div className="flex items-center gap-1.5 font-bold text-slate-900">
+                              <Building2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                              <span className="truncate max-w-[150px]">{item.clinic.name}</span>
+                            </div>
+                            <p className="text-[10px] text-slate-400 font-mono pl-5 truncate max-w-[150px]">
+                              {item.clinic.branch_name || item.clinic.city || item.clinic.location || 'Main'}
+                              {item.clinic.clinic_code && ` • ${item.clinic.clinic_code}`}
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-slate-400 italic">Central</span>
+                        )}
                       </td>
 
                       {/* Patient */}
@@ -968,6 +1026,7 @@ export default function AppointmentReportsPage({
               <thead>
                 <tr className="bg-slate-50/90 border-b border-slate-200 text-[10px] font-bold uppercase tracking-wider text-slate-500">
                   <th className="py-3.5 px-4">Session Info</th>
+                  <th className="py-3.5 px-4">Clinic / Branch</th>
                   <th className="py-3.5 px-4">Schedule Date &amp; Time</th>
                   <th className="py-3.5 px-4">Patient Profile</th>
                   <th className="py-3.5 px-4">Clinical Service</th>
@@ -996,6 +1055,24 @@ export default function AppointmentReportsPage({
                             {master.appointment_number}
                           </p>
                         </div>
+                      </td>
+
+                      {/* Clinic / Branch */}
+                      <td className="py-3.5 px-4">
+                        {master.clinic ? (
+                          <div>
+                            <div className="flex items-center gap-1.5 font-bold text-slate-900">
+                              <Building2 className="w-3.5 h-3.5 text-purple-600 shrink-0" />
+                              <span className="truncate max-w-[150px]">{master.clinic.name}</span>
+                            </div>
+                            <p className="text-[10px] text-slate-400 font-mono pl-5 truncate max-w-[150px]">
+                              {master.clinic.branch_name || master.clinic.city || master.clinic.location || 'Main'}
+                              {master.clinic.clinic_code && ` • ${master.clinic.clinic_code}`}
+                            </p>
+                          </div>
+                        ) : (
+                          <span className="text-[11px] text-slate-400 italic">Central</span>
+                        )}
                       </td>
 
                       {/* Schedule Date & Time */}
@@ -1202,6 +1279,42 @@ export default function AppointmentReportsPage({
 
             {/* Modal Content */}
             <div className="p-6 overflow-y-auto space-y-5 text-xs">
+              {/* Clinic Branch Badge Card */}
+              {(() => {
+                const clinic =
+                  activeTab === 'appointments'
+                    ? selectedRecord.clinic
+                    : selectedRecord.master_appointment?.clinic;
+
+                if (!clinic) return null;
+
+                return (
+                  <div className="bg-purple-50/60 p-3.5 rounded-2xl border border-purple-200/80 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                      <div className="w-8 h-8 rounded-xl bg-purple-100 border border-purple-200 flex items-center justify-center text-purple-700 shrink-0">
+                        <Building2 className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-purple-600 block">
+                          Clinic Branch
+                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="font-bold text-slate-900 text-sm">{clinic.name}</span>
+                          {clinic.branch_name && (
+                            <span className="text-slate-500 font-medium">({clinic.branch_name})</span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <span className="font-mono text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 border border-purple-200/60">
+                        {clinic.clinic_code || clinic.city || clinic.location || 'Branch'}
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Patient Profile Card */}
               {(() => {
                 const cust =

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\AppointmentSession;
+use App\Models\Clinic;
 use App\Models\Customer;
 use App\Models\MasterAppointment;
 use App\Models\SalesMember;
@@ -43,9 +44,13 @@ class AppointmentReportController extends Controller
             },
         ]);
 
-        // Enforce clinic scoping strictly for logged-in admin
+        // Enforce clinic scoping strictly for logged-in admin, or clinic filter for superadmin
         if ($user && ! empty($user->clinic_id)) {
             $query->where('clinic_id', $user->clinic_id);
+        } elseif ($clinicId = $request->input('clinic_id')) {
+            if ($clinicId !== 'all' && ! empty($clinicId)) {
+                $query->where('clinic_id', $clinicId);
+            }
         }
 
         // 1. Text Search Filter
@@ -218,6 +223,7 @@ class AppointmentReportController extends Controller
 
         $query = AppointmentSession::with([
             'masterAppointment:id,clinic_id,appointment_number,customer_id,sales_team_id,appointment_date,appointment_fees,notes,image',
+            'masterAppointment.clinic:id,clinic_code,name,branch_name,location,city',
             'masterAppointment.customer:id,name,mobile,email,gender,age,address,image',
             'masterAppointment.salesTeam:id,sales_code,name,email,mobile,department',
             'staff:id,staff_code,name,department,designation,mobile',
@@ -226,11 +232,17 @@ class AppointmentReportController extends Controller
             'inventoryProduct:id,product_name,business_unit',
         ]);
 
-        // Enforce clinic scoping strictly for logged-in admin
+        // Enforce clinic scoping strictly for logged-in admin, or clinic filter for superadmin
         if ($user && ! empty($user->clinic_id)) {
             $query->whereHas('masterAppointment', function ($mq) use ($user) {
                 $mq->where('clinic_id', $user->clinic_id);
             });
+        } elseif ($clinicId = $request->input('clinic_id')) {
+            if ($clinicId !== 'all' && ! empty($clinicId)) {
+                $query->whereHas('masterAppointment', function ($mq) use ($clinicId) {
+                    $mq->where('clinic_id', $clinicId);
+                });
+            }
         }
 
         // 1. Text Search Filter
@@ -353,7 +365,15 @@ class AppointmentReportController extends Controller
     public function filterOptions(Request $request): JsonResponse
     {
         $user = $request->user();
-        $clinicId = $user?->clinic_id;
+        $clinicId = $user?->clinic_id ?: $request->input('clinic_id');
+        if ($clinicId === 'all') {
+            $clinicId = null;
+        }
+
+        $clinics = Clinic::where('status', Clinic::STATUS_ACTIVE)
+            ->select('id', 'name', 'branch_name', 'location', 'clinic_code')
+            ->orderBy('name')
+            ->get();
 
         $staffQuery = Staff::where('status', 'active');
         if ($clinicId) {
@@ -403,6 +423,7 @@ class AppointmentReportController extends Controller
 
         return response()->json([
             'success' => true,
+            'clinics' => $clinics,
             'staff' => $staff,
             'sales_team' => $salesTeam,
             'services' => $services,
