@@ -4,26 +4,16 @@
     </IfModule>
 
     RewriteEngine On
-    Options +FollowSymLinks
+    RewriteBase /
 
-    # Bypass LiteSpeed Symlink Protection on Hostinger by routing storage requests through Laravel
-    RewriteRule ^storage/(.*)$ index.php [L,QSA]
+    # Direct access to index.html should not be rewritten
+    RewriteRule ^index\.html$ - [L]
 
-    # Handle Authorization Header
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
+    # If requested file or directory physically exists, serve it directly
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
 
-    # Handle X-XSRF-Token Header
-    RewriteCond %{HTTP:x-xsrf-token} .
-    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
-
-    # Redirect Trailing Slashes If Not A Folder...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
-
-    # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [L]
+    # React Single Page Application (SPA) Routing: All requests route to index.html
+    RewriteRule ^ index.html [L]
 </IfModule>
