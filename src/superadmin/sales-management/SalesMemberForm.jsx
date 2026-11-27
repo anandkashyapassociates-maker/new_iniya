@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   User,
   Mail,
@@ -17,6 +17,7 @@ import {
   Layers,
   Compass,
   Lock,
+  X,
 } from 'lucide-react';
 import salesMemberManagementService from '../services/salesMemberManagementService';
 import clinicManagementService from '../services/clinicManagementService';
@@ -76,6 +77,7 @@ export default function SalesMemberForm({
   const [isLoadingClinics, setIsLoadingClinics] = useState(true);
   const [previewPhoto, setPreviewPhoto] = useState(null);
   const [photoFile, setPhotoFile] = useState(null);
+  const photoInputRef = useRef(null);
   const [previewCode, setPreviewCode] = useState('');
   const [errors, setErrors] = useState({});
 
@@ -143,12 +145,32 @@ export default function SalesMemberForm({
         return;
       }
       setPhotoFile(file);
+      setErrors((prev) => {
+        if (!prev.profile_photo) return prev;
+        const next = { ...prev };
+        delete next.profile_photo;
+        return next;
+      });
       const reader = new FileReader();
       reader.onloadend = () => {
         setPreviewPhoto(reader.result);
       };
       reader.readAsDataURL(file);
     }
+  };
+
+  const handleRemovePhoto = () => {
+    setPhotoFile(null);
+    setPreviewPhoto(null);
+    if (photoInputRef.current) {
+      photoInputRef.current.value = '';
+    }
+    setErrors((prev) => {
+      if (!prev.profile_photo) return prev;
+      const next = { ...prev };
+      delete next.profile_photo;
+      return next;
+    });
   };
 
   const validate = () => {
@@ -240,6 +262,9 @@ export default function SalesMemberForm({
       });
       setPhotoFile(null);
       setPreviewPhoto(null);
+      if (photoInputRef.current) {
+        photoInputRef.current.value = '';
+      }
       setErrors({});
 
       // Refresh code preview
@@ -605,17 +630,30 @@ export default function SalesMemberForm({
             </label>
             <div className="flex items-center gap-3">
               {previewPhoto ? (
-                <img
-                  src={previewPhoto}
-                  alt="Preview"
-                  className="w-10 h-10 rounded-xl object-cover border border-slate-200 shadow-xs shrink-0"
-                />
+                <div className="relative shrink-0">
+                  <img
+                    src={previewPhoto}
+                    alt="Preview"
+                    className="w-11 h-11 rounded-xl object-cover border border-slate-200 shadow-xs"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleRemovePhoto}
+                    disabled={isLoading}
+                    title="Remove selected photo"
+                    aria-label="Remove selected photo"
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-rose-500 hover:bg-rose-600 text-white flex items-center justify-center shadow-sm transition-colors cursor-pointer disabled:opacity-50"
+                  >
+                    <X className="w-3 h-3" strokeWidth={2.5} />
+                  </button>
+                </div>
               ) : (
-                <div className="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200 shrink-0">
+                <div className="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center text-slate-400 border border-slate-200 shrink-0">
                   <UploadCloud className="w-5 h-5" />
                 </div>
               )}
               <input
+                ref={photoInputRef}
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={handlePhotoChange}
