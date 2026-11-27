@@ -255,11 +255,8 @@ class MasterAppointmentController extends Controller
             ->orderBy('name')
             ->get();
 
-        $inventoryQuery = InventoryProduct::where('status', 'active');
-        if ($clinicId) {
-            $inventoryQuery->where('clinic_id', $clinicId);
-        }
-        $inventoryProducts = $inventoryQuery
+        // Inventory products remain global across clinics for session consumables selection
+        $inventoryProducts = InventoryProduct::where('status', 'active')
             ->select('id', 'clinic_id', 'product_name', 'business_unit', 'product_type')
             ->orderBy('product_name')
             ->get();
@@ -417,21 +414,6 @@ class MasterAppointmentController extends Controller
                         "sessions.{$idx}.staff_id" => ['Selected staff member does not belong to your assigned clinic.'],
                     ]);
                 }
-
-                $productIds = ! empty($sData['inventory_product_ids'])
-                    ? array_map('intval', (array) $sData['inventory_product_ids'])
-                    : (! empty($sData['inventory_product_id']) ? [(int) $sData['inventory_product_id']] : []);
-
-                if (! empty($productIds)) {
-                    $invalidProducts = InventoryProduct::whereIn('id', $productIds)
-                        ->where('clinic_id', '!=', $clinicId)
-                        ->exists();
-                    if ($invalidProducts) {
-                        throw ValidationException::withMessages([
-                            "sessions.{$idx}.inventory_product_id" => ['Selected inventory product does not belong to your assigned clinic.'],
-                        ]);
-                    }
-                }
             }
         }
 
@@ -458,7 +440,11 @@ class MasterAppointmentController extends Controller
 
                 // Process optional session image
                 $sessionImagePath = null;
-                if (! empty($sData['image']) && is_string($sData['image']) && str_starts_with($sData['image'], 'data:image')) {
+                if ($request->hasFile("session_images.{$i}")) {
+                    $sessionImagePath = $request->file("session_images.{$i}")->store('appointment_sessions', 'public');
+                } elseif ($request->hasFile("sessions.{$i}.image")) {
+                    $sessionImagePath = $request->file("sessions.{$i}.image")->store('appointment_sessions', 'public');
+                } elseif (! empty($sData['image']) && is_string($sData['image']) && str_starts_with($sData['image'], 'data:image')) {
                     $sDataUri = $sData['image'];
                     if (preg_match('/^data:image\/(\w+);base64,/', $sDataUri, $sType)) {
                         $sDataDecoded = substr($sDataUri, strpos($sDataUri, ',') + 1);
@@ -470,8 +456,6 @@ class MasterAppointmentController extends Controller
                             $sessionImagePath = $sFileName;
                         }
                     }
-                } elseif ($request->hasFile("sessions.{$i}.image")) {
-                    $sessionImagePath = $request->file("sessions.{$i}.image")->store('appointment_sessions', 'public');
                 }
 
                 AppointmentSession::create([

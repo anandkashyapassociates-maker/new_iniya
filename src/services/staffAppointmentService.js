@@ -30,10 +30,7 @@ export const staffAppointmentService = {
    * Upload or update clinical session image.
    */
   async uploadSessionImage(id, formDataOrPayload) {
-    const isFormData = formDataOrPayload instanceof FormData;
-    const response = await adminApi.post(`/admin/my-appointments/${id}/image`, formDataOrPayload, {
-      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
-    });
+    const response = await adminApi.post(`/admin/my-appointments/${id}/image`, formDataOrPayload);
     return response.data;
   },
 };

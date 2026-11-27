@@ -8,16 +8,27 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 export const superAdminApiClient = axios.create({
   baseURL: BASE_URL,
   headers: {
-    'Content-Type': 'application/json',
     'Accept': 'application/json',
   },
 });
 
-// Attach Bearer token to outgoing Superadmin requests
+// Attach Bearer token & handle FormData Content-Type properly for outgoing Superadmin requests
 superAdminApiClient.interceptors.request.use((config) => {
   const token = localStorage.getItem('superadmin_token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+  }
+  if (config.data instanceof FormData) {
+    if (config.headers) {
+      if (typeof config.headers.delete === 'function') {
+        config.headers.delete('Content-Type');
+        config.headers.delete('content-type');
+      }
+      delete config.headers['Content-Type'];
+      delete config.headers['content-type'];
+    }
+  } else if (config.headers && !config.headers['Content-Type'] && !config.headers['content-type']) {
+    config.headers['Content-Type'] = 'application/json';
   }
   return config;
 });

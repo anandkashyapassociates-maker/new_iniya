@@ -21,10 +21,7 @@ export const salesMemberManagementService = {
    * Create a new Sales Member.
    */
   async createSalesMember(data) {
-    const isFormData = data instanceof FormData;
-    const response = await superAdminApiClient.post('/superadmin/sales-members', data, {
-      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
-    });
+    const response = await superAdminApiClient.post('/superadmin/sales-members', data);
     return response.data;
   },
 
@@ -32,11 +29,15 @@ export const salesMemberManagementService = {
    * Update an existing Sales Member.
    */
   async updateSalesMember(id, data) {
-    const isFormData = data instanceof FormData;
-    // For Laravel multipart PUT requests, _method=PUT or normal PUT is supported
-    const response = await superAdminApiClient.put(`/superadmin/sales-members/${id}`, data, {
-      headers: isFormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
-    });
+    const isFormData = typeof FormData !== 'undefined' && data instanceof FormData;
+    if (isFormData) {
+      if (!data.has('_method')) {
+        data.append('_method', 'PUT');
+      }
+      const response = await superAdminApiClient.post(`/superadmin/sales-members/${id}`, data);
+      return response.data;
+    }
+    const response = await superAdminApiClient.put(`/superadmin/sales-members/${id}`, data);
     return response.data;
   },
 

@@ -4,40 +4,16 @@
     </IfModule>
 
     RewriteEngine On
+    RewriteBase /
 
-    # CORS Headers for Apache / LiteSpeed (Hostinger)
-    <IfModule mod_headers.c>
-        SetEnvIf Origin "^(https?://(.*?\.)?apptesting\.fun(:[0-9]+)?)$" CORS_ORIGIN=$1
-        SetEnvIf Origin "^(https?://(localhost|127\.0\.0\.1)(:[0-9]+)?)$" CORS_ORIGIN=$1
-        Header always set Access-Control-Allow-Origin "%{CORS_ORIGIN}e" env=CORS_ORIGIN
-        Header always set Access-Control-Allow-Methods "GET, POST, PUT, PATCH, DELETE, OPTIONS"
-        Header always set Access-Control-Allow-Headers "Origin, X-Requested-With, Content-Type, Accept, Authorization, X-XSRF-TOKEN"
-        Header always set Access-Control-Allow-Credentials "true"
-        Header always set Access-Control-Max-Age "86400"
-    </IfModule>
+    # Direct access to index.html should not be rewritten
+    RewriteRule ^index\.html$ - [L]
 
-    # Handle OPTIONS preflight early and route to index.php
-    RewriteCond %{REQUEST_METHOD} OPTIONS
-    RewriteRule ^(.*)$ index.php [QSA,L]
+    # If requested file or directory physically exists, serve it directly
+    RewriteCond %{REQUEST_FILENAME} -f [OR]
+    RewriteCond %{REQUEST_FILENAME} -d
+    RewriteRule ^ - [L]
 
-    # Bypass LiteSpeed Symlink Protection on Hostinger by routing storage requests through Laravel
-    RewriteRule ^storage/(.*)$ index.php [L,QSA]
-
-    # Handle Authorization Header
-    RewriteCond %{HTTP:Authorization} .
-    RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
-
-    # Handle X-XSRF-Token Header
-    RewriteCond %{HTTP:x-xsrf-token} .
-    RewriteRule .* - [E=HTTP_X_XSRF_TOKEN:%{HTTP:X-XSRF-Token}]
-
-    # Redirect Trailing Slashes If Not A Folder...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_URI} (.+)/$
-    RewriteRule ^ %1 [L,R=301]
-
-    # Send Requests To Front Controller...
-    RewriteCond %{REQUEST_FILENAME} !-d
-    RewriteCond %{REQUEST_FILENAME} !-f
-    RewriteRule ^ index.php [L]
+    # React Single Page Application (SPA) Routing: All requests route to index.html
+    RewriteRule ^ index.html [L]
 </IfModule>

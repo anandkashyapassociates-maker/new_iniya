@@ -39,11 +39,7 @@ export const adminAuthService = {
   async uploadAvatar(file) {
     const formData = new FormData();
     formData.append('image', file);
-    const response = await adminApi.post('/admin/profile/avatar', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data',
-      },
-    });
+    const response = await adminApi.post('/admin/profile/avatar', formData);
     return response.data;
   },
 

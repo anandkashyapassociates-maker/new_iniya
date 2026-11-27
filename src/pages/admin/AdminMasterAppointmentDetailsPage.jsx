@@ -270,32 +270,29 @@ export default function AdminMasterAppointmentDetailsPage() {
     try {
       const pIds = (newSessionData.inventory_product_ids || []).map((pId) => Number(pId));
 
-      let sessionImageBase64 = null;
+      const formData = new FormData();
+      if (newSessionData.service_id) {
+        formData.append('service_id', String(Number(newSessionData.service_id)));
+      }
+      if (newSessionData.service_price !== undefined && newSessionData.service_price !== '') {
+        formData.append('consultation_fee', String(Number(newSessionData.service_price)));
+      }
+      formData.append('treatment_details', newSessionData.treatment_details.trim());
+      formData.append('session_date', newSessionData.session_date);
+      formData.append('session_time', newSessionData.session_time);
+      formData.append('staff_id', String(Number(newSessionData.staff_id)));
+      formData.append('staff_commission', String(Number(newSessionData.staff_commission || 0)));
+      pIds.forEach((pId) => {
+        formData.append('inventory_product_ids[]', String(pId));
+      });
+      if (pIds.length > 0) {
+        formData.append('inventory_product_id', String(pIds[0]));
+      }
       if (newSessionData.image_file) {
-        const toBase64 = (file) =>
-          new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.readAsDataURL(file);
-            reader.onload = () => resolve(reader.result);
-            reader.onerror = (err) => reject(err);
-          });
-        sessionImageBase64 = await toBase64(newSessionData.image_file);
+        formData.append('image', newSessionData.image_file);
       }
 
-      const payload = {
-        service_id: newSessionData.service_id ? Number(newSessionData.service_id) : null,
-        consultation_fee: newSessionData.service_price !== undefined && newSessionData.service_price !== '' ? Number(newSessionData.service_price) : null,
-        treatment_details: newSessionData.treatment_details.trim(),
-        session_date: newSessionData.session_date,
-        session_time: newSessionData.session_time,
-        staff_id: Number(newSessionData.staff_id),
-        staff_commission: Number(newSessionData.staff_commission || 0),
-        inventory_product_ids: pIds,
-        inventory_product_id: pIds.length > 0 ? pIds[0] : null,
-        image: sessionImageBase64 || undefined,
-      };
-
-      const res = await adminMasterAppointmentService.addSession(id, payload);
+      const res = await adminMasterAppointmentService.addSession(id, formData);
       toast.success(res.message || 'New session attached successfully!');
       setShowAddSessionModal(false);
       setNewSessionData({
@@ -560,7 +557,7 @@ export default function AdminMasterAppointmentDetailsPage() {
                 <th className="py-3 px-4 min-w-[200px]">Treatment / Procedure</th>
                 <th className="py-3 px-4 min-w-[140px]">Assigned Staff</th>
                 <th className="py-3 px-4 min-w-[140px]">Reassign Staff</th>
-                <th className="py-3 px-4 min-w-[140px]">Executive By</th>
+                <th className="py-3 px-4 min-w-[140px]">Executed By</th>
                 <th className="py-3 px-4 min-w-[160px]">Clinic Branch</th>
                 <th className="py-3 px-4 whitespace-nowrap">Commission</th>
                 <th className="py-3 px-4 min-w-[140px]">Product Used</th>
@@ -1010,7 +1007,7 @@ export default function AdminMasterAppointmentDetailsPage() {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 mb-1">
                         Assign to Doctor / Staff <span className="text-rose-500">*</span>
@@ -1029,19 +1026,6 @@ export default function AdminMasterAppointmentDetailsPage() {
                             {st.name} {st.department ? `(${st.department})` : ''}
                           </option>
                         ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1">
-                        Executive by Doctor / Staff
-                      </label>
-                      <select
-                        disabled
-                        value=""
-                        className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-400 font-medium cursor-not-allowed select-none"
-                      >
-                        <option value="">-- Assigned on Execution --</option>
                       </select>
                     </div>
 

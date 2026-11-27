@@ -81,8 +81,8 @@ class ProductController extends Controller
             'business_unit' => ['required', 'string', 'max:50'],
             'product_unit' => ['nullable', 'integer', 'min:1'],
             'low_stock_threshold' => ['nullable', 'integer', 'min:1'],
-            'product_type' => ['required', 'string', 'max:50'],
-            'custom_product_type' => ['nullable', 'string', 'max:100', 'required_if:product_type,Other'],
+            'product_type' => ['nullable', 'string', 'max:50'],
+            'custom_product_type' => ['nullable', 'string', 'max:100'],
             'status' => ['nullable', 'in:active,inactive'],
             'product_image' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
         ], [
@@ -114,8 +114,8 @@ class ProductController extends Controller
                 'business_unit' => $validated['business_unit'],
                 'product_unit' => isset($validated['product_unit']) ? (int) $validated['product_unit'] : 1,
                 'low_stock_threshold' => isset($validated['low_stock_threshold']) ? (int) $validated['low_stock_threshold'] : 10,
-                'product_type' => $validated['product_type'],
-                'custom_product_type' => $validated['product_type'] === 'Other' ? ($validated['custom_product_type'] ?? null) : null,
+                'product_type' => ! empty($validated['product_type']) ? $validated['product_type'] : 'Standard',
+                'custom_product_type' => ($validated['product_type'] ?? null) === 'Other' ? ($validated['custom_product_type'] ?? null) : null,
                 'status' => $validated['status'] ?? 'active',
                 'created_by_admin_id' => $admin->id,
             ]);
@@ -181,8 +181,8 @@ class ProductController extends Controller
             'business_unit' => ['required', 'string', 'max:50'],
             'product_unit' => ['nullable', 'integer', 'min:1'],
             'low_stock_threshold' => ['nullable', 'integer', 'min:1'],
-            'product_type' => ['required', 'string', 'max:50'],
-            'custom_product_type' => ['nullable', 'string', 'max:100', 'required_if:product_type,Other'],
+            'product_type' => ['nullable', 'string', 'max:50'],
+            'custom_product_type' => ['nullable', 'string', 'max:100'],
             'status' => ['nullable', 'in:active,inactive'],
             'product_image' => ['nullable', 'file', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
             'remove_image' => ['sometimes', 'boolean'],
@@ -213,8 +213,8 @@ class ProductController extends Controller
                 'business_unit' => $validated['business_unit'],
                 'product_unit' => isset($validated['product_unit']) ? (int) $validated['product_unit'] : ($product->product_unit ?? 1),
                 'low_stock_threshold' => isset($validated['low_stock_threshold']) ? (int) $validated['low_stock_threshold'] : ($product->low_stock_threshold ?? 10),
-                'product_type' => $validated['product_type'],
-                'custom_product_type' => $validated['product_type'] === 'Other' ? ($validated['custom_product_type'] ?? null) : null,
+                'product_type' => ! empty($validated['product_type']) ? $validated['product_type'] : ($product->product_type ?? 'Standard'),
+                'custom_product_type' => ($validated['product_type'] ?? $product->product_type) === 'Other' ? ($validated['custom_product_type'] ?? $product->custom_product_type) : null,
                 'status' => $validated['status'] ?? $product->status,
             ];
 

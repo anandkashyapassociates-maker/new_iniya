@@ -187,7 +187,7 @@ export default function SessionQuickDetailsModal({
             {/* Executive By */}
             <div className="p-3 bg-white border border-slate-200 rounded-xl">
               <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-1">
-                Executive By
+                Executed By
               </span>
               {(() => {
                 const isHandled = ['completed', 'in_progress', 'cancelled'].includes(session.status);

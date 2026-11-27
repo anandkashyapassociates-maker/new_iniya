@@ -220,10 +220,6 @@ export default function AdminProductEditPage() {
     if (formData.low_stock_threshold !== '' && formData.low_stock_threshold !== null && (isNaN(formData.low_stock_threshold) || parseInt(formData.low_stock_threshold, 10) < 1)) {
       errs.low_stock_threshold = 'Please enter a valid alert threshold (minimum 1).';
     }
-    if (!formData.product_type) errs.product_type = 'Product type is required.';
-    if (formData.product_type === 'Other' && !formData.custom_product_type?.trim()) {
-      errs.custom_product_type = 'Please specify the custom product type.';
-    }
 
     if (Object.keys(errs).length > 0) {
       setErrors(errs);
@@ -240,10 +236,6 @@ export default function AdminProductEditPage() {
       payload.append('business_unit', formData.business_unit.trim());
       payload.append('product_unit', parseInt(formData.product_unit, 10) || 1);
       payload.append('low_stock_threshold', parseInt(formData.low_stock_threshold, 10) || 10);
-      payload.append('product_type', formData.product_type);
-      if (formData.product_type === 'Other' && formData.custom_product_type) {
-        payload.append('custom_product_type', formData.custom_product_type.trim());
-      }
       payload.append('status', formData.status);
       if (imageFile) {
         payload.append('product_image', imageFile);
@@ -790,68 +782,6 @@ export default function AdminProductEditPage() {
                   </p>
                 )}
               </div>
-
-              {/* FIELD 7: Product Type */}
-              <div>
-                <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                  Product Type <span className="text-rose-500">*</span>
-                </label>
-                <div className="relative">
-                  <select
-                    name="product_type"
-                    value={formData.product_type}
-                    onChange={handleChange}
-                    disabled={isSubmitting}
-                    required
-                    className={`w-full px-4 py-2.5 text-xs bg-slate-50/80 hover:bg-slate-50 border rounded-2xl focus:outline-none focus:ring-2 transition-all font-medium text-slate-900 ${
-                      errors.product_type
-                        ? 'border-rose-400 focus:ring-rose-500/20'
-                        : 'border-slate-200 focus:border-blue-600 focus:ring-blue-500/20'
-                    }`}
-                  >
-                    <option value="Consumable">Consumable</option>
-                    <option value="Retail">Retail</option>
-                    <option value="Equipment">Equipment</option>
-                    <option value="Medicine">Medicine</option>
-                    <option value="Service">Service</option>
-                    <option value="Other">Other (Custom Type)</option>
-                  </select>
-                </div>
-                {errors.product_type && (
-                  <p className="text-[11px] text-rose-500 mt-1.5 font-normal flex items-center gap-1">
-                    <AlertCircle className="w-3.5 h-3.5" />
-                    <span>{Array.isArray(errors.product_type) ? errors.product_type[0] : errors.product_type}</span>
-                  </p>
-                )}
-              </div>
-
-              {/* Custom Product Type (Shown only if Other selected) */}
-              {formData.product_type === 'Other' && (
-                <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                    Specify Custom Product Type <span className="text-rose-500">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    name="custom_product_type"
-                    value={formData.custom_product_type}
-                    onChange={handleChange}
-                    disabled={isSubmitting}
-                    required
-                    className={`w-full px-4 py-2.5 text-xs bg-slate-50/80 hover:bg-slate-50 border rounded-2xl focus:outline-none focus:ring-2 transition-all font-normal text-slate-900 ${
-                      errors.custom_product_type
-                        ? 'border-rose-400 focus:ring-rose-500/20'
-                        : 'border-slate-200 focus:border-blue-600 focus:ring-blue-500/20'
-                    }`}
-                  />
-                  {errors.custom_product_type && (
-                    <p className="text-[11px] text-rose-500 mt-1.5 font-normal flex items-center gap-1">
-                      <AlertCircle className="w-3.5 h-3.5" />
-                      <span>{Array.isArray(errors.custom_product_type) ? errors.custom_product_type[0] : errors.custom_product_type}</span>
-                    </p>
-                  )}
-                </div>
-              )}
 
               {/* FIELD 7: Status */}
               <div className="sm:col-span-2">

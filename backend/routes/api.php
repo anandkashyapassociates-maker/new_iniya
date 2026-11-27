@@ -141,7 +141,7 @@ Route::prefix('superadmin')
         Route::get('/sales-members', [SalesMemberManagementController::class, 'index']);
         Route::post('/sales-members', [SalesMemberManagementController::class, 'store']);
         Route::get('/sales-members/{id}', [SalesMemberManagementController::class, 'show']);
-        Route::put('/sales-members/{id}', [SalesMemberManagementController::class, 'update']);
+        Route::match(['PUT', 'POST'], '/sales-members/{id}', [SalesMemberManagementController::class, 'update']);
         Route::patch('/sales-members/{id}/status', [SalesMemberManagementController::class, 'updateStatus']);
 
         // Category Oversight (SuperAdmin View and Delete Power)

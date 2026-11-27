@@ -599,6 +599,7 @@ export default function StaffForm({
                 value={formData.password}
                 onChange={(e) => handleChange('password', e.target.value)}
                 placeholder="Leave blank for default (12345678) or enter min. 8 characters"
+                autoComplete="new-password"
                 disabled={isLoading}
                 className={`w-full pl-10 pr-4 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 shadow-2xs ${
                   errors.password

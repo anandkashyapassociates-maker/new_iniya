@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import adminMasterAppointmentService from '../../services/adminMasterAppointmentService';
 import ProductMultiSelectDropdown from '../../components/admin/ProductMultiSelectDropdown';
+import PatientSelectDropdown from '../../components/admin/PatientSelectDropdown';
 import { useToast } from '../../context/ToastContext';
 import { useAdminAuth } from '../../features/auth/AdminAuthContext';
 
@@ -487,51 +488,40 @@ export default function AdminMasterAppointmentCreatePage() {
     setSaving(true);
 
     try {
-      const toBase64 = (file) =>
-        new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.readAsDataURL(file);
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = (err) => reject(err);
-        });
+      const processedSessions = sessions.map((s) => ({
+        service_id: s.service_id ? Number(s.service_id) : null,
+        consultation_fee: s.service_price !== undefined && s.service_price !== '' ? Number(s.service_price) : null,
+        treatment_details: (s.treatment_details || '').trim(),
+        session_date: s.session_date,
+        session_time: s.session_time,
+        staff_id: Number(s.staff_id),
+        staff_commission: Number(s.staff_commission || 0),
+        inventory_product_ids: (s.inventory_product_ids || []).map(Number),
+        inventory_product_id: (s.inventory_product_ids && s.inventory_product_ids.length > 0)
+          ? Number(s.inventory_product_ids[0])
+          : (s.inventory_product_id ? Number(s.inventory_product_id) : null),
+      }));
 
-      const imageBase64 = await toBase64(imageFile);
+      const formData = new FormData();
+      formData.append('customer_id', String(Number(customerId)));
+      formData.append('appointment_date', appointmentDate);
+      formData.append('sales_team_id', String(Number(salesTeamId)));
+      formData.append('sales_commission', String(Number(salesCommission || 0)));
+      formData.append('appointment_fees', String(totalAppointmentFees));
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
+      if (notes && notes.trim()) {
+        formData.append('notes', notes.trim());
+      }
+      formData.append('sessions', JSON.stringify(processedSessions));
+      sessions.forEach((s, idx) => {
+        if (s.image_file) {
+          formData.append(`session_images[${idx}]`, s.image_file);
+        }
+      });
 
-      const processedSessions = await Promise.all(
-        sessions.map(async (s) => {
-          let sessionImageBase64 = null;
-          if (s.image_file) {
-            sessionImageBase64 = await toBase64(s.image_file);
-          }
-          return {
-            service_id: s.service_id ? Number(s.service_id) : null,
-            consultation_fee: s.service_price !== undefined && s.service_price !== '' ? Number(s.service_price) : null,
-            treatment_details: (s.treatment_details || '').trim(),
-            session_date: s.session_date,
-            session_time: s.session_time,
-            staff_id: Number(s.staff_id),
-            staff_commission: Number(s.staff_commission || 0),
-            inventory_product_ids: (s.inventory_product_ids || []).map(Number),
-            inventory_product_id: (s.inventory_product_ids && s.inventory_product_ids.length > 0)
-              ? Number(s.inventory_product_ids[0])
-              : (s.inventory_product_id ? Number(s.inventory_product_id) : null),
-            image: sessionImageBase64 || undefined,
-          };
-        })
-      );
-
-      const payload = {
-        customer_id: Number(customerId),
-        appointment_date: appointmentDate,
-        sales_team_id: Number(salesTeamId),
-        sales_commission: Number(salesCommission || 0),
-        appointment_fees: totalAppointmentFees,
-        image: imageBase64,
-        notes: notes ? notes.trim() : undefined,
-        sessions: processedSessions,
-      };
-
-      const res = await adminMasterAppointmentService.create(payload);
+      const res = await adminMasterAppointmentService.create(formData);
 
       toast.success(res.message || 'Appointment created successfully!');
       navigate('/admin/appointments');
@@ -648,19 +638,12 @@ export default function AdminMasterAppointmentCreatePage() {
               <label className="block text-xs sm:text-sm font-semibold text-slate-700 mb-1.5 sm:mb-2">
                 Patient <span className="text-rose-500">*</span>
               </label>
-              <select
+              <PatientSelectDropdown
+                patients={customers}
                 value={customerId}
-                onChange={(e) => setCustomerId(e.target.value)}
-                required
-                className="w-full px-3.5 py-2.5 sm:px-4 sm:py-3 bg-slate-50/70 hover:bg-slate-50 border border-slate-200/90 rounded-xl sm:rounded-2xl text-xs sm:text-sm text-slate-800 font-medium focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer shadow-xs"
-              >
-                <option value="">-- Select Patient --</option>
-                {customers.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name} ({c.mobile}) {c.gender ? `• ${c.gender}` : ''}
-                  </option>
-                ))}
-              </select>
+                onChange={(val) => setCustomerId(val)}
+                placeholder="-- Select Patient --"
+              />
 
               {/* Selected Patient Compact Info */}
               {selectedCustomer && (
@@ -1037,7 +1020,7 @@ export default function AdminMasterAppointmentCreatePage() {
                   <div className="text-[11px] sm:text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 sm:mb-3">
                     Doctor &amp; Procedure
                   </div>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                     {/* Treatment Details */}
                     <div>
                       <label className="block text-xs font-semibold text-slate-700 mb-1.5">
@@ -1071,21 +1054,6 @@ export default function AdminMasterAppointmentCreatePage() {
                           </option>
                         ))}
                       </select>
-                    </div>
-
-                    {/* Executive by Doctor / Staff */}
-                    <div>
-                      <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                        Executive by Doctor / Staff
-                      </label>
-                      <select
-                        disabled
-                        value=""
-                        className="w-full px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-100 border border-slate-200 rounded-xl text-xs sm:text-sm text-slate-400 font-medium cursor-not-allowed select-none"
-                      >
-                        <option value="">-- Assigned on Execution --</option>
-                      </select>
-                      <p className="text-[10px] text-slate-400 mt-1">Filled when session is executed by staff.</p>
                     </div>
 
                     {/* Staff Commission */}

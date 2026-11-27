@@ -30,8 +30,8 @@ export default function AdminForm({
     name: '',
     email: '',
     mobile: '',
-    password: '',
-    password_confirmation: '',
+    password: '12345678',
+    password_confirmation: '12345678',
     is_active: true,
   });
 
@@ -157,8 +157,8 @@ export default function AdminForm({
         name: '',
         email: '',
         mobile: '',
-        password: '',
-        password_confirmation: '',
+        password: '12345678',
+        password_confirmation: '12345678',
         is_active: true,
       });
       setErrors({});
@@ -517,7 +517,8 @@ export default function AdminForm({
                 type={showPassword ? 'text' : 'password'}
                 value={formData.password}
                 onChange={(e) => handleChange('password', e.target.value)}
-                placeholder="Minimum 8 characters"
+                placeholder="Minimum 8 characters (default: 12345678)"
+                autoComplete="new-password"
                 disabled={isLoading}
                 required
                 className={`w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 shadow-2xs ${
@@ -574,6 +575,7 @@ export default function AdminForm({
                 value={formData.password_confirmation}
                 onChange={(e) => handleChange('password_confirmation', e.target.value)}
                 placeholder="Re-enter matching password"
+                autoComplete="new-password"
                 disabled={isLoading}
                 required
                 className={`w-full pl-10 pr-10 py-2.5 text-xs bg-slate-50/70 hover:bg-slate-50 focus:bg-white text-slate-900 border rounded-xl focus:outline-none focus:ring-4 transition-all duration-200 shadow-2xs ${
